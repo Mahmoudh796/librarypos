@@ -3,42 +3,32 @@
 namespace Config;
 
 use CodeIgniter\Config\BaseConfig;
-use CodeIgniter\Session\Handlers\DatabaseHandler;
+use RuntimeException;
 
 class App extends BaseConfig
 {
     /**
      * This is the code version of the Open Source Point of Sale you're running.
-     *
-     * @var string
      */
     public string $application_version = '3.4.3';
 
     /**
      * This is the commit hash for the version you are currently using.
-     *
-     * @var string
      */
     public string $commit_sha1 = 'dev';
 
     /**
      * Logs are stored in writable/logs
-     *
-     * @var bool
      */
     public bool $db_log_enabled = false;
 
     /**
      * DB Query Log only long-running queries
-     *
-     * @var bool
      */
     public bool $db_log_only_long = false;
 
     /**
      * Defines whether to require/reroute to HTTPS
-     *
-     * @var bool
      */
     public bool $https_on;    // Set in the constructor
 
@@ -292,16 +282,29 @@ class App extends BaseConfig
         if ($envAllowedHostnames !== null) {
             $this->allowedHostnames = array_values(array_filter(
                 array_map('trim', explode(',', $envAllowedHostnames)),
-                static fn (string $hostname): bool => $hostname !== ''
+                static fn (string $hostname): bool => $hostname !== '',
             ));
         }
 
-        $this->https_on = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_ENV['FORCE_HTTPS']) && $_ENV['FORCE_HTTPS'] == 'true');
+        $this->https_on = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_ENV['FORCE_HTTPS']) && $_ENV['FORCE_HTTPS'] === 'true');
 
+        // Run host validation in every context: it fails fast in production when
+        // allowedHostnames is not configured and logs the localhost fallback in
+        // development/testing.
         $host = $this->getValidHost();
-        $this->baseURL = $this->https_on ? 'https' : 'http';
-        $this->baseURL .= '://' . $host . '/';
-        $this->baseURL .= str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']);
+
+        // $_SERVER['SCRIPT_NAME'] is only a URL path for real web requests. Under
+        // CLI (PHPUnit, Spark, phpdbg) it is the filesystem path of the entry script
+        // (e.g. "D:\...\vendor\bin\phpunit"), so deriving a URL from it is wrong.
+        // Resolve baseURL from .env / server vars instead. (BaseConfig cannot do
+        // this here: it only env-overrides properties with a default value.)
+        if (is_cli()) {
+            $this->baseURL = $this->getEnvString('app.baseURL') ?: 'http://localhost/';
+        } else {
+            $this->baseURL = $this->https_on ? 'https' : 'http';
+            $this->baseURL .= '://' . $host . '/';
+            $this->baseURL .= str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']);
+        }
     }
 
     /**
@@ -314,7 +317,8 @@ class App extends BaseConfig
      * In development: Allows localhost fallback with an error log.
      *
      * @return string A validated hostname
-     * @throws \RuntimeException If allowedHostnames is not configured in production
+     *
+     * @throws RuntimeException If allowedHostnames is not configured in production
      */
     private function getValidHost(): string
     {
@@ -326,8 +330,7 @@ class App extends BaseConfig
         $environment = $_SERVER['CI_ENVIRONMENT'] ?? $_ENV['CI_ENVIRONMENT'] ?? getenv('CI_ENVIRONMENT') ?: 'production';
 
         if (empty($this->allowedHostnames)) {
-            $errorMessage =
-                'Security: allowedHostnames is not configured. ' .
+            $errorMessage = 'Security: allowedHostnames is not configured. ' .
                 'Host header injection protection is disabled. ' .
                 'Set app.allowedHostnames in your .env file or ALLOWED_HOSTNAMES environment variable. ' .
                 'Example: app.allowedHostnames = "example.com,www.example.com" ' .
@@ -336,10 +339,11 @@ class App extends BaseConfig
             // Production: Fail explicitly to prevent silent security vulnerabilities
             // Testing and development: Allow localhost fallback
             if ($environment === 'production') {
-                throw new \RuntimeException($errorMessage);
+                throw new RuntimeException($errorMessage);
             }
 
             log_message('error', $errorMessage . ' Using localhost fallback (development only).');
+
             return 'localhost';
         }
 
@@ -348,9 +352,10 @@ class App extends BaseConfig
         }
 
         // Host not in whitelist - use first configured hostname as fallback
-        log_message('warning',
+        log_message(
+            'warning',
             'Security: Rejected HTTP_HOST "' . $httpHost . '" - not in allowedHostnames whitelist. ' .
-            'Using fallback: ' . $this->allowedHostnames[0]
+            'Using fallback: ' . $this->allowedHostnames[0],
         );
 
         return $this->allowedHostnames[0];

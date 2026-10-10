@@ -20,6 +20,7 @@ class AppTest extends CIUnitTestCase
     {
         parent::tearDown();
         // Clean up environment
+        is_cli(true); // MockCommon's is_cli() is a process-wide static; always restore
         putenv('CI_ENVIRONMENT');
         putenv('app.allowedHostnames');
         putenv('ALLOWED_HOSTNAMES');
@@ -140,11 +141,16 @@ class AppTest extends CIUnitTestCase
         $_SERVER['SCRIPT_NAME'] = '/index.php';
         $_SERVER['HTTPS'] = null;
 
-        $app = new class extends App {
-            public array $allowedHostnames = ['example.com'];
-        };
+        is_cli(false);
+        try {
+            $app = new class extends App {
+                public array $allowedHostnames = ['example.com'];
+            };
 
-        $this->assertStringContainsString('example.com', $app->baseURL);
+            $this->assertStringContainsString('example.com', $app->baseURL);
+        } finally {
+            is_cli(true);
+        }
     }
 
     public function testBaseURLUsesFallbackHostWhenInvalidHostProvided(): void
@@ -153,12 +159,17 @@ class AppTest extends CIUnitTestCase
         $_SERVER['SCRIPT_NAME'] = '/index.php';
         $_SERVER['HTTPS'] = null;
 
-        $app = new class extends App {
-            public array $allowedHostnames = ['example.com'];
-        };
+        is_cli(false);
+        try {
+            $app = new class extends App {
+                public array $allowedHostnames = ['example.com'];
+            };
 
-        $this->assertStringContainsString('example.com', $app->baseURL);
-        $this->assertStringNotContainsString('malicious.com', $app->baseURL);
+            $this->assertStringContainsString('example.com', $app->baseURL);
+            $this->assertStringNotContainsString('malicious.com', $app->baseURL);
+        } finally {
+            is_cli(true);
+        }
     }
 
     public function testEnvAllowedHostnamesParsedAsCommaSeparated(): void
@@ -170,7 +181,7 @@ class AppTest extends CIUnitTestCase
         $_SERVER['SCRIPT_NAME'] = '/index.php';
         $_SERVER['HTTPS'] = null;
 
-        $app = new App();
+        $app = $this->newAppInWebContext();
 
         // Constructor should parse comma-separated values
         $this->assertEquals(['example.com', 'www.example.com', 'demo.example.com'], $app->allowedHostnames);
@@ -299,7 +310,7 @@ class AppTest extends CIUnitTestCase
         $_SERVER['SCRIPT_NAME'] = '/index.php';
         $_SERVER['HTTPS'] = null;
 
-        $app = new App();
+        $app = $this->newAppInWebContext();
 
         // Constructor should parse comma-separated values
         $this->assertEquals(['example.com', 'www.example.com', 'demo.example.com'], $app->allowedHostnames);
@@ -319,7 +330,7 @@ class AppTest extends CIUnitTestCase
         $_SERVER['SCRIPT_NAME'] = '/index.php';
         $_SERVER['HTTPS'] = null;
 
-        $app = new App();
+        $app = $this->newAppInWebContext();
 
         // ALLOWED_HOSTNAMES should take precedence
         $this->assertEquals(['allowed1.com', 'allowed2.com'], $app->allowedHostnames);
@@ -339,7 +350,7 @@ class AppTest extends CIUnitTestCase
         $_SERVER['SCRIPT_NAME'] = '/index.php';
         $_SERVER['HTTPS'] = null;
 
-        $app = new App();
+        $app = $this->newAppInWebContext();
 
         // Should fall back to app.allowedHostnames
         $this->assertEquals(['dotenv1.com', 'dotenv2.com'], $app->allowedHostnames);
@@ -358,7 +369,7 @@ class AppTest extends CIUnitTestCase
         $_SERVER['SCRIPT_NAME'] = '/index.php';
         $_SERVER['HTTPS'] = null;
 
-        $app = new App();
+        $app = $this->newAppInWebContext();
 
         // Values should be trimmed
         $this->assertEquals(['example.com', 'www.example.com', 'demo.example.com'], $app->allowedHostnames);
@@ -438,5 +449,124 @@ class AppTest extends CIUnitTestCase
 
         putenv('app.allowedHostnames');
         putenv('CI_ENVIRONMENT');
+    }
+
+    /**
+     * Captures the current app.baseURL environment so it can be restored afterward.
+     *
+     * @return array{0: string|null, 1: string|null, 2: string|false}
+     */
+    private function backupBaseURLEnv(): array
+    {
+        return [$_ENV['app.baseURL'] ?? null, $_SERVER['app.baseURL'] ?? null, getenv('app.baseURL')];
+    }
+
+    /**
+     * Restores the app.baseURL environment captured by backupBaseURLEnv().
+     *
+     * @param array{0: string|null, 1: string|null, 2: string|false} $backup
+     */
+    private function restoreBaseURLEnv(array $backup): void
+    {
+        [$env, $server, $getenv] = $backup;
+
+        if ($getenv === false) {
+            putenv('app.baseURL');
+        } else {
+            putenv('app.baseURL=' . $getenv);
+        }
+
+        if ($env === null) {
+            unset($_ENV['app.baseURL']);
+        } else {
+            $_ENV['app.baseURL'] = $env;
+        }
+
+        if ($server === null) {
+            unset($_SERVER['app.baseURL']);
+        } else {
+            $_SERVER['app.baseURL'] = $server;
+        }
+    }
+
+    /**
+     * Instantiates App as if handling a real web request.
+     *
+     * The test bootstrap loads MockCommon::is_cli(), which reports true by default;
+     * flipping it to false lets the web derivation branch run under PHPUnit.
+     */
+    private function newAppInWebContext(): App
+    {
+        is_cli(false);
+
+        try {
+            return new App();
+        } finally {
+            is_cli(true);
+        }
+    }
+
+    public function testBaseURLKeepsConfiguredValueUnderCliWindowsScriptName(): void
+    {
+        $backup = $this->backupBaseURLEnv();
+        unset($_ENV['app.baseURL'], $_SERVER['app.baseURL']);
+        putenv('app.baseURL=http://configured.test/');
+
+        $_SERVER['HTTP_HOST'] = 'unknown.test';
+        $_SERVER['SCRIPT_NAME'] = 'D:\\positions\\repo\\vendor\\bin\\phpunit';
+        $_SERVER['HTTPS'] = null;
+        putenv('app.allowedHostnames=localhost');
+
+        try {
+            $app = new App();
+
+            $this->assertSame('http://configured.test/', $app->baseURL);
+        } finally {
+            $this->restoreBaseURLEnv($backup);
+        }
+    }
+
+    public function testBaseURLKeepsConfiguredValueUnderCliLinuxScriptName(): void
+    {
+        $backup = $this->backupBaseURLEnv();
+        unset($_ENV['app.baseURL'], $_SERVER['app.baseURL']);
+        putenv('app.baseURL=http://configured.test/');
+
+        $_SERVER['HTTP_HOST'] = 'unknown.test';
+        $_SERVER['SCRIPT_NAME'] = '/home/user/repo/vendor/bin/phpunit';
+        $_SERVER['HTTPS'] = null;
+        putenv('app.allowedHostnames=localhost');
+
+        try {
+            $app = new App();
+
+            $this->assertSame('http://configured.test/', $app->baseURL);
+        } finally {
+            $this->restoreBaseURLEnv($backup);
+        }
+    }
+
+    public function testBaseURLDerivedForRootWebRequest(): void
+    {
+        $_SERVER['HTTP_HOST'] = 'example.com';
+        $_SERVER['SCRIPT_NAME'] = '/index.php';
+        $_SERVER['HTTPS'] = null;
+        putenv('app.allowedHostnames=example.com');
+
+        $app = $this->newAppInWebContext();
+
+        $this->assertSame('http://example.com//', $app->baseURL);
+    }
+
+    public function testBaseURLDerivedForSubdirectoryWebRequest(): void
+    {
+        $_SERVER['HTTP_HOST'] = 'example.com';
+        $_SERVER['SCRIPT_NAME'] = '/ospos/index.php';
+        $_SERVER['HTTPS'] = null;
+        putenv('app.allowedHostnames=example.com');
+
+        $app = $this->newAppInWebContext();
+
+        $this->assertSame('http://example.com//ospos/', $app->baseURL);
     }
 }
