@@ -17,6 +17,11 @@ use RuntimeException;
  * output), so an interrupted or failed dump never looks like a completed
  * backup. A SHA-256 checksum of the finished file is included in the report.
  *
+ * The dump deliberately avoids the client's `--databases` switch, so the SQL
+ * contains no CREATE DATABASE/USE statements for the source database. A dump
+ * can therefore be restored into a different-named target (the scratch restore
+ * verifier) without ever recreating or touching the source database.
+ *
  * This is dump-level verification only - it does NOT prove the dump can be
  * restored. The external process is injectable so tests never touch a real
  * database. Password handling: the temporary option file is removed in a
@@ -75,7 +80,7 @@ final class BackupDump
             $finalPath = $dumpDir . DIRECTORY_SEPARATOR . $this->safeDatabaseName($connection['database']) . '_' . $timestamp . '.sql';
             $partial   = $finalPath . '.part';
 
-            $optionFile = $this->writeOptionFile((string) $connection['password']);
+            $optionFile = BackupCredentials::writeOptionFile((string) $connection['password']);
 
             $result = ($this->processRunner)(
                 $this->dumpCommand($executable, $connection, $optionFile, (string) $connection['database']),
@@ -85,7 +90,7 @@ final class BackupDump
             if ($result['exitCode'] !== 0) {
                 throw new RuntimeException(
                     'Dump process failed (exit ' . $result['exitCode'] . '): '
-                    . $this->redact($result['stderr'], (string) $connection['password']),
+                    . BackupCredentials::redact($result['stderr'], (string) $connection['password']),
                 );
             }
 
@@ -223,47 +228,11 @@ final class BackupDump
             || preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1;
     }
 
-    private function writeOptionFile(string $password): string
+    private function safeDatabaseName(string $databaseName): string
     {
-        $path = rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . 'db-backup-' . bin2hex(random_bytes(8)) . '.cnf';
+        $safe = preg_replace('/[^A-Za-z0-9_.-]/', '-', $databaseName) ?? '';
 
-        if (@file_put_contents($path, "[client]\npassword=" . $password . "\n", LOCK_EX) === false) {
-            throw new RuntimeException('Could not create the temporary credentials file for the dump.');
-        }
-
-        $this->lockDownOptionFile($path);
-
-        return $path;
-    }
-
-    private function lockDownOptionFile(string $path): void
-    {
-        if (DIRECTORY_SEPARATOR === '\\') {
-            // Best-effort on Windows: drop inherited ACLs so only the current
-            // user can read the file. Failure is non-fatal - the file is
-            // deleted immediately after the dump either way.
-            $user = getenv('USERNAME') ?: get_current_user();
-
-            $pipes   = [];
-            $process = @proc_open(
-                ['icacls', $path, '/inheritance:r', '/grant:r', $user . ':(R,W)'],
-                [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-                $pipes,
-            );
-
-            if (is_resource($process)) {
-                fclose($pipes[0]);
-                stream_get_contents($pipes[1]);
-                stream_get_contents($pipes[2]);
-                fclose($pipes[1]);
-                fclose($pipes[2]);
-                proc_close($process);
-            }
-
-            return;
-        }
-
-        @chmod($path, 0600);
+        return $safe === '' ? 'database' : $safe;
     }
 
     /**
@@ -288,26 +257,9 @@ final class BackupDump
         }
 
         $command[] = '--single-transaction';
-        $command[] = '--databases';
         $command[] = $databaseName;
 
         return $command;
-    }
-
-    private function safeDatabaseName(string $databaseName): string
-    {
-        $safe = preg_replace('/[^A-Za-z0-9_.-]/', '-', $databaseName) ?? '';
-
-        return $safe === '' ? 'database' : $safe;
-    }
-
-    private function redact(string $text, string $secret): string
-    {
-        if ($secret === '') {
-            return $text;
-        }
-
-        return str_replace($secret, '[REDACTED]', $text);
     }
 
     /**

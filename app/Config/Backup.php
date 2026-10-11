@@ -12,10 +12,11 @@ use CodeIgniter\Config\BaseConfig;
  *
  *     backup.backupDir = "C:\Backups\ospos"
  *     backup.dumpExecutable = "C:\Program Files\MariaDB 10.6\bin\mariadb-dump.exe"
+ *     backup.clientExecutable = "C:\Program Files\MariaDB 10.6\bin\mariadb.exe"
  *
  * Never put the database password here - it is read from the Database config
- * and handed to the dump process through a temporary option file that is
- * deleted immediately after the dump.
+ * and handed to the dump/restore process through a temporary option file that
+ * is deleted immediately after the process finishes.
  */
 class Backup extends BaseConfig
 {
@@ -35,4 +36,14 @@ class Backup extends BaseConfig
      * `C:\Program Files\MariaDB 10.6\bin\mariadb-dump.exe` - set it here.
      */
     public string $dumpExecutable = '';
+
+    /**
+     * Absolute path to the MariaDB/MySQL client executable used for restore
+     * verification (creating/dropping the scratch database and restoring into
+     * it).
+     *
+     * Empty means: look for `mariadb`, then `mysql`, next to the configured
+     * dump executable, then on PATH.
+     */
+    public string $clientExecutable = '';
 }

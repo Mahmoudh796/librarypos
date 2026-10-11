@@ -136,7 +136,11 @@ final class BackupDumpTest extends CIUnitTestCase
         $this->assertStringContainsString('--port=3306', implode(' ', $captured));
         $this->assertStringContainsString('--user=backup_user', implode(' ', $captured));
         $this->assertStringContainsString('--single-transaction', implode(' ', $captured));
-        $this->assertStringContainsString('--databases ospos', implode(' ', $captured));
+        // The dump deliberately avoids `--databases` so the SQL never contains a
+        // CREATE DATABASE/USE for the source; the database name is the final
+        // positional argument instead (safe to restore into any target).
+        $this->assertStringNotContainsString('--databases', implode(' ', $captured));
+        $this->assertSame('ospos', $captured[array_key_last($captured)]);
         $this->assertStringNotContainsString(self::DB_PASSWORD, implode(' ', $captured));
     }
 

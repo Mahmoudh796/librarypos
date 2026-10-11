@@ -121,7 +121,17 @@ Create a verified local SQL dump of the configured default database:
 php spark db:backup
 ```
 
-The dump is written to `writable/backups/` (or the `backup.backupDir` setting), given dump-level verification (exit code, non-empty output, SHA-256 checksum) and reported with its path, size and timestamp. This is **dump-level verification only** — it does **not** prove the dump can be restored; restore verification is handled separately.
+The dump is written to `writable/backups/` (or the `backup.backupDir` setting), given dump-level verification (exit code, non-empty output, SHA-256 checksum) and reported with its path, size, checksum and timestamp:
+
+- **DUMP VERIFIED** — the SQL file exists, is non-empty, and its SHA-256 was reported. This does **not** prove the dump can be restored.
+
+To additionally prove restorability, run:
+
+```sh
+php spark db:backup --verify-restore
+```
+
+The finished dump is then loaded into a freshly created scratch database (`ospos_backup_verify_<timestamp>_<random>`) on the same configured server, sanity-checked, and dropped again. Only when every stage succeeds — dump checks, scratch database created, restore exit code 0, integrity/sanity checks passed, scratch database removed — is the backup reported as **RESTORE VERIFIED**. The configured/default database is never used as a restore target, and no arbitrary restore/drop of a user-supplied database name is possible.
 
 Configuration (`.env`):
 
@@ -132,9 +142,14 @@ backup.backupDir = 'C:\Backups\ospos'
 # Absolute path to the MariaDB dump binary (optional; PATH is searched for
 # mariadb-dump then mysqldump when unset).
 backup.dumpExecutable = 'C:\Program Files\MariaDB 10.6\bin\mariadb-dump.exe'
+
+# Absolute path to the MariaDB/MySQL client binary used for restore
+# verification (optional; a client next to backup.dumpExecutable is used, then
+# PATH is searched for mariadb then mysql).
+backup.clientExecutable = 'C:\Program Files\MariaDB 10.6\bin\mariadb.exe'
 ```
 
-The connection and password come from the `database.default.*` settings; the password reaches the dump tool through a temporary option file and never appears on the process command line.
+The connection and password come from the `database.default.*` settings; the password reaches the dump/restore tools through a temporary option file and never appears on the process command line. Dumps deliberately contain no `CREATE DATABASE`/`USE` statements, so restoring a dump never recreates or touches the source database.
 
 ## 📄 License
 
