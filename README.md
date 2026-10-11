@@ -113,6 +113,29 @@ Or refer to the [FUNDING.yml](.github/FUNDING.yml) file.
 
 If you choose to deploy OSPOS in the cloud, you can contribute to the project by using DigitalOcean and signing up through our referral link. You'll receive a [free $200, 60-day credit](https://m.do.co/c/ac38c262507b) if you run OSPOS in a DigitalOcean droplet through [our referral link](https://m.do.co/c/ac38c262507b).
 
+## 🗄️ Local Database Backup
+
+Create a verified local SQL dump of the configured default database:
+
+```sh
+php spark db:backup
+```
+
+The dump is written to `writable/backups/` (or the `backup.backupDir` setting), given dump-level verification (exit code, non-empty output, SHA-256 checksum) and reported with its path, size and timestamp. This is **dump-level verification only** — it does **not** prove the dump can be restored; restore verification is handled separately.
+
+Configuration (`.env`):
+
+```ini
+# Destination directory for dumps (optional; defaults to writable/backups)
+backup.backupDir = 'C:\Backups\ospos'
+
+# Absolute path to the MariaDB dump binary (optional; PATH is searched for
+# mariadb-dump then mysqldump when unset).
+backup.dumpExecutable = 'C:\Program Files\MariaDB 10.6\bin\mariadb-dump.exe'
+```
+
+The connection and password come from the `database.default.*` settings; the password reaches the dump tool through a temporary option file and never appears on the process command line.
+
 ## 📄 License
 
 Open Source Point of Sale is licensed under MIT terms with an important addition:
