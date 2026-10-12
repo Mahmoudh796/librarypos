@@ -90,4 +90,5 @@ auth.json
 /app/Database/database.sql
 /writable/cache/*
 /writable/backups/
+/writable/db-backup.lock
 /.env.bak
