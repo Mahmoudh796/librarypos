@@ -466,4 +466,67 @@ final class DbBackupTest extends CIUnitTestCase
 
         $recheck->release();
     }
+
+    public function testFullWorkflowVerifyRestoreReplicatePruneReportsEveryStageInOrder(): void
+    {
+        foreach (['ospos_2020-01-01_000000_0001.sql', 'ospos_2021-01-01_000000_0002.sql', 'ospos_2022-01-01_000000_0003.sql'] as $name) {
+            file_put_contents($this->backupDir . DIRECTORY_SEPARATOR . $name, 'old local contents');
+        }
+
+        foreach (['ospos_2020-01-01_000000_0001.sql', 'ospos_2021-01-01_000000_0002.sql'] as $name) {
+            file_put_contents($this->replicaDir . DIRECTORY_SEPARATOR . $name, 'old replica contents');
+        }
+
+        $config  = $this->config($this->replicaDir, retentionCount: 2);
+        $command = $this->command($config, $this->dumper($config), $this->verifier($config), new BackupReplica($config));
+
+        $exit = $command->run(['verify-restore' => true, 'replicate' => true, 'prune' => true]);
+
+        $this->assertSame(EXIT_SUCCESS, $exit);
+
+        $dumpPos    = strpos($this->io->output, 'DUMP VERIFIED');
+        $restorePos = strpos($this->io->output, 'RESTORE VERIFIED');
+        $replicaPos = strpos($this->io->output, 'REPLICA VERIFIED');
+        $retentionPos = strpos($this->io->output, 'RETENTION APPLIED');
+
+        $this->assertIsInt($dumpPos);
+        $this->assertIsInt($restorePos);
+        $this->assertIsInt($replicaPos);
+        $this->assertIsInt($retentionPos);
+        $this->assertTrue($dumpPos < $restorePos && $restorePos < $replicaPos && $replicaPos < $retentionPos, 'Verification markers must appear in stage order.');
+
+        // Local: 3 seeded + 1 new; retention 2 keeps the new dump and the 2022 seed.
+        $local = glob($this->backupDir . '/*.sql') ?: [];
+        $this->assertCount(2, $local);
+        $this->assertFileDoesNotExist($this->backupDir . DIRECTORY_SEPARATOR . 'ospos_2020-01-01_000000_0001.sql');
+        $this->assertFileDoesNotExist($this->backupDir . DIRECTORY_SEPARATOR . 'ospos_2021-01-01_000000_0002.sql');
+        $this->assertFileExists($this->backupDir . DIRECTORY_SEPARATOR . 'ospos_2022-01-01_000000_0003.sql');
+
+        // Replica: 2 seeded + new replica; retention 2 keeps the new replica and the 2021 seed.
+        $replicas = glob($this->replicaDir . '/*.sql') ?: [];
+        $this->assertCount(2, $replicas);
+        $this->assertFileDoesNotExist($this->replicaDir . DIRECTORY_SEPARATOR . 'ospos_2020-01-01_000000_0001.sql');
+        $this->assertFileExists($this->replicaDir . DIRECTORY_SEPARATOR . 'ospos_2021-01-01_000000_0002.sql');
+    }
+
+    public function testPruneDoesNotRunWhenAnEarlierStageFails(): void
+    {
+        $older = $this->backupDir . DIRECTORY_SEPARATOR . 'ospos_2020-01-01_000000_aaaa.sql';
+        file_put_contents($older, 'old dump');
+
+        $blocker = $this->root . DIRECTORY_SEPARATOR . 'replica-blocker';
+        file_put_contents($blocker, 'x');
+
+        $command = $this->command($this->config($blocker, retentionCount: 5));
+
+        $exit = $command->run(['replicate' => true, 'prune' => true]);
+
+        $this->assertSame(EXIT_ERROR, $exit);
+        $this->assertStringContainsString('Replication failed', $this->io->output);
+        $this->assertStringNotContainsString('RETENTION APPLIED', $this->io->output);
+        $this->assertStringNotContainsString('RETENTION DRY-RUN', $this->io->output);
+
+        // Retention never ran, so the seeded old local backup is still there.
+        $this->assertFileExists($older);
+    }
 }
