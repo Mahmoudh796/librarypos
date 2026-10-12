@@ -441,4 +441,29 @@ final class DbBackupTest extends CIUnitTestCase
             $holder->release();
         }
     }
+
+    public function testOutputIncludesStartAndFinishTimestamps(): void
+    {
+        $command = $this->command($this->config($this->replicaDir));
+
+        $exit = $command->run([]);
+
+        $this->assertSame(EXIT_SUCCESS, $exit);
+        $this->assertStringContainsString('Backup started at ', $this->io->output);
+        $this->assertStringContainsString('Backup finished at ', $this->io->output);
+    }
+
+    public function testLockIsReleasedAfterASuccessfulRun(): void
+    {
+        $lockPath = $this->root . DIRECTORY_SEPARATOR . 'backup.lock';
+        $command  = $this->command($this->config($this->replicaDir), null, null, null, null, new BackupLock($lockPath, 0));
+
+        $this->assertSame(EXIT_SUCCESS, $command->run([]));
+
+        // The injected lock was released in a finally, so a fresh lock can immediately be taken.
+        $recheck = new BackupLock($lockPath, 0);
+        $this->assertTrue($recheck->acquire());
+
+        $recheck->release();
+    }
 }

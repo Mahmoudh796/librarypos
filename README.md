@@ -184,6 +184,24 @@ backup.retentionCount = '5'
 
 The connection and password come from the `database.default.*` settings; the password reaches the dump/restore tools through a temporary option file and never appears on the process command line. Dumps deliberately contain no `CREATE DATABASE`/`USE` statements, so restoring a dump never recreates or touches the source database.
 
+Every `db:backup` run is guarded by a cross-process lock (`writable/db-backup.lock`): an overlapping second invocation fails fast with a clear message instead of racing the dump, scratch-restore, replica or retention stages, and the lock is released automatically if the process dies.
+
+### Unattended / scheduled operation
+
+For safe unattended runs (e.g. nightly), a helper script is provided at `tools/backup-run.ps1`:
+
+```sh
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\backup-run.ps1 -PhpPath "C:\Program Files\PHP\8.2\php.exe"
+```
+
+It resolves the project directory automatically (paths with spaces work), forwards arguments to `php spark db:backup` (default: `--verify-restore --replicate --prune`), and exits with the Spark exit code so the scheduler sees failures. It contains no credentials and no machine-specific paths.
+
+> **Backup verification is not disaster recovery.** `--verify-restore` proves a
+> dump can be restored into a *scratch* database. For the operator runbook —
+> scheduled setup, restore-in-staging, controlled cutover, rollback, and what to
+> do if only the off-device replica survives — see
+> [`BACKUP_AND_RECOVERY.md`](BACKUP_AND_RECOVERY.md).
+
 ## 📄 License
 
 Open Source Point of Sale is licensed under MIT terms with an important addition:

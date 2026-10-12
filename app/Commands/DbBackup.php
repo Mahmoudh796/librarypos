@@ -96,6 +96,8 @@ class DbBackup extends BaseCommand
             return EXIT_ERROR;
         }
 
+        CLI::write('Backup started at ' . date('Y-m-d H:i:s') . '.');
+
         try {
             try {
                 $result = $this->makeDumper()->execute();
@@ -161,6 +163,8 @@ class DbBackup extends BaseCommand
                     return EXIT_ERROR;
                 }
             }
+
+            CLI::write('Backup finished at ' . date('Y-m-d H:i:s') . '.');
 
             return EXIT_SUCCESS;
         } finally {
