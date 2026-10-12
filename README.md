@@ -133,6 +133,19 @@ php spark db:backup --verify-restore
 
 The finished dump is then loaded into a freshly created scratch database (`ospos_backup_verify_<timestamp>_<random>`) on the same configured server, sanity-checked, and dropped again. Only when every stage succeeds — dump checks, scratch database created, restore exit code 0, integrity/sanity checks passed, scratch database removed — is the backup reported as **RESTORE VERIFIED**. The configured/default database is never used as a restore target, and no arbitrary restore/drop of a user-supplied database name is possible.
 
+To additionally copy the verified backup off-device, add `--replicate`:
+
+```sh
+php spark db:backup --replicate
+php spark db:backup --verify-restore --replicate
+```
+
+When `--replicate` is used the verified backup is copied to `backup.replicaDir`. The copy is written to a temporary `<name>.part` file, checked against the source size and SHA-256, atomically renamed into place, and re-checked; only then is it reported as **REPLICA VERIFIED**. Replication never modifies, removes or replaces the local backup, so a failed replica leaves the local backup intact — the command then exits non-zero and points at the still-valid local file. It is copy-only and uses PHP filesystem operations (no shell copy). Point `backup.replicaDir` at another physical device, a network share (UNC path) or a synced external location so a single disk failure cannot destroy both copies.
+
+- **REPLICA VERIFIED** — the verified backup was copied to `backup.replicaDir` and the replica was re-checked (size and SHA-256 match the source).
+
+Replication is off unless `backup.replicaDir` is set, and this feature does **not** configure credentials for a network share — the operating system must already have access to the share.
+
 Configuration (`.env`):
 
 ```ini
@@ -147,6 +160,11 @@ backup.dumpExecutable = 'C:\Program Files\MariaDB 10.6\bin\mariadb-dump.exe'
 # verification (optional; a client next to backup.dumpExecutable is used, then
 # PATH is searched for mariadb then mysql).
 backup.clientExecutable = 'C:\Program Files\MariaDB 10.6\bin\mariadb.exe'
+
+# Off-device replication destination (optional; replication is disabled when
+# unset). Relative paths resolve under the writable directory. Network-share
+# credentials are not configured here.
+backup.replicaDir = 'D:\Backups\ospos'
 ```
 
 The connection and password come from the `database.default.*` settings; the password reaches the dump/restore tools through a temporary option file and never appears on the process command line. Dumps deliberately contain no `CREATE DATABASE`/`USE` statements, so restoring a dump never recreates or touches the source database.

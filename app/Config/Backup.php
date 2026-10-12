@@ -7,12 +7,13 @@ use CodeIgniter\Config\BaseConfig;
 /**
  * Configuration for the local database backup command (`php spark db:backup`).
  *
- * Both settings are overridable through the environment using the CodeIgniter
+ * Settings are overridable through the environment using the CodeIgniter
  * BaseConfig convention, e.g. in `.env`:
  *
  *     backup.backupDir = "C:\Backups\ospos"
  *     backup.dumpExecutable = "C:\Program Files\MariaDB 10.6\bin\mariadb-dump.exe"
  *     backup.clientExecutable = "C:\Program Files\MariaDB 10.6\bin\mariadb.exe"
+ *     backup.replicaDir = "D:\Backups\ospos"
  *
  * Never put the database password here - it is read from the Database config
  * and handed to the dump/restore process through a temporary option file that
@@ -46,4 +47,19 @@ class Backup extends BaseConfig
      * dump executable, then on PATH.
      */
     public string $clientExecutable = '';
+
+    /**
+     * Optional off-device replication destination. Replication is DISABLED when
+     * this is empty, which is the default.
+     *
+     * When set, `php spark db:backup --replicate` copies each verified backup
+     * into this directory. Point it at another physical device, a network share
+     * (UNC path) or a synced external location so a single local failure cannot
+     * destroy both copies. Relative values resolve under the writable
+     * directory. The destination must differ from the backup directory.
+     *
+     * Credentials for a network share are NOT configured here - the operating
+     * system must already have access to the share.
+     */
+    public string $replicaDir = '';
 }
