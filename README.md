@@ -146,6 +146,17 @@ When `--replicate` is used the verified backup is copied to `backup.replicaDir`.
 
 Replication is off unless `backup.replicaDir` is set, and this feature does **not** configure credentials for a network share — the operating system must already have access to the share.
 
+To keep only recent backups, add `--prune`:
+
+```sh
+php spark db:backup --prune
+php spark db:backup --verify-restore --replicate --prune
+```
+
+`--prune` removes backups older than `backup.retentionCount` from the local backup directory and, when configured, from `backup.replicaDir` — each counted and pruned independently, so pruning the replica can never touch the local backup. Only files matching the backup naming rule (`<database>_YYYY-MM-DD_HHMMSS_<hex>.sql`) inside exactly those directories are ever removed — never subdirectories, symlinks or arbitrary files — and the newest valid backup is always kept. Preview what would be removed (deleting nothing) with `--prune --dry-run`, reported as **RETENTION DRY-RUN**. A failed prune exits non-zero and names the failing stage; the freshly created local backup is always preserved.
+
+- **RETENTION APPLIED** — backups older than `backup.retentionCount` were pruned locally and (when configured) in the replica directory.
+
 Configuration (`.env`):
 
 ```ini
@@ -165,6 +176,10 @@ backup.clientExecutable = 'C:\Program Files\MariaDB 10.6\bin\mariadb.exe'
 # unset). Relative paths resolve under the writable directory. Network-share
 # credentials are not configured here.
 backup.replicaDir = 'D:\Backups\ospos'
+
+# Retention count for --prune (optional; 0 disables pruning). The newest valid
+# backup is always kept.
+backup.retentionCount = '5'
 ```
 
 The connection and password come from the `database.default.*` settings; the password reaches the dump/restore tools through a temporary option file and never appears on the process command line. Dumps deliberately contain no `CREATE DATABASE`/`USE` statements, so restoring a dump never recreates or touches the source database.

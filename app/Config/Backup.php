@@ -14,6 +14,7 @@ use CodeIgniter\Config\BaseConfig;
  *     backup.dumpExecutable = "C:\Program Files\MariaDB 10.6\bin\mariadb-dump.exe"
  *     backup.clientExecutable = "C:\Program Files\MariaDB 10.6\bin\mariadb.exe"
  *     backup.replicaDir = "D:\Backups\ospos"
+ *     backup.retentionCount = 5
  *
  * Never put the database password here - it is read from the Database config
  * and handed to the dump/restore process through a temporary option file that
@@ -62,4 +63,16 @@ class Backup extends BaseConfig
      * system must already have access to the share.
      */
     public string $replicaDir = '';
+
+    /**
+     * How many of the newest valid backups to keep when `db:backup --prune`
+     * runs, applied independently to the local backup directory and (when
+     * configured) the replica directory.
+     *
+     * 0 (the default) disables pruning. Only files matching the application
+     * backup naming rule (`<database>_YYYY-MM-DD_HHMMSS_<hex>.sql`) are ever
+     * removed from exactly the configured directories, never subdirectories or
+     * arbitrary files, and the newest valid backup is always kept.
+     */
+    public int $retentionCount = 0;
 }

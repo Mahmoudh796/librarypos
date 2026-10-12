@@ -5,15 +5,18 @@ namespace App\Commands;
 use App\Libraries\BackupDump;
 use App\Libraries\BackupReplica;
 use App\Libraries\BackupRestoreVerify;
+use App\Libraries\BackupRetention;
 use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 use CodeIgniter\CLI\Commands;
+use Config\Backup;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
  * Creates a verified local SQL dump of the configured default database and,
- * optionally, restore-verifies it and/or copies it off-device.
+ * optionally, restore-verifies it, copies it off-device and/or prunes old
+ * backups.
  *
  * Without options the dump gets dump-level verification (exit code 0, non-empty
  * output, SHA-256) and is reported as DUMP VERIFIED. With `--verify-restore`
@@ -24,17 +27,24 @@ use RuntimeException;
  * verified backup is copied into `backup.replicaDir` and the copy is
  * re-checked, reported as REPLICA VERIFIED - replication never modifies or
  * removes the local backup, so a failed replica leaves the local backup intact.
- * The configured/default database is never used as a restore target.
+ * With `--prune` backups older than `backup.retentionCount` are removed from
+ * the local backup directory and (when configured) the replica directory, each
+ * independent of the other, always keeping the newest valid backup;
+ * `--dry-run` previews that pruning without deleting anything. Any stage that
+ * fails makes the command exit non-zero and name the failing stage. The
+ * configured/default database is never used as a restore target.
  */
 class DbBackup extends BaseCommand
 {
     protected $group       = 'Database';
     protected $name        = 'db:backup';
-    protected $usage       = 'db:backup [--verify-restore] [--replicate]';
-    protected $description = 'Creates a verified local SQL dump of the configured default database; optionally restore-verifies it (--verify-restore) and/or copies it to an off-device replica directory (--replicate).';
+    protected $usage       = 'db:backup [--verify-restore] [--replicate] [--prune] [--dry-run]';
+    protected $description = 'Creates a verified local SQL dump of the configured default database; optionally restore-verifies it (--verify-restore), copies it to an off-device replica directory (--replicate) and prunes old backups (--prune, preview with --dry-run).';
     private ?BackupDump $dumper;
     private ?BackupRestoreVerify $verifier;
     private ?BackupReplica $replicator;
+    private ?BackupRetention $retention;
+    private ?Backup $backup;
 
     public function __construct(
         LoggerInterface $logger,
@@ -42,12 +52,16 @@ class DbBackup extends BaseCommand
         ?BackupDump $dumper = null,
         ?BackupRestoreVerify $verifier = null,
         ?BackupReplica $replicator = null,
+        ?BackupRetention $retention = null,
+        ?Backup $backup = null,
     ) {
         parent::__construct($logger, $commands);
 
         $this->dumper     = $dumper;
         $this->verifier   = $verifier;
         $this->replicator = $replicator;
+        $this->retention  = $retention;
+        $this->backup     = $backup;
     }
 
     public function run(array $params): int
@@ -62,6 +76,8 @@ class DbBackup extends BaseCommand
 
         $verifyRestore = array_key_exists('verify-restore', $params);
         $replicate     = array_key_exists('replicate', $params);
+        $prune         = array_key_exists('prune', $params);
+        $dryRun        = array_key_exists('dry-run', $params);
 
         try {
             $result = $this->makeDumper()->execute();
@@ -114,7 +130,59 @@ class DbBackup extends BaseCommand
             CLI::write('REPLICA VERIFIED - the verified backup was copied off-device and the replica was re-checked (size and SHA-256 match).');
         }
 
+        if ($prune) {
+            try {
+                $this->applyRetention($result['path'], $dryRun);
+            } catch (RuntimeException $e) {
+                CLI::error('Retention failed: ' . $e->getMessage());
+                CLI::write('The local backup is still valid and was left untouched:');
+                CLI::write('  path   : ' . $result['path']);
+                CLI::write('  size   : ' . $result['size'] . ' bytes');
+                CLI::write('  sha256 : ' . $result['sha256']);
+
+                return EXIT_ERROR;
+            }
+        }
+
         return EXIT_SUCCESS;
+    }
+
+    /**
+     * Prunes the local backup directory and, when configured, the replica
+     * directory, each judged against backup.retentionCount independently. Only
+     * files matching the application backup naming rule are ever removed and
+     * the newest valid backup is always kept.
+     *
+     * @throws RuntimeException when retention is requested without a
+     *                          retentionCount, or any removal fails
+     */
+    private function applyRetention(string $dumpPath, bool $dryRun): void
+    {
+        $retentionCount = $this->backupConfig()->retentionCount;
+
+        if ($retentionCount <= 0) {
+            throw new RuntimeException('Retention requested (--prune) but backup.retentionCount is not configured (it must be greater than 0). Set it in .env, e.g. backup.retentionCount=5.');
+        }
+
+        $retention = $this->makeRetention();
+
+        $local = $retention->prune(dirname($dumpPath), $retentionCount, $dryRun);
+
+        CLI::write('  retention : local  kept ' . count($local['kept']) . ', ' . ($dryRun ? 'would remove ' : 'removed ') . count($local['deleted']));
+
+        $replicaDir = trim($this->backupConfig()->replicaDir);
+
+        if ($replicaDir === '') {
+            CLI::write('  retention : replica pruning skipped (backup.replicaDir is not configured)');
+        } else {
+            $replica = $retention->prune($this->makeReplicator()->replicaDirectory(), $retentionCount, $dryRun);
+
+            CLI::write('  retention : replica kept ' . count($replica['kept']) . ', ' . ($dryRun ? 'would remove ' : 'removed ') . count($replica['deleted']));
+        }
+
+        $verb = $dryRun ? 'would prune' : 'pruned';
+
+        CLI::write(($dryRun ? 'RETENTION DRY-RUN' : 'RETENTION APPLIED') . ' - ' . $verb . ' backups older than backup.retentionCount; the newest valid backup is always kept' . ($dryRun ? ' (nothing deleted)' : '') . '.');
     }
 
     protected function makeDumper(): BackupDump
@@ -130,5 +198,15 @@ class DbBackup extends BaseCommand
     protected function makeReplicator(): BackupReplica
     {
         return $this->replicator ?? new BackupReplica();
+    }
+
+    protected function makeRetention(): BackupRetention
+    {
+        return $this->retention ?? new BackupRetention();
+    }
+
+    private function backupConfig(): Backup
+    {
+        return $this->backup ?? config(Backup::class);
     }
 }

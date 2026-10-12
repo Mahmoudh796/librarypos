@@ -162,6 +162,19 @@ final class BackupReplica
     }
 
     /**
+     * Resolves (creating if needed) the configured replica directory, exactly
+     * as {@see replicate()} would, without copying anything. Used by retention
+     * so the replica directory can be pruned independently of a replication run.
+     *
+     * @throws RuntimeException when replication is not configured, or the
+     *                          directory cannot be created or resolved
+     */
+    public function replicaDirectory(): string
+    {
+        return $this->resolveReplicaDirectory();
+    }
+
+    /**
      * Runs only on the structured report from BackupDump: the file must exist,
      * be non-empty, carry a checksum, match that checksum, and live inside the
      * configured backup directory.

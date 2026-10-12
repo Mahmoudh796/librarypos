@@ -6,6 +6,7 @@ use App\Commands\DbBackup;
 use App\Libraries\BackupDump;
 use App\Libraries\BackupReplica;
 use App\Libraries\BackupRestoreVerify;
+use App\Libraries\BackupRetention;
 use CodeIgniter\CLI\CLI;
 use CodeIgniter\CLI\Commands;
 use CodeIgniter\CLI\InputOutput;
@@ -94,13 +95,14 @@ final class DbBackupTest extends CIUnitTestCase
         @rmdir($dir);
     }
 
-    private function config(string $replicaDir): Backup
+    private function config(string $replicaDir, int $retentionCount = 0): Backup
     {
         $config                   = new Backup();
         $config->backupDir        = $this->backupDir;
         $config->replicaDir       = $replicaDir;
         $config->dumpExecutable   = $this->dumpExecutable;
         $config->clientExecutable = $this->clientExecutable;
+        $config->retentionCount   = $retentionCount;
 
         return $config;
     }
@@ -182,6 +184,7 @@ final class DbBackupTest extends CIUnitTestCase
         ?BackupDump $dumper = null,
         ?BackupRestoreVerify $verifier = null,
         ?BackupReplica $replicator = null,
+        ?BackupRetention $retention = null,
     ): DbBackup {
         return new DbBackup(
             service('logger'),
@@ -189,6 +192,8 @@ final class DbBackupTest extends CIUnitTestCase
             $dumper ?? $this->dumper($config),
             $verifier,
             $replicator ?? new BackupReplica($config),
+            $retention ?? new BackupRetention(),
+            $config,
         );
     }
 
@@ -303,5 +308,113 @@ final class DbBackupTest extends CIUnitTestCase
         $this->assertStringNotContainsString('RESTORE VERIFIED', $this->io->output);
         $this->assertStringNotContainsString('REPLICA VERIFIED', $this->io->output);
         $this->assertSame([], glob($this->replicaDir . '/*') ?: []);
+    }
+
+    public function testPruneRemovesOnlyBackupsOlderThanRetentionCount(): void
+    {
+        $older = $this->backupDir . DIRECTORY_SEPARATOR . 'ospos_2020-01-01_000000_aaaa.sql';
+        file_put_contents($older, 'old dump');
+
+        $command = $this->command($this->config($this->replicaDir, retentionCount: 1));
+
+        $exit = $command->run(['prune' => true]);
+
+        $this->assertSame(EXIT_SUCCESS, $exit);
+        $this->assertStringContainsString('DUMP VERIFIED', $this->io->output);
+        $this->assertStringContainsString('RETENTION APPLIED', $this->io->output);
+        $this->assertFileDoesNotExist($older);
+        $this->assertCount(1, glob($this->backupDir . '/*.sql') ?: []);
+    }
+
+    public function testPruneDryRunRemovesNothing(): void
+    {
+        $older = $this->backupDir . DIRECTORY_SEPARATOR . 'ospos_2020-01-01_000000_aaaa.sql';
+        file_put_contents($older, 'old dump');
+
+        $command = $this->command($this->config($this->replicaDir, retentionCount: 1));
+
+        $exit = $command->run(['prune' => true, 'dry-run' => true]);
+
+        $this->assertSame(EXIT_SUCCESS, $exit);
+        $this->assertStringContainsString('RETENTION DRY-RUN', $this->io->output);
+        $this->assertFileExists($older);
+        $this->assertCount(2, glob($this->backupDir . '/*.sql') ?: []);
+    }
+
+    public function testPruneWithoutConfiguredRetentionCountFailsButKeepsLocalBackup(): void
+    {
+        $command = $this->command($this->config($this->replicaDir, retentionCount: 0));
+
+        $exit = $command->run(['prune' => true]);
+
+        $this->assertSame(EXIT_ERROR, $exit);
+        $this->assertStringContainsString('Retention failed', $this->io->output);
+        $this->assertStringContainsString('retentionCount', $this->io->output);
+        $this->assertStringContainsString('still valid', $this->io->output);
+        $this->assertStringNotContainsString('RETENTION APPLIED', $this->io->output);
+        $this->assertCount(1, glob($this->backupDir . '/*.sql') ?: []);
+    }
+
+    public function testPruneAppliesToReplicaDirectoryAndNeverEndangersLocal(): void
+    {
+        $command = $this->command($this->config($this->replicaDir, retentionCount: 1));
+
+        $exit = $command->run(['replicate' => true, 'prune' => true]);
+
+        $this->assertSame(EXIT_SUCCESS, $exit);
+        $this->assertStringContainsString('REPLICA VERIFIED', $this->io->output);
+        $this->assertStringContainsString('RETENTION APPLIED', $this->io->output);
+
+        $local = glob($this->backupDir . '/*.sql') ?: [];
+        $this->assertCount(1, $local);
+
+        $replicas = glob($this->replicaDir . '/*.sql') ?: [];
+        $this->assertCount(1, $replicas);
+        $this->assertSame(basename($local[0]), basename($replicas[0]));
+    }
+
+    public function testPruneWithoutReplicateStillPrunesConfiguredReplicaDirectory(): void
+    {
+        $replicaNewest = $this->replicaDir . DIRECTORY_SEPARATOR . 'ospos_2026-10-12_120000_0001.sql';
+        $replicaOlder  = $this->replicaDir . DIRECTORY_SEPARATOR . 'ospos_2020-01-01_000000_aaaa.sql';
+        file_put_contents($replicaNewest, 'newest replica');
+        file_put_contents($replicaOlder, 'old replica');
+
+        $command = $this->command($this->config($this->replicaDir, retentionCount: 1));
+
+        $exit = $command->run(['prune' => true]);
+
+        $this->assertSame(EXIT_SUCCESS, $exit);
+        $this->assertStringContainsString('RETENTION APPLIED', $this->io->output);
+        $this->assertFileExists($replicaNewest);
+        $this->assertFileDoesNotExist($replicaOlder);
+        $this->assertStringNotContainsString('REPLICA VERIFIED', $this->io->output);
+    }
+
+    public function testPruneSkipsReplicaWhenReplicaDirIsNotConfigured(): void
+    {
+        $command = $this->command($this->config('', retentionCount: 1));
+
+        $exit = $command->run(['prune' => true]);
+
+        $this->assertSame(EXIT_SUCCESS, $exit);
+        $this->assertStringContainsString('replica pruning skipped', $this->io->output);
+        $this->assertStringContainsString('RETENTION APPLIED', $this->io->output);
+    }
+
+    public function testRetentionFailureReturnsNonZeroAndPreservesLocalBackup(): void
+    {
+        $blocker = $this->root . DIRECTORY_SEPARATOR . 'replica-blocker';
+        file_put_contents($blocker, 'x');
+
+        $command = $this->command($this->config($blocker, retentionCount: 1));
+
+        $exit = $command->run(['prune' => true]);
+
+        $this->assertSame(EXIT_ERROR, $exit);
+        $this->assertStringContainsString('Retention failed', $this->io->output);
+        $this->assertStringContainsString('not a directory', $this->io->output);
+        $this->assertStringContainsString('still valid', $this->io->output);
+        $this->assertCount(1, glob($this->backupDir . '/*.sql') ?: []);
     }
 }
