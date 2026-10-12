@@ -3,6 +3,7 @@
 namespace App\Commands;
 
 use App\Libraries\BackupDump;
+use App\Libraries\BackupLock;
 use App\Libraries\BackupReplica;
 use App\Libraries\BackupRestoreVerify;
 use App\Libraries\BackupRetention;
@@ -30,9 +31,12 @@ use RuntimeException;
  * With `--prune` backups older than `backup.retentionCount` are removed from
  * the local backup directory and (when configured) the replica directory, each
  * independent of the other, always keeping the newest valid backup;
- * `--dry-run` previews that pruning without deleting anything. Any stage that
- * fails makes the command exit non-zero and name the failing stage. The
- * configured/default database is never used as a restore target.
+ * `--dry-run` previews that pruning without deleting anything. The whole run is
+ * guarded by a cross-process lock: an overlapping second invocation fails
+ * clearly instead of racing the dump, scratch restore, replica or retention
+ * stages. Any stage that fails makes the command exit non-zero and name the
+ * failing stage. The configured/default database is never used as a restore
+ * target.
  */
 class DbBackup extends BaseCommand
 {
@@ -44,6 +48,7 @@ class DbBackup extends BaseCommand
     private ?BackupRestoreVerify $verifier;
     private ?BackupReplica $replicator;
     private ?BackupRetention $retention;
+    private ?BackupLock $lock;
     private ?Backup $backup;
 
     public function __construct(
@@ -53,6 +58,7 @@ class DbBackup extends BaseCommand
         ?BackupRestoreVerify $verifier = null,
         ?BackupReplica $replicator = null,
         ?BackupRetention $retention = null,
+        ?BackupLock $lock = null,
         ?Backup $backup = null,
     ) {
         parent::__construct($logger, $commands);
@@ -61,6 +67,7 @@ class DbBackup extends BaseCommand
         $this->verifier   = $verifier;
         $this->replicator = $replicator;
         $this->retention  = $retention;
+        $this->lock       = $lock;
         $this->backup     = $backup;
     }
 
@@ -79,72 +86,86 @@ class DbBackup extends BaseCommand
         $prune         = array_key_exists('prune', $params);
         $dryRun        = array_key_exists('dry-run', $params);
 
+        $lock = $this->makeLock();
+
         try {
-            $result = $this->makeDumper()->execute();
+            $lock->acquire();
         } catch (RuntimeException $e) {
-            CLI::error('Backup failed: ' . $e->getMessage());
+            CLI::error('Backup lock unavailable: ' . $e->getMessage());
 
             return EXIT_ERROR;
         }
 
-        CLI::write('Backup created:');
-        CLI::write('  path      : ' . $result['path']);
-        CLI::write('  size      : ' . $result['size'] . ' bytes');
-        CLI::write('  sha256    : ' . $result['sha256']);
-        CLI::write('  timestamp : ' . $result['timestamp']);
-        CLI::write('DUMP VERIFIED - dump-level checks passed (exit code 0, non-empty output, SHA-256).');
-
-        if ($verifyRestore) {
+        try {
             try {
-                $verification = $this->makeVerifier()->verify($result['path']);
+                $result = $this->makeDumper()->execute();
             } catch (RuntimeException $e) {
-                CLI::error('Restore verification failed: ' . $e->getMessage());
+                CLI::error('Backup failed: ' . $e->getMessage());
 
                 return EXIT_ERROR;
             }
 
-            CLI::write('  restored  : scratch database ' . $verification['scratchDatabase'] . ' (created, verified, dropped)');
-            CLI::write('  checkedAt : ' . $verification['checkedAt']);
-            CLI::write('RESTORE VERIFIED - the dump was restored into a scratch database, passed all integrity checks, and the scratch database was removed.');
-        }
+            CLI::write('Backup created:');
+            CLI::write('  path      : ' . $result['path']);
+            CLI::write('  size      : ' . $result['size'] . ' bytes');
+            CLI::write('  sha256    : ' . $result['sha256']);
+            CLI::write('  timestamp : ' . $result['timestamp']);
+            CLI::write('DUMP VERIFIED - dump-level checks passed (exit code 0, non-empty output, SHA-256).');
 
-        if ($replicate) {
-            try {
-                $replica = $this->makeReplicator()->replicate($result);
-            } catch (RuntimeException $e) {
-                CLI::error('Replication failed: ' . $e->getMessage());
-                CLI::write('The local backup is still valid and was left untouched:');
-                CLI::write('  path   : ' . $result['path']);
-                CLI::write('  size   : ' . $result['size'] . ' bytes');
-                CLI::write('  sha256 : ' . $result['sha256']);
+            if ($verifyRestore) {
+                try {
+                    $verification = $this->makeVerifier()->verify($result['path']);
+                } catch (RuntimeException $e) {
+                    CLI::error('Restore verification failed: ' . $e->getMessage());
 
-                return EXIT_ERROR;
+                    return EXIT_ERROR;
+                }
+
+                CLI::write('  restored  : scratch database ' . $verification['scratchDatabase'] . ' (created, verified, dropped)');
+                CLI::write('  checkedAt : ' . $verification['checkedAt']);
+                CLI::write('RESTORE VERIFIED - the dump was restored into a scratch database, passed all integrity checks, and the scratch database was removed.');
             }
 
-            $copyState = $replica['status'] === BackupReplica::STATUS_IDENTICAL
-                ? 'already present and identical'
-                : 'copied';
+            if ($replicate) {
+                try {
+                    $replica = $this->makeReplicator()->replicate($result);
+                } catch (RuntimeException $e) {
+                    CLI::error('Replication failed: ' . $e->getMessage());
+                    CLI::write('The local backup is still valid and was left untouched:');
+                    CLI::write('  path   : ' . $result['path']);
+                    CLI::write('  size   : ' . $result['size'] . ' bytes');
+                    CLI::write('  sha256 : ' . $result['sha256']);
 
-            CLI::write('  replica   : ' . $replica['replicaPath']);
-            CLI::write('  copy      : ' . $copyState . ', size ' . $replica['size'] . ' bytes, sha256 ' . $replica['sha256']);
-            CLI::write('REPLICA VERIFIED - the verified backup was copied off-device and the replica was re-checked (size and SHA-256 match).');
-        }
+                    return EXIT_ERROR;
+                }
 
-        if ($prune) {
-            try {
-                $this->applyRetention($result['path'], $dryRun);
-            } catch (RuntimeException $e) {
-                CLI::error('Retention failed: ' . $e->getMessage());
-                CLI::write('The local backup is still valid and was left untouched:');
-                CLI::write('  path   : ' . $result['path']);
-                CLI::write('  size   : ' . $result['size'] . ' bytes');
-                CLI::write('  sha256 : ' . $result['sha256']);
+                $copyState = $replica['status'] === BackupReplica::STATUS_IDENTICAL
+                    ? 'already present and identical'
+                    : 'copied';
 
-                return EXIT_ERROR;
+                CLI::write('  replica   : ' . $replica['replicaPath']);
+                CLI::write('  copy      : ' . $copyState . ', size ' . $replica['size'] . ' bytes, sha256 ' . $replica['sha256']);
+                CLI::write('REPLICA VERIFIED - the verified backup was copied off-device and the replica was re-checked (size and SHA-256 match).');
             }
-        }
 
-        return EXIT_SUCCESS;
+            if ($prune) {
+                try {
+                    $this->applyRetention($result['path'], $dryRun);
+                } catch (RuntimeException $e) {
+                    CLI::error('Retention failed: ' . $e->getMessage());
+                    CLI::write('The local backup is still valid and was left untouched:');
+                    CLI::write('  path   : ' . $result['path']);
+                    CLI::write('  size   : ' . $result['size'] . ' bytes');
+                    CLI::write('  sha256 : ' . $result['sha256']);
+
+                    return EXIT_ERROR;
+                }
+            }
+
+            return EXIT_SUCCESS;
+        } finally {
+            $lock->release();
+        }
     }
 
     /**
@@ -203,6 +224,11 @@ class DbBackup extends BaseCommand
     protected function makeRetention(): BackupRetention
     {
         return $this->retention ?? new BackupRetention();
+    }
+
+    protected function makeLock(): BackupLock
+    {
+        return $this->lock ?? new BackupLock();
     }
 
     private function backupConfig(): Backup

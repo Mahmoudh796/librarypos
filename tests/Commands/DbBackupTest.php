@@ -4,6 +4,7 @@ namespace Tests\Commands;
 
 use App\Commands\DbBackup;
 use App\Libraries\BackupDump;
+use App\Libraries\BackupLock;
 use App\Libraries\BackupReplica;
 use App\Libraries\BackupRestoreVerify;
 use App\Libraries\BackupRetention;
@@ -185,6 +186,7 @@ final class DbBackupTest extends CIUnitTestCase
         ?BackupRestoreVerify $verifier = null,
         ?BackupReplica $replicator = null,
         ?BackupRetention $retention = null,
+        ?BackupLock $lock = null,
     ): DbBackup {
         return new DbBackup(
             service('logger'),
@@ -193,6 +195,7 @@ final class DbBackupTest extends CIUnitTestCase
             $verifier,
             $replicator ?? new BackupReplica($config),
             $retention ?? new BackupRetention(),
+            $lock ?? new BackupLock($this->root . DIRECTORY_SEPARATOR . 'backup.lock'),
             $config,
         );
     }
@@ -416,5 +419,26 @@ final class DbBackupTest extends CIUnitTestCase
         $this->assertStringContainsString('not a directory', $this->io->output);
         $this->assertStringContainsString('still valid', $this->io->output);
         $this->assertCount(1, glob($this->backupDir . '/*.sql') ?: []);
+    }
+
+    public function testCommandFailsClearlyWhileAnotherBackupHoldsTheLock(): void
+    {
+        $lockPath = $this->root . DIRECTORY_SEPARATOR . 'backup.lock';
+        $holder   = new BackupLock($lockPath, 0);
+        $holder->acquire();
+
+        try {
+            $command = $this->command($this->config($this->replicaDir), null, null, null, null, new BackupLock($lockPath, 0));
+
+            $exit = $command->run([]);
+
+            $this->assertSame(EXIT_ERROR, $exit);
+            $this->assertStringContainsString('Backup lock unavailable', $this->io->output);
+            $this->assertStringContainsString('already running', $this->io->output);
+            $this->assertStringNotContainsString('DUMP VERIFIED', $this->io->output);
+            $this->assertSame([], glob($this->backupDir . '/*.sql') ?: []);
+        } finally {
+            $holder->release();
+        }
     }
 }
