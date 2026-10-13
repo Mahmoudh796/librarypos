@@ -367,13 +367,12 @@ class Receivings extends Secure_Controller
             $data['error_message'] = lang('Receivings.transaction_failed');
         } else {
             $data['barcode'] = $this->barcode_lib->generate_receipt_barcode($data['receiving_id']);
+            $this->receiving_lib->clear_all();
         }
 
         $data['print_after_sale'] = $this->receiving_lib->is_print_after_sale();
 
         $view = view("receivings/receipt", $data);
-
-        $this->receiving_lib->clear_all();
 
         return $view;
     }

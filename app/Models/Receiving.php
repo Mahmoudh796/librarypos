@@ -130,7 +130,13 @@ class Receiving extends Model
 
         $builder = $this->db->table('receivings_items');
 
-        foreach ($items as $line => $item_data) {
+        // Lock item_quantities rows in item/location order so concurrent
+        // receivings that share items acquire row locks in the same sequence
+        // instead of risking a deadlock.
+        $orderedItems = $items;
+        uasort($orderedItems, static fn ($a, $b) => [$a['item_id'], $a['item_location']] <=> [$b['item_id'], $b['item_location']]);
+
+        foreach ($orderedItems as $line => $item_data) {
             $config = config(OSPOS::class)->settings;
             $cur_item_info = $item->get_info($item_data['item_id']);
 
@@ -158,17 +164,20 @@ class Receiving extends Model
                 $item->change_cost_price($item_data['item_id'], $items_received, $item_data['price'], $cur_item_info->cost_price);
             }
 
-            // Update stock quantity
-            $item_quantity_value = $item_quantity->get_item_quantity($item_data['item_id'], $item_data['item_location']);
-            $item_quantity->save_value(
-                [
-                    'quantity'    => $item_quantity_value->quantity + $items_received,
-                    'item_id'     => $item_data['item_id'],
-                    'location_id' => $item_data['item_location']
-                ],
+            // Update stock quantity with the same atomic delta-based write as
+            // sales, so concurrent receivings of the same item/location cannot
+            // lose updates. The zero floor also stops a negative receiving
+            // (return/requisition line) from driving the location below zero.
+            if (! $item_quantity->changeQuantity(
                 $item_data['item_id'],
-                $item_data['item_location']
-            );
+                $item_data['item_location'],
+                $items_received,
+                0.0,
+            )) {
+                $this->db->transRollback();
+
+                return -1;
+            }
 
             $recv_remarks = 'RECV ' . $receiving_id;
             $inv_data = [
@@ -197,17 +206,23 @@ class Receiving extends Model
     {
         $success = true;
 
-        // Start a transaction to assure data integrity
+        // Single transaction for the whole batch so that failing to reverse
+        // one receiving rolls back every other reversal in the same request.
         $this->db->transStart();
 
         foreach ($receiving_ids as $receiving_id) {
-            $success &= $this->delete_value($receiving_id, $employee_id, $update_inventory);
+            if (! $this->delete_value($receiving_id, $employee_id, $update_inventory)) {
+                $success = false;
+                break;
+            }
         }
 
-        // Execute transaction
-        $this->db->transComplete();
-
-        $success &= $this->db->transStatus();
+        if ($success) {
+            $this->db->transComplete();
+            $success = $this->db->transStatus();
+        } else {
+            $this->db->transRollback();
+        }
 
         return $success;
     }
@@ -217,8 +232,19 @@ class Receiving extends Model
      */
     public function delete_value(int $receiving_id, int $employee_id, bool $update_inventory = true): bool
     {
-        // Start a transaction to assure data integrity
-        $this->db->transStart();
+        // Callers wrap this in a transaction (see delete_list) so the row lock
+        // below is held until they commit. Lock the receiving row so that
+        // concurrent deletes of the same receiving serialize: only the first
+        // one to run reverses stock, the others see the row is already gone
+        // and become no-ops.
+        $receivingRow = $this->db->query(
+            'SELECT receiving_id FROM ' . $this->db->prefixTable('receivings') . ' WHERE receiving_id = ? FOR UPDATE',
+            [$receiving_id]
+        )->getRow();
+
+        if ($receivingRow === null) {
+            return true;
+        }
 
         if ($update_inventory) {
             // TODO: defect, not all item deletions will be undone? get array with all the items involved in the sale to update the inventory tracking
@@ -228,6 +254,16 @@ class Receiving extends Model
             $item_quantity = model(Item_quantity::class);
 
             foreach ($items as $item) {
+                $reversal = $item['quantity_purchased'] * (-$item['receiving_quantity']);
+
+                // Reverse the received quantity. The zero floor stops the void
+                // from driving a location below zero (the goods may already have
+                // been sold on); if that would happen the whole void is refused
+                // and the caller's transaction rolls back.
+                if (! $item_quantity->changeQuantity($item['item_id'], $item['item_location'], $reversal, 0.0)) {
+                    return false;
+                }
+
                 // Create query to update inventory tracking
                 $inv_data = [
                     'trans_date'      => date('Y-m-d H:i:s'),
@@ -235,13 +271,10 @@ class Receiving extends Model
                     'trans_user'      => $employee_id,
                     'trans_comment'   => 'Deleting receiving ' . $receiving_id,
                     'trans_location'  => $item['item_location'],
-                    'trans_inventory' => $item['quantity_purchased'] * (-$item['receiving_quantity'])
+                    'trans_inventory' => $reversal
                 ];
                 // Update inventory
                 $inventory->insert($inv_data, false);
-
-                // Update quantities
-                $item_quantity->changeQuantity($item['item_id'], $item['item_location'], $item['quantity_purchased'] * (-$item['receiving_quantity']));
             }
         }
 
@@ -253,10 +286,7 @@ class Receiving extends Model
         $builder = $this->db->table('receivings');
         $builder->delete(['receiving_id' => $receiving_id]);
 
-        // Execute transaction
-        $this->db->transComplete();
-
-        return $this->db->transStatus();
+        return true;
     }
 
     /**
