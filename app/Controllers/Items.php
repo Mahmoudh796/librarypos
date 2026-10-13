@@ -1000,35 +1000,38 @@ class Items extends Secure_Controller
         $employee_id = $this->employee->get_logged_in_employee_info()->person_id;
         $cur_item_info = $this->item->get_info($item_id);
         $location_id = $this->request->getPost('stock_location');
-        $new_quantity = $this->request->getPost('newquantity');
+        $quantity_change = parse_quantity($this->request->getPost('newquantity'));
         $inv_data = [
             'trans_date'      => date('Y-m-d H:i:s'),
             'trans_items'     => $item_id,
             'trans_user'      => $employee_id,
             'trans_location'  => $location_id,
             'trans_comment'   => $this->request->getPost('trans_comment'),
-            'trans_inventory' => parse_quantity($new_quantity)
+            'trans_inventory' => $quantity_change
         ];
+
+        $db = \Config\Database::connect();
+        $db->transStart();
 
         $this->inventory->insert($inv_data, false);
 
-        // Update stock quantity
-        $item_quantity = $this->item_quantity->get_item_quantity($item_id, $location_id);
-        $item_quantity_data = [
-            'item_id'     => $item_id,
-            'location_id' => $location_id,
-            'quantity'    => $item_quantity->quantity + parse_quantity($this->request->getPost('newquantity'))
-        ];
+        // Update stock quantity with the same atomic delta-based write as sales
+        // and receivings, so concurrent adjustments cannot lose updates; the
+        // zero floor rejects an adjustment that would drive the location below
+        // zero.
+        $success = $this->item_quantity->changeQuantity((int) $item_id, (int) $location_id, $quantity_change, 0.0);
 
-        if ($this->item_quantity->save_value($item_quantity_data, $item_id, $location_id)) {
+        $db->transComplete();
+
+        if ($success && $db->transStatus()) {
             $message = lang('Items.successful_updating') . " $cur_item_info->name";
 
             return $this->response->setJSON(['success' => true, 'message' => $message, 'id' => $item_id]);
-        } else {
-            $message = lang('Items.error_adding_updating') . " $cur_item_info->name";
-
-            return $this->response->setJSON(['success' => false, 'message' => $message, 'id' => NEW_ENTRY]);
         }
+
+        $message = lang('Items.error_adding_updating') . " $cur_item_info->name";
+
+        return $this->response->setJSON(['success' => false, 'message' => $message, 'id' => NEW_ENTRY]);
     }
 
     /**
