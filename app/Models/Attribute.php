@@ -930,6 +930,42 @@ class Attribute extends Model
     }
 
     /**
+     * Returns the id of the non-deleted definition with the given name, creating
+     * it (with the supplied type and flags) when it does not exist yet.
+     *
+     * Nothing is created until a caller actually needs the definition, so
+     * installs that never use the variant workflow keep their existing data
+     * untouched. Returns NO_DEFINITION_ID when the definition cannot be created.
+     */
+    public function ensureDefinition(string $definitionName, string $definitionType = DROPDOWN, int $definitionFlags = 0): int
+    {
+        $existing = $this->getDefinitionByName($definitionName);
+
+        if (!empty($existing)) {
+            return (int) $existing['definition_id'];
+        }
+
+        $definitionData = [
+            'definition_name'  => $definitionName,
+            'definition_type'  => $definitionType,
+            'definition_flags' => $definitionFlags,
+            'definition_fk'    => null,
+        ];
+
+        return $this->saveDefinition($definitionData) ? (int) $definitionData['definition_id'] : NO_DEFINITION_ID;
+    }
+
+    /**
+     * Ensures a value is available as a selectable option of the given
+     * definition and returns its attribute_id. Safe to call repeatedly: an
+     * existing value is reused and only linked when the link is missing.
+     */
+    public function ensureDefinitionValue(int $definitionId, string $attributeValue, string $definitionType = DROPDOWN): int
+    {
+        return $this->saveAttributeValue($attributeValue, $definitionId, false, false, $definitionType);
+    }
+
+    /**
      * Saves attribute data found in one row of a CSV import file. Loops through all attribute definitions and checks
      * if there is data for that attribute in the row. If there is, it saves the attribute value and link to the item.
      *

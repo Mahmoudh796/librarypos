@@ -84,6 +84,10 @@ use App\Models\Employee;
     <button class="btn btn-info btn-sm pull-right modal-dlg" data-btn-new="<?= lang('Common.new') ?>" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
         <span class="glyphicon glyphicon-tag">&nbsp;</span><?= lang(ucfirst($controller_name) . '.new') ?>
     </button>
+
+    <a class="btn btn-info btn-sm pull-right" href="<?= esc(base_url("$controller_name/variants"), 'url') ?>" title="<?= lang('Items.create_variants') ?>">
+        <span class="glyphicon glyphicon-th-large">&nbsp;</span><?= lang('Items.create_variants') ?>
+    </a>
 </div>
 
 <div id="toolbar">

@@ -679,6 +679,400 @@ class Items extends Secure_Controller
         return view('items/form_bulk', $data);
     }
 
+    /**
+     * Apparel variant definitions are ordinary DROPDOWN attributes so that they
+     * show up as sortable columns and in the named attribute search of the
+     * Items page, without changing the schema. The names are fixed strings and
+     * reused wherever an existing definition already carries them, so stores
+     * that already have a Size or Color definition keep using it.
+     */
+    private const VARIANT_DEFINITION_FLAGS = Attribute::SHOW_IN_ITEMS | Attribute::SHOW_IN_SEARCH;
+    private const VARIANT_COLOR_DEFINITION = 'Color';
+    private const VARIANT_SIZE_DEFINITION = 'Size';
+
+    /**
+     * Renders the variant builder page used to create apparel variants
+     * (colors x sizes) as ordinary items in one go.
+     */
+    public function getVariants(): string
+    {
+        return view('items/form_variants', $this->variantFormData());
+    }
+
+    /**
+     * Returns the generated variant matrix for review without writing anything.
+     * Used by the builder page to render the editable preview table.
+     *
+     * @return ResponseInterface
+     */
+    public function postVariantPreview(): ResponseInterface
+    {
+        $rows = $this->buildVariantRows($this->variantInput());
+
+        if ($rows === []) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => lang('Items.variant_no_options'),
+            ]);
+        }
+
+        $existing = array_map('mb_strtolower', $this->item->get_existing_item_numbers(array_column($rows, 'sku')));
+
+        foreach ($rows as &$row) {
+            $row['exists'] = in_array(mb_strtolower($row['sku']), $existing, true);
+        }
+        unset($row);
+
+        return $this->response->setJSON(['success' => true, 'rows' => $rows]);
+    }
+
+    /**
+     * Creates every reviewed variant in a single transaction. Either all
+     * variants are stored or none are, so a failure can never leave a partial
+     * matrix behind, and SKU/barcode collisions are rejected before any write.
+     *
+     * @return ResponseInterface
+     */
+    public function postCreateVariants(): ResponseInterface
+    {
+        $input = $this->variantInput();
+        $rows = $this->variantRowsFromRequest();
+
+        if ($rows === []) {
+            $rows = $this->buildVariantRows($input);
+        }
+
+        if ($input['name'] === '') {
+            return $this->response->setJSON(['success' => false, 'message' => lang('Items.name_required')]);
+        }
+
+        if ($rows === []) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => lang('Items.variant_no_options'),
+            ]);
+        }
+
+        $validation = $this->validateVariantRows($rows);
+        if ($validation !== null) {
+            return $this->response->setJSON(['success' => false, 'message' => $validation]);
+        }
+
+        // Definitions and their selectable values are metadata, not stock, so
+        // they are prepared before the atomic item write below. They are safe
+        // to keep even if that transaction has to roll back.
+        $colorDefinition = $this->attribute->ensureDefinition(self::VARIANT_COLOR_DEFINITION, DROPDOWN, self::VARIANT_DEFINITION_FLAGS);
+        $sizeDefinition = $this->attribute->ensureDefinition(self::VARIANT_SIZE_DEFINITION, DROPDOWN, self::VARIANT_DEFINITION_FLAGS);
+
+        if ($colorDefinition === NO_DEFINITION_ID || $sizeDefinition === NO_DEFINITION_ID) {
+            return $this->response->setJSON(['success' => false, 'message' => lang('Items.error_adding_updating')]);
+        }
+
+        foreach ($rows as $row) {
+            if ($row['color'] !== null) {
+                $this->attribute->ensureDefinitionValue($colorDefinition, $row['color'], DROPDOWN);
+            }
+
+            if ($row['size'] !== null) {
+                $this->attribute->ensureDefinitionValue($sizeDefinition, $row['size'], DROPDOWN);
+            }
+        }
+
+        $useDestinationBasedTax = (bool) $this->config['use_destination_based_tax'];
+        $stockLocations = $this->stock_location->get_undeleted_all()->getResultArray();
+
+        $db = db_connect();
+        $db->transBegin();
+
+        $success = true;
+        $created = 0;
+
+        foreach ($rows as $row) {
+            $itemData = [
+                'name'                  => $row['name'],
+                'description'           => $input['description'],
+                'category'              => $input['category'],
+                'item_type'             => ITEM,
+                'stock_type'            => $input['stock_type'],
+                'supplier_id'           => $input['supplier_id'],
+                'item_number'           => $row['sku'],
+                'cost_price'            => $row['cost_price'],
+                'unit_price'            => $row['unit_price'],
+                'reorder_level'         => $input['reorder_level'],
+                'receiving_quantity'    => 1,
+                'allow_alt_description' => false,
+                'is_serialized'         => false,
+                'qty_per_pack'          => 1,
+                'pack_name'             => lang('Items.default_pack_name'),
+                'low_sell_item_id'      => NEW_ITEM,
+                'deleted'               => false,
+                'hsn_code'              => '',
+                'tax_category_id'       => $input['tax_category_id'],
+            ];
+
+            $success = $this->item->save_value($itemData);
+
+            if (!$success) {
+                break;
+            }
+
+            $itemId = (int) $itemData['item_id'];
+
+            if (!$useDestinationBasedTax) {
+                $itemsTaxesData = [];
+
+                foreach ($input['tax_percents'] as $taxNameIndex => $taxPercent) {
+                    $taxPercentage = parse_tax($taxPercent);
+
+                    if (is_numeric($taxPercentage)) {
+                        $itemsTaxesData[] = ['name' => $input['tax_names'][$taxNameIndex] ?? '', 'percent' => $taxPercentage];
+                    }
+                }
+
+                $success = $this->item_taxes->save_value($itemsTaxesData, $itemId);
+            }
+
+            if (!$success) {
+                break;
+            }
+
+            foreach ($stockLocations as $location) {
+                $success = $this->item_quantity->save_value([
+                    'item_id'     => $itemId,
+                    'location_id' => $location['location_id'],
+                    'quantity'    => 0,
+                ], $itemId, $location['location_id']) && $success;
+            }
+
+            if (!$success) {
+                break;
+            }
+
+            if ($row['color'] !== null) {
+                $success = $this->attribute->saveAttributeValue($row['color'], $colorDefinition, $itemId, false, DROPDOWN) !== 0 && $success;
+            }
+
+            if ($success && $row['size'] !== null) {
+                $success = $this->attribute->saveAttributeValue($row['size'], $sizeDefinition, $itemId, false, DROPDOWN) !== 0 && $success;
+            }
+
+            if (!$success) {
+                break;
+            }
+
+            $created++;
+        }
+
+        if (!$success) {
+            $db->transRollback();
+
+            return $this->response->setJSON(['success' => false, 'message' => lang('Items.error_adding_updating')]);
+        }
+
+        $db->transCommit();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => lang('Items.variant_saved', [$created]),
+            'count'   => $created,
+        ]);
+    }
+
+    /**
+     * Shared view data for the variant builder page: the same suppliers,
+     * categories and tax switches the regular item form uses.
+     *
+     * @return array
+     */
+    private function variantFormData(): array
+    {
+        $data['suppliers'] = ['' => lang('Items.none')];
+
+        foreach ($this->supplier->get_all()->getResultArray() as $row) {
+            $data['suppliers'][$row['person_id']] = $row['company_name'];
+        }
+
+        $data['categoryDropdown'] = $this->config['category_dropdown'] === '1';
+
+        if ($data['categoryDropdown']) {
+            $categories = ['' => lang('Items.none')];
+            $categoryOptions = $this->attribute->getDefinitionValues(CATEGORY_DEFINITION_ID);
+
+            if ($categoryOptions !== []) {
+                $categories = array_merge($categories, array_combine($categoryOptions, $categoryOptions));
+            }
+
+            $data['categories'] = $categories;
+        }
+
+        $data['useDestinationBasedTax'] = (bool) $this->config['use_destination_based_tax'];
+
+        if ($data['useDestinationBasedTax']) {
+            $taxCategories = [];
+
+            foreach ($this->tax_category->get_all()->getResultArray() as $row) {
+                $taxCategories[$row['tax_category_id']] = $row['tax_category'];
+            }
+
+            $data['taxCategories'] = $taxCategories;
+        }
+
+        $data['defaultTax1Rate'] = $this->config['default_tax_1_rate'];
+        $data['defaultTax2Rate'] = $this->config['default_tax_2_rate'];
+
+        return $data;
+    }
+
+    /**
+     * Reads and normalizes the base variant builder fields.
+     *
+     * @return array
+     */
+    private function variantInput(): array
+    {
+        return [
+            'name'            => trim((string) $this->request->getPost('name')),
+            'category'        => trim((string) $this->request->getPost('category')),
+            'supplier_id'     => empty($this->request->getPost('supplier_id')) ? null : (int) $this->request->getPost('supplier_id'),
+            'cost_price'      => parse_decimals($this->request->getPost('cost_price')),
+            'unit_price'      => parse_decimals($this->request->getPost('unit_price')),
+            'reorder_level'   => parse_quantity((string) $this->request->getPost('reorder_level')),
+            'description'     => $this->request->getPost('description', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?? '',
+            'stock_type'      => $this->request->getPost('stock_type') === null ? HAS_STOCK : (int) $this->request->getPost('stock_type'),
+            'tax_names'       => $this->request->getPost('tax_names') ?? [],
+            'tax_percents'    => $this->request->getPost('tax_percents') ?? [],
+            'tax_category_id' => empty($this->request->getPost('tax_category_id')) ? null : (int) $this->request->getPost('tax_category_id'),
+            'colors'          => variant_split_options((string) $this->request->getPost('colors')),
+            'sizes'           => variant_split_options((string) $this->request->getPost('sizes')),
+            'sku_prefix'      => trim((string) $this->request->getPost('sku_prefix')),
+        ];
+    }
+
+    /**
+     * Builds the color x size matrix rows with deterministic names and SKUs.
+     * Option labels that normalize to the same SKU token are disambiguated with
+     * a numeric suffix so auto-generation can never produce a duplicate.
+     *
+     * @param array $input
+     * @return array
+     */
+    private function buildVariantRows(array $input): array
+    {
+        $rows = [];
+        $usedSkus = [];
+
+        foreach (variant_build_combinations($input['colors'], $input['sizes']) as $combination) {
+            $name = variant_build_name($input['name'], $combination['options']);
+            $baseSku = variant_build_sku($input['sku_prefix'], $combination['options']);
+            $sku = $baseSku;
+            $suffix = 2;
+
+            while ($sku !== '' && isset($usedSkus[$sku])) {
+                $sku = $baseSku . '-' . $suffix;
+                $suffix++;
+            }
+
+            if ($sku !== '') {
+                $usedSkus[$sku] = true;
+            }
+
+            $rows[] = [
+                'name'       => $name,
+                'sku'        => $sku,
+                'color'      => $combination['color'],
+                'size'       => $combination['size'],
+                'cost_price' => $input['cost_price'],
+                'unit_price' => $input['unit_price'],
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Reads the reviewed (and possibly edited) rows posted by the builder page.
+     * Rows whose include checkbox was left unchecked are not submitted and are
+     * therefore skipped here.
+     *
+     * @return array
+     */
+    private function variantRowsFromRequest(): array
+    {
+        $rawRows = $this->request->getPost('rows');
+
+        if (!is_array($rawRows)) {
+            return [];
+        }
+
+        $rows = [];
+
+        foreach ($rawRows as $row) {
+            if (!is_array($row) || empty($row['include'])) {
+                continue;
+            }
+
+            $rows[] = [
+                'name'       => trim((string) ($row['name'] ?? '')),
+                'sku'        => trim((string) ($row['sku'] ?? '')),
+                'color'      => ($row['color'] ?? '') === '' ? null : variant_option_label((string) $row['color']),
+                'size'       => ($row['size'] ?? '') === '' ? null : variant_option_label((string) $row['size']),
+                'cost_price' => parse_decimals((string) ($row['cost_price'] ?? '')),
+                'unit_price' => parse_decimals((string) ($row['unit_price'] ?? '')),
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Validates the variant rows before anything is written. Returns an
+     * error message, or null when the rows may be created.
+     *
+     * @param array $rows
+     * @return string|null
+     */
+    private function validateVariantRows(array $rows): ?string
+    {
+        $duplicates = [];
+        $seen = [];
+        $skus = [];
+
+        foreach ($rows as $row) {
+            if ($row['name'] === '') {
+                return lang('Items.name_required');
+            }
+
+            if ($row['sku'] === '') {
+                return lang('Items.number_required');
+            }
+
+            if (preg_match('/[^\w.\-]/u', $row['sku'])) {
+                return lang('Items.item_number_invalid');
+            }
+
+            $key = mb_strtolower($row['sku']);
+
+            if (isset($seen[$key])) {
+                $duplicates[] = $row['sku'];
+            }
+
+            $seen[$key] = true;
+            $skus[] = $row['sku'];
+        }
+
+        if ($duplicates !== []) {
+            return lang('Items.variant_duplicate_sku') . implode(', ', array_values(array_unique($duplicates)));
+        }
+
+        $existing = $this->item->get_existing_item_numbers($skus);
+
+        if ($existing !== []) {
+            return lang('Items.variant_sku_in_use') . implode(', ', $existing);
+        }
+
+        return null;
+    }
+
     private function validateItemFields(int $itemId): ?ResponseInterface
     {
         $itemNumber = $this->request->getPost('item_number');

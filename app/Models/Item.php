@@ -111,6 +111,40 @@ class Item extends Model
     }
 
     /**
+     * Returns every item_number from the given list that is already taken.
+     *
+     * The items table declares an unconditional UNIQUE index on item_number, so
+     * soft-deleted items still reserve their number; deleted rows are therefore
+     * included here so a bulk write can fail with a clear message instead of a
+     * raw duplicate-key error.
+     *
+     * @param string[] $itemNumbers
+     * @return string[]
+     */
+    public function get_existing_item_numbers(array $itemNumbers): array
+    {
+        $itemNumbers = array_values(array_unique(array_filter(
+            $itemNumbers,
+            static fn ($value): bool => is_string($value) && $value !== ''
+        )));
+
+        if ($itemNumbers === []) {
+            return [];
+        }
+
+        $builder = $this->db->table('items');
+        $builder->select('item_number');
+        $builder->whereIn('item_number', $itemNumbers);
+
+        $existing = [];
+        foreach ($builder->get()->getResult() as $row) {
+            $existing[] = (string) $row->item_number;
+        }
+
+        return $existing;
+    }
+
+    /**
      * Gets total of rows
      */
     public function get_total_rows(): int
