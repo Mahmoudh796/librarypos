@@ -617,7 +617,14 @@ class Sale extends Model
 
         $customer = $customer->get_info($customerId);
 
-        foreach ($items as $line => $itemData) {
+        // Lock item_quantities rows in item/location order so concurrent sales
+        // that share items acquire row locks in the same sequence instead of
+        // risking a deadlock. The line order of the receipt is unaffected; it
+        // is re-sorted from the stored line numbers afterwards.
+        $orderedItems = $items;
+        uasort($orderedItems, static fn ($a, $b) => [$a['item_id'], $a['item_location']] <=> [$b['item_id'], $b['item_location']]);
+
+        foreach ($orderedItems as $line => $itemData) {
             $curItemInfo = $item->get_info($itemData['item_id']);
 
             if ($itemData['price'] == 0.00) {
@@ -643,11 +650,16 @@ class Sale extends Model
             $builder->insert($salesItemsData);
 
             if ($curItemInfo->stock_type == HAS_STOCK && $saleStatus == COMPLETED) {    // TODO: === ?
-                // Update stock quantity if item type is a standard stock item and the sale is a standard sale
+                // Update stock quantity if item type is a standard stock item and the sale is a standard sale.
+                // The floor guard makes the deduction conditional on not taking
+                // the item below zero: it serializes competing finalizations on
+                // the item_quantities row so the last unit can only be consumed
+                // once, and it rejects selling an item that has no quantity row.
                 if (! $itemQuantity->changeQuantity(
                     $itemData['item_id'],
                     $itemData['item_location'],
                     -(float) $itemData['quantity'],
+                    0.0,
                 )) {
                     $this->db->transRollback();
 
@@ -805,7 +817,14 @@ class Sale extends Model
         // Start a transaction to assure data integrity
         $this->db->transStart();
 
-        $sale_status = $this->getSaleStatus($sale_id);
+        // Lock the sale row so concurrent deletes of the same sale serialize;
+        // the first one to run restores inventory, the others see the now
+        // CANCELED status and must not restore it a second time.
+        $sale = $this->db->query(
+            'SELECT sale_status FROM ' . $this->db->prefixTable('sales') . ' WHERE sale_id = ? FOR UPDATE',
+            [$sale_id]
+        )->getRow();
+        $sale_status = $sale === null ? null : (int) $sale->sale_status;
 
         if ($update_inventory && $sale_status == COMPLETED) {
             // Defect, not all item deletions will be undone?

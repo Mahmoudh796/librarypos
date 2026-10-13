@@ -71,7 +71,7 @@ trait ConcurrentDbRaceTrait
      *
      * @return array{0: bool, 1: bool} return value of the model method for [call1, call2]
      */
-    protected function raceTwoProcesses(string $method, array $args1, array $args2): array
+    protected function raceTwoProcesses(string $method, array $args1, array $args2, ?string $method2 = null): array
     {
         $workerScript = __DIR__ . '/RaceWorker.php';
         $php          = PHP_BINARY;
@@ -83,7 +83,7 @@ trait ConcurrentDbRaceTrait
         ];
 
         $command1 = array_merge([$php, $workerScript, $method], array_map('strval', $args1));
-        $command2 = array_merge([$php, $workerScript, $method], array_map('strval', $args2));
+        $command2 = array_merge([$php, $workerScript, $method2 ?? $method], array_map('strval', $args2));
 
         $readyFile1 = tempnam(sys_get_temp_dir(), 'race_ready_');
         $readyFile2 = tempnam(sys_get_temp_dir(), 'race_ready_');

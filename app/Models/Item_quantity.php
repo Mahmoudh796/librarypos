@@ -87,20 +87,74 @@ class Item_quantity extends Model
     /**
      * Atomically changes an item's quantity at a location by a signed delta.
      * Positive delta adds; negative delta subtracts. Creates the
-     * item_quantities row if it doesn't yet exist. Negative resulting
-     * quantity is allowed (no floor guard).
+     * item_quantities row if it doesn't yet exist.
+     *
+     * With no $minimumQuantity the change is unrestricted (negative results
+     * are allowed, legacy behaviour). When a minimum is supplied the caller
+     * must already be inside a DB transaction: the row is locked with
+     * SELECT ... FOR UPDATE, the floor is enforced against the locked value
+     * and the write is applied before the transaction commits. Concurrent
+     * changes to the same item/location therefore serialize against this one,
+     * so two transactions can never both consume the same last units.
      */
-    public function changeQuantity(int $itemId, int $locationId, float $quantityChange): bool
+    public function changeQuantity(int $itemId, int $locationId, float $quantityChange, ?float $minimumQuantity = null): bool
     {
-        $builder = $this->db->table('item_quantities');
-        $builder->set([
-            'item_id'     => $itemId,
-            'location_id' => $locationId,
-            'quantity'    => $quantityChange,
-        ]);
-        $builder->updateFields(['quantity' => new RawSql('quantity + ' . $this->db->escape($quantityChange))]);
+        if ($minimumQuantity === null) {
+            $builder = $this->db->table('item_quantities');
+            $builder->set([
+                'item_id'     => $itemId,
+                'location_id' => $locationId,
+                'quantity'    => $quantityChange,
+            ]);
+            $builder->updateFields(['quantity' => new RawSql('quantity + ' . $this->db->escape($quantityChange))]);
 
-        return $builder->upsert() !== false;
+            return $builder->upsert() !== false;
+        }
+
+        $tableName = $this->db->prefixTable('item_quantities');
+
+        $row = $this->db->query(
+            'SELECT quantity FROM ' . $tableName . ' WHERE item_id = ? AND location_id = ? FOR UPDATE',
+            [$itemId, $locationId]
+        )->getRow();
+
+        if ($row === null) {
+            // No row yet: only a change that already satisfies the floor may
+            // create one. A negative delta here would fabricate stock.
+            if ($quantityChange < $minimumQuantity) {
+                return false;
+            }
+
+            // Create-or-add in one statement; a concurrent transaction may
+            // have inserted the row after our (gap-locked) read.
+            $builder = $this->db->table('item_quantities');
+            $builder->set([
+                'item_id'     => $itemId,
+                'location_id' => $locationId,
+                'quantity'    => $quantityChange,
+            ]);
+            $builder->updateFields(['quantity' => new RawSql('quantity + ' . $this->db->escape($quantityChange))]);
+            $builder->upsert();
+
+            // Re-read under the lock and verify the floor still holds.
+            $row = $this->db->query(
+                'SELECT quantity FROM ' . $tableName . ' WHERE item_id = ? AND location_id = ? FOR UPDATE',
+                [$itemId, $locationId]
+            )->getRow();
+
+            return $row !== null && (float) $row->quantity >= $minimumQuantity;
+        }
+
+        $newQuantity = (float) $row->quantity + $quantityChange;
+        if ($newQuantity < $minimumQuantity) {
+            return false;
+        }
+
+        $builder = $this->db->table('item_quantities');
+        $builder->where('item_id', $itemId);
+        $builder->where('location_id', $locationId);
+
+        return $builder->update(['quantity' => $newQuantity]);
     }
 
     /**

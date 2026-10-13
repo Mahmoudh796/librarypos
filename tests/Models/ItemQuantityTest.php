@@ -13,9 +13,10 @@ use Tests\Support\ItemFixtureTrait;
  * Regression tests: changeQuantity() must apply
  * its write in a single atomic upsert, so that two concurrent sales of the
  * same item/location can never both read the same stale quantity and
- * oversell stock. Unlike the gift card and reward point spends, there is
- * deliberately no floor guard here (see the fix's scope note) — negative
- * stock is allowed today and this fix does not change that.
+ * oversell stock. The unrestricted call keeps the legacy behaviour (negative
+ * stock allowed); the floor-guarded call additionally serializes on the row
+ * lock so a floor (e.g. zero) is enforced exactly and only one concurrent
+ * transaction may consume the last units.
  */
 class ItemQuantityTest extends CIUnitTestCase
 {
@@ -88,5 +89,86 @@ class ItemQuantityTest extends CIUnitTestCase
         $this->assertTrue($result1);
         $this->assertTrue($result2);
         $this->assertEqualsWithDelta(4.0, $this->getItemQuantity($itemId, self::LOCATION_ID), 0.001);
+    }
+
+    public function testChangeQuantityGuardedRejectsBelowFloor(): void
+    {
+        $itemId = $this->createTestItem();
+        $this->createItemQuantityRow($itemId, 1);
+        $itemQuantityModel = model(Item_quantity::class);
+
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        $result = $itemQuantityModel->changeQuantity($itemId, self::LOCATION_ID, -2, 0.0);
+
+        $db->transComplete();
+
+        $this->assertFalse($result);
+        $this->assertEqualsWithDelta(1.0, $this->getItemQuantity($itemId, self::LOCATION_ID), 0.001);
+    }
+
+    public function testChangeQuantityGuardedAllowsExactlyAtFloor(): void
+    {
+        $itemId = $this->createTestItem();
+        $this->createItemQuantityRow($itemId, 1);
+        $itemQuantityModel = model(Item_quantity::class);
+
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        $result = $itemQuantityModel->changeQuantity($itemId, self::LOCATION_ID, -1, 0.0);
+
+        $db->transComplete();
+
+        $this->assertTrue($result);
+        $this->assertEqualsWithDelta(0.0, $this->getItemQuantity($itemId, self::LOCATION_ID), 0.001);
+    }
+
+    public function testChangeQuantityGuardedRejectsRowCreationBelowFloor(): void
+    {
+        $itemId = $this->createTestItem();
+        $itemQuantityModel = model(Item_quantity::class);
+
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        $result = $itemQuantityModel->changeQuantity($itemId, self::LOCATION_ID, -1, 0.0);
+
+        $db->transComplete();
+
+        $this->assertFalse($result);
+        $this->assertSame(0.0, $this->getItemQuantity($itemId, self::LOCATION_ID));
+    }
+
+    public function testChangeQuantityGuardedCreatesRowAboveFloor(): void
+    {
+        $itemId = $this->createTestItem();
+        $itemQuantityModel = model(Item_quantity::class);
+
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        $result = $itemQuantityModel->changeQuantity($itemId, self::LOCATION_ID, 3, 0.0);
+
+        $db->transComplete();
+
+        $this->assertTrue($result);
+        $this->assertEqualsWithDelta(3.0, $this->getItemQuantity($itemId, self::LOCATION_ID), 0.001);
+    }
+
+    public function testChangeQuantityGuardedConcurrentDecrementsConsumeLastUnitOnce(): void
+    {
+        $itemId = $this->createTestItem();
+        $this->createItemQuantityRow($itemId, 1);
+
+        [$result1, $result2] = $this->raceTwoProcesses(
+            'itemQuantityGuarded',
+            [$itemId, self::LOCATION_ID, -1.0],
+            [$itemId, self::LOCATION_ID, -1.0]
+        );
+
+        $this->assertNotSame($result1, $result2);
+        $this->assertEqualsWithDelta(0.0, $this->getItemQuantity($itemId, self::LOCATION_ID), 0.001);
     }
 }
