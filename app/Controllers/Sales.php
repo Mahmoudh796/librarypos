@@ -688,11 +688,49 @@ class Sales extends Secure_Controller
             }
 
             // sales_change_price grant is enforced server-side here; the UI-only "change_price" flag must not be trusted
-            $current_price = $this->sale_lib->get_cart()[$line]['price'] ?? null;
-            $employee_id = $this->employee->get_logged_in_employee_info()->person_id;
-            if ($current_price !== null && bccomp((string)$price, (string)$current_price, $precision) != 0 && !$this->employee->has_grant('sales_change_price', $employee_id)) {
-                $data['error'] = lang('Sales.not_authorized');
-                return $this->reload($data);
+            $cart_line = $this->sale_lib->get_cart()[$line] ?? null;
+            $current_price = $cart_line['price'] ?? null;
+            $employeeId = $this->employee->get_logged_in_employee_info()->person_id;
+
+            if ($current_price !== null && bccomp((string)$price, (string)$current_price, $precision) != 0) {
+                if (!$this->employee->has_grant('sales_change_price', $employeeId)) {
+                    $data['error'] = lang('Sales.not_authorized');
+                    return $this->reload($data);
+                }
+
+                log_message('info', 'authorization: employee {employeeId} overrode the price of item {itemId} on sale line {line} from {oldPrice} to {newPrice}', [
+                    'employeeId' => $employeeId,
+                    'itemId'     => $cart_line['item_id'] ?? null,
+                    'line'       => $line,
+                    'oldPrice'   => $current_price,
+                    'newPrice'   => $price,
+                ]);
+            }
+
+            // sales_discount grant is enforced server-side here. A cashier without
+            // the grant may re-submit the discount already carried by the line
+            // (e.g. the default or customer discount) but must not introduce or
+            // alter one, which is how the POS historically leaked discount authority.
+            $current_discount = $cart_line['discount'] ?? null;
+            $current_discount_type = $cart_line['discount_type'] ?? null;
+            $discountChanged = $current_discount !== null
+                && (bccomp((string)$discount, (string)$current_discount, $precision) != 0 || (int)$discount_type !== (int)$current_discount_type);
+
+            if ($discountChanged) {
+                if (!$this->employee->has_grant('sales_discount', $employeeId)) {
+                    $data['error'] = lang('Sales.not_authorized');
+                    return $this->reload($data);
+                }
+
+                log_message('info', 'authorization: employee {employeeId} overrode the discount of item {itemId} on sale line {line} from {oldDiscount}/{oldType} to {newDiscount}/{newType}', [
+                    'employeeId'  => $employeeId,
+                    'itemId'      => $cart_line['item_id'] ?? null,
+                    'line'        => $line,
+                    'oldDiscount' => $current_discount,
+                    'oldType'     => $current_discount_type,
+                    'newDiscount' => $discount,
+                    'newType'     => $discount_type,
+                ]);
             }
 
             $item_location = $this->request->getPost('location', FILTER_SANITIZE_NUMBER_INT);
@@ -772,6 +810,13 @@ class Sales extends Secure_Controller
         $employeeId = $this->employee->get_logged_in_employee_info()->person_id;
         $employeeInfo = $this->employee->get_info($employeeId);
         $data['employee'] = $employeeInfo->first_name . ' ' . mb_substr($employeeInfo->last_name, 0, 1);
+
+        // sales_return grant is enforced server-side here; the return mode
+        // selector exposed to the register UI is not authoritative.
+        if ($this->sale_lib->is_return_mode() && !$this->employee->has_grant('sales_return', $employeeId)) {
+            $data['error'] = lang('Sales.not_authorized');
+            return $this->reload($data);
+        }
 
         $data['company_info'] = implode("\n", [$this->config['address'], $this->config['phone']]);
 
@@ -1540,19 +1585,24 @@ class Sales extends Secure_Controller
      */
     public function postDelete(int $sale_id = NEW_ENTRY, bool $update_inventory = true): ResponseInterface
     {
-        $employee_id = $this->employee->get_logged_in_employee_info()->person_id;
-        $has_grant = $this->employee->has_grant('sales_delete', $employee_id);
+        $employeeId = $this->employee->get_logged_in_employee_info()->person_id;
+        $has_grant = $this->employee->has_grant('sales_delete', $employeeId);
 
         if (!$has_grant) {
             return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => lang('Sales.not_authorized')]);
         } else {
-            $sale_ids = $sale_id == NEW_ENTRY ? $this->request->getPost('ids', FILTER_SANITIZE_NUMBER_INT) : [$sale_id];
+            $saleIds = $sale_id == NEW_ENTRY ? $this->request->getPost('ids', FILTER_SANITIZE_NUMBER_INT) : [$sale_id];
 
-            if ($this->sale->delete_list($sale_ids, $employee_id, $update_inventory)) {
+            if ($this->sale->delete_list($saleIds, $employeeId, $update_inventory)) {
+                log_message('info', 'authorization: employee {employeeId} voided sales {saleIds}', [
+                    'employeeId' => $employeeId,
+                    'saleIds'    => implode(',', $saleIds),
+                ]);
+
                 return $this->response->setJSON([
                     'success' => true,
-                    'message' => lang('Sales.successfully_deleted') . ' ' . count($sale_ids) . ' ' . lang('Sales.one_or_multiple'),
-                    'ids'     => $sale_ids
+                    'message' => lang('Sales.successfully_deleted') . ' ' . count($saleIds) . ' ' . lang('Sales.one_or_multiple'),
+                    'ids'     => $saleIds
                 ]);
             } else {
                 return $this->response->setJSON(['success' => false, 'message' => lang('Sales.unsuccessfully_deleted')]);
@@ -1567,19 +1617,24 @@ class Sales extends Secure_Controller
      */
     public function restore(int $sale_id = NEW_ENTRY, bool $update_inventory = true): ResponseInterface
     {
-        $employee_id = $this->employee->get_logged_in_employee_info()->person_id;
-        $has_grant = $this->employee->has_grant('sales_delete', $employee_id);
+        $employeeId = $this->employee->get_logged_in_employee_info()->person_id;
+        $has_grant = $this->employee->has_grant('sales_delete', $employeeId);
 
         if (!$has_grant) {
             return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => lang('Sales.not_authorized')]);
         } else {
-            $sale_ids = $sale_id == NEW_ENTRY ? $this->request->getPost('ids', FILTER_SANITIZE_NUMBER_INT) : [$sale_id];
+            $saleIds = $sale_id == NEW_ENTRY ? $this->request->getPost('ids', FILTER_SANITIZE_NUMBER_INT) : [$sale_id];
 
-            if ($this->sale->restore_list($sale_ids, $employee_id, $update_inventory)) {
+            if ($this->sale->restore_list($saleIds, $employeeId, $update_inventory)) {
+                log_message('info', 'authorization: employee {employeeId} restored sales {saleIds}', [
+                    'employeeId' => $employeeId,
+                    'saleIds'    => implode(',', $saleIds),
+                ]);
+
                 return $this->response->setJSON([
                     'success' => true,
-                    'message' => lang('Sales.successfully_restored') . ' ' . count($sale_ids) . ' ' . lang('Sales.one_or_multiple'),
-                    'ids'     => $sale_ids
+                    'message' => lang('Sales.successfully_restored') . ' ' . count($saleIds) . ' ' . lang('Sales.one_or_multiple'),
+                    'ids'     => $saleIds
                 ]);
             } else {
                 return $this->response->setJSON(['success' => false, 'message' => lang('Sales.unsuccessfully_restored')]);

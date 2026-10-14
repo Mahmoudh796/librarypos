@@ -51,6 +51,13 @@ class SalesControllerTest extends CIUnitTestCase
         }
 
         parent::setUp();
+
+        // CIUnitTestCase reuses the CodeIgniter application (and the services it
+        // resolved) across tests in a class. The View service caches the shared
+        // data set by the previous request (e.g. an authorization error), which
+        // would otherwise render into the next test's response. Drop the cached
+        // renderer so each test renders from its own request only.
+        Services::resetSingle('renderer');
     }
 
     protected function tearDown(): void
@@ -124,6 +131,36 @@ class SalesControllerTest extends CIUnitTestCase
         );
     }
 
+    protected function createCashierWithDiscountGrant(): int
+    {
+        return $this->createEmployee(
+            first_name: 'Cashier',
+            last_name:  'Discount',
+            email:      'cashier-discount.' . uniqid() . '@test.com',
+            username:   'cashier_discount_' . uniqid(),
+            grants: [
+                ['permission_id' => 'sales', 'menu_group' => 'home'],
+                ['permission_id' => 'sales_stock', 'menu_group' => 'home'],
+                ['permission_id' => 'sales_discount', 'menu_group' => 'home'],
+            ],
+        );
+    }
+
+    protected function createCashierWithReturnGrant(): int
+    {
+        return $this->createEmployee(
+            first_name: 'Cashier',
+            last_name:  'Return',
+            email:      'cashier-return.' . uniqid() . '@test.com',
+            username:   'cashier_return_' . uniqid(),
+            grants: [
+                ['permission_id' => 'sales', 'menu_group' => 'home'],
+                ['permission_id' => 'sales_stock', 'menu_group' => 'home'],
+                ['permission_id' => 'sales_return', 'menu_group' => 'home'],
+            ],
+        );
+    }
+
     protected function loginAs(int $personId): void
     {
         $this->withSession([
@@ -137,7 +174,7 @@ class SalesControllerTest extends CIUnitTestCase
      * Sale_lib::add_item() produces, so tests can target postEditItem's
      * authorization branch without exercising the full add-item flow.
      */
-    protected function seedCartLine(int $line, string $price, int $itemId): void
+    protected function seedCartLine(int $line, string $price, int $itemId, string $discount = '0', int $discountType = PERCENT): void
     {
         $this->withSession(array_merge($this->session, [
             'sales_cart' => [
@@ -155,8 +192,8 @@ class SalesControllerTest extends CIUnitTestCase
                     'allow_alt_description' => false,
                     'is_serialized'         => false,
                     'quantity'              => '1',
-                    'discount'              => '0',
-                    'discount_type'         => 0,
+                    'discount'              => $discount,
+                    'discount_type'         => $discountType,
                     'in_stock'              => '10',
                     'price'                 => $price,
                     'cost_price'            => '1.00',
@@ -393,6 +430,143 @@ class SalesControllerTest extends CIUnitTestCase
         $session = Services::session();
         $cart = $session->get('sales_cart');
         $this->assertEquals('0.01', $cart[1]['price']);
+    }
+
+    public function testCashierWithoutDiscountGrantCannotChangeDiscount(): void
+    {
+        $cashierId = $this->createCashierEmployee();
+        $this->loginAs($cashierId);
+        $itemId = $this->createTestItem(HAS_NO_STOCK);
+        $this->seedCartLine(1, '5.00', $itemId);
+
+        $response = $this->post('/sales/editItem/1', [
+            'description'   => 'Test Item',
+            'serialnumber'  => '',
+            'price'         => '5.00',
+            'quantity'      => '1',
+            'discount'      => '2',
+            'discount_type' => (string)FIXED,
+            'location'      => '1',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertSee(lang('Sales.not_authorized'));
+
+        $cart = Services::session()->get('sales_cart');
+        $this->assertEquals(0.0, (float)$cart[1]['discount']);
+    }
+
+    public function testCashierWithoutDiscountGrantCanResubmitExistingDiscount(): void
+    {
+        $cashierId = $this->createCashierEmployee();
+        $this->loginAs($cashierId);
+        $itemId = $this->createTestItem(HAS_NO_STOCK);
+        $this->seedCartLine(1, '5.00', $itemId, '2', FIXED);
+
+        $response = $this->post('/sales/editItem/1', [
+            'description'   => 'Test Item',
+            'serialnumber'  => '',
+            'price'         => '5.00',
+            'quantity'      => '2',
+            'discount'      => '2',
+            'discount_type' => (string)FIXED,
+            'location'      => '1',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertDontSee(lang('Sales.not_authorized'));
+
+        $cart = Services::session()->get('sales_cart');
+        $this->assertEquals('2', $cart[1]['quantity']);
+        $this->assertEquals(2.0, (float)$cart[1]['discount']);
+    }
+
+    public function testCashierWithDiscountGrantCanChangeDiscount(): void
+    {
+        $cashierId = $this->createCashierWithDiscountGrant();
+        $this->loginAs($cashierId);
+        $itemId = $this->createTestItem(HAS_NO_STOCK);
+        $this->seedCartLine(1, '5.00', $itemId);
+
+        $response = $this->post('/sales/editItem/1', [
+            'description'   => 'Test Item',
+            'serialnumber'  => '',
+            'price'         => '5.00',
+            'quantity'      => '1',
+            'discount'      => '2',
+            'discount_type' => (string)FIXED,
+            'location'      => '1',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertDontSee(lang('Sales.not_authorized'));
+
+        $cart = Services::session()->get('sales_cart');
+        $this->assertEquals(2.0, (float)$cart[1]['discount']);
+        $this->assertEquals(FIXED, (int)$cart[1]['discount_type']);
+    }
+
+    public function testCashierWithoutReturnGrantCannotCompleteReturn(): void
+    {
+        $cashierId = $this->createCashierEmployee();
+        $itemId = $this->createTestItem(HAS_NO_STOCK);
+        $this->loginAs($cashierId);
+        $this->seedCartLine(1, '100.00', $itemId);
+        $this->withSession(array_merge($this->session, ['sale_id' => NEW_ENTRY, 'sales_mode' => 'return']));
+
+        $salesCountBefore = Database::connect()->table('sales')->countAllResults();
+
+        $response = $this->post('/sales/complete');
+
+        $salesCountAfter = Database::connect()->table('sales')->countAllResults();
+        $this->assertSame($salesCountBefore, $salesCountAfter);
+        $response->assertSee(lang('Sales.not_authorized'));
+    }
+
+    public function testCashierWithReturnGrantPassesReturnAuthorization(): void
+    {
+        $cashierId = $this->createCashierWithReturnGrant();
+        $itemId = $this->createTestItem(HAS_NO_STOCK);
+        $this->loginAs($cashierId);
+        $this->seedCartLine(1, '100.00', $itemId);
+        $this->withSession(array_merge($this->session, ['sale_id' => NEW_ENTRY, 'sales_mode' => 'return']));
+
+        $salesCountBefore = Database::connect()->table('sales')->countAllResults();
+
+        $response = $this->post('/sales/complete');
+
+        $salesCountAfter = Database::connect()->table('sales')->countAllResults();
+        $response->assertDontSee(lang('Sales.not_authorized'));
+        $this->assertSame($salesCountBefore + 1, $salesCountAfter);
+    }
+
+    public function testChangeModeRejectsStockLocationOutsideEmployeeGrants(): void
+    {
+        $cashierId = $this->createCashierEmployee();
+        $this->loginAs($cashierId);
+
+        $response = $this->post('/sales/changeMode', [
+            'mode'           => 'sale',
+            'stock_location' => '999999',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertEquals(1, Services::session()->get('sales_location'));
+    }
+
+    public function testChangeModeAcceptsGrantedStockLocation(): void
+    {
+        $cashierId = $this->createCashierEmployee();
+        $this->loginAs($cashierId);
+        $this->withSession(array_merge($this->session, ['sales_location' => 999999]));
+
+        $response = $this->post('/sales/changeMode', [
+            'mode'           => 'sale',
+            'stock_location' => '1',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertEquals(1, Services::session()->get('sales_location'));
     }
 
     public function testPostAddPaymentRejectsNegativeAmountTendered(): void
