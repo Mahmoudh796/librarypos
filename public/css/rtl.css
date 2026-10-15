@@ -7,8 +7,12 @@
  *
  * Direction is decided server-side (get_text_direction()) and emitted on <html dir>.
  * We flip the Bootstrap 3 float/text utilities and the register layout rather than
- * duplicating the whole stylesheet, and isolate identifiers (SKUs, barcodes,
- * serial numbers, phone numbers) so they keep reading left-to-right.
+ * duplicating the whole stylesheet.
+ *
+ * Layout flips are wrapped in @media screen so the receipt, invoice and barcode
+ * print documents keep their dedicated print stylesheets. The identifier
+ * isolation below stays in effect for every medium so SKUs and barcodes print
+ * left-to-right even inside an RTL document.
  */
 
 /* Numbers and identifiers must stay LTR even inside an RTL document. */
@@ -21,159 +25,161 @@
     unicode-bidi: isolate;
 }
 
-/* ---------- Bootstrap 3 float/text utilities ---------- */
+@media screen {
+    /* ---------- Bootstrap 3 float/text utilities ---------- */
 
-[dir="rtl"] .pull-left {
-    float: right !important;
-}
+    [dir="rtl"] .pull-left {
+        float: right !important;
+    }
 
-[dir="rtl"] .pull-right {
-    float: left !important;
-}
+    [dir="rtl"] .pull-right {
+        float: left !important;
+    }
 
-[dir="rtl"] .text-left {
-    text-align: right !important;
-}
+    [dir="rtl"] .text-left {
+        text-align: right !important;
+    }
 
-[dir="rtl"] .text-right {
-    text-align: left !important;
-}
+    [dir="rtl"] .text-right {
+        text-align: left !important;
+    }
 
-/* ---------- Application shell ---------- */
+    /* ---------- Application shell ---------- */
 
-[dir="rtl"] .navbar-left {
-    float: right !important;
-}
+    [dir="rtl"] .navbar-left {
+        float: right !important;
+    }
 
-[dir="rtl"] .navbar-right {
-    float: left !important;
-}
+    [dir="rtl"] .navbar-right {
+        float: left !important;
+    }
 
-[dir="rtl"] .navbar-header {
-    float: right;
-}
+    [dir="rtl"] .navbar-header {
+        float: right;
+    }
 
-[dir="rtl"] .navbar-toggle {
-    float: left;
-    margin-left: 15px;
-    margin-right: 0;
-}
+    [dir="rtl"] .navbar-toggle {
+        float: left;
+        margin-left: 15px;
+        margin-right: 0;
+    }
 
-[dir="rtl"] .navbar-brand {
-    float: right;
-}
+    [dir="rtl"] .navbar-brand {
+        float: right;
+    }
 
-[dir="rtl"] .navbar-nav {
-    float: right;
-}
+    [dir="rtl"] .navbar-nav {
+        float: right;
+    }
 
-[dir="rtl"] .navbar-nav.navbar-right {
-    float: left;
-}
+    [dir="rtl"] .navbar-nav.navbar-right {
+        float: left;
+    }
 
-/* ---------- Register layout ---------- */
+    /* ---------- Register layout ---------- */
 
-[dir="rtl"] #register_wrapper {
-    float: right;
-}
+    [dir="rtl"] #register_wrapper {
+        float: right;
+    }
 
-[dir="rtl"] #overall_sale {
-    float: right;
-    margin-left: 0;
-    margin-right: 0.1em;
-    text-align: center;
-}
+    [dir="rtl"] #overall_sale {
+        float: right;
+        margin-left: 0;
+        margin-right: 0.1em;
+        text-align: center;
+    }
 
-[dir="rtl"] #payment_details {
-    float: right;
-    text-align: right;
-}
+    [dir="rtl"] #payment_details {
+        float: right;
+        text-align: right;
+    }
 
-[dir="rtl"] #mode_form ul li,
-[dir="rtl"] #add_item_form ul li {
-    margin-left: 0;
-    margin-right: 1em;
-}
+    [dir="rtl"] #mode_form ul li,
+    [dir="rtl"] #add_item_form ul li {
+        margin-left: 0;
+        margin-right: 1em;
+    }
 
-[dir="rtl"] .first_li {
-    margin-left: 0 !important;
-    margin-right: 0.2em !important;
-}
+    [dir="rtl"] .first_li {
+        margin-left: 0 !important;
+        margin-right: 0.2em !important;
+    }
 
-[dir="rtl"] #mode_form ul.dropdown-menu.inner,
-[dir="rtl"] #add_item_form ul.dropdown-menu.inner {
-    margin-left: 0 !important;
-    margin-right: -1em !important;
-}
+    [dir="rtl"] #mode_form ul.dropdown-menu.inner,
+    [dir="rtl"] #add_item_form ul.dropdown-menu.inner {
+        margin-left: 0 !important;
+        margin-right: -1em !important;
+    }
 
-/* ---------- Input groups ---------- */
+    /* ---------- Input groups ---------- */
 
-[dir="rtl"] .input-group .form-control:first-child,
-[dir="rtl"] .input-group-addon:first-child,
-[dir="rtl"] .input-group-btn:first-child > .btn,
-[dir="rtl"] .input-group-btn:first-child > .btn-group > .btn {
-    border-radius: 0 4px 4px 0;
-}
+    [dir="rtl"] .input-group .form-control:first-child,
+    [dir="rtl"] .input-group-addon:first-child,
+    [dir="rtl"] .input-group-btn:first-child > .btn,
+    [dir="rtl"] .input-group-btn:first-child > .btn-group > .btn {
+        border-radius: 0 4px 4px 0;
+    }
 
-[dir="rtl"] .input-group .form-control:last-child,
-[dir="rtl"] .input-group-addon:last-child,
-[dir="rtl"] .input-group-btn:last-child > .btn,
-[dir="rtl"] .input-group-btn:last-child > .btn-group > .btn {
-    border-radius: 4px 0 0 4px;
-}
+    [dir="rtl"] .input-group .form-control:last-child,
+    [dir="rtl"] .input-group-addon:last-child,
+    [dir="rtl"] .input-group-btn:last-child > .btn,
+    [dir="rtl"] .input-group-btn:last-child > .btn-group > .btn {
+        border-radius: 4px 0 0 4px;
+    }
 
-[dir="rtl"] .input-group-addon:first-child {
-    border-right: 1px solid #ccc;
-    border-left: 0;
-}
+    [dir="rtl"] .input-group-addon:first-child {
+        border-right: 1px solid #ccc;
+        border-left: 0;
+    }
 
-/* ---------- Dropdowns, pagination, breadcrumbs, modals ---------- */
+    /* ---------- Dropdowns, pagination, breadcrumbs, modals ---------- */
 
-[dir="rtl"] .dropdown-menu {
-    right: 0;
-    left: auto;
-    text-align: right;
-}
+    [dir="rtl"] .dropdown-menu {
+        right: 0;
+        left: auto;
+        text-align: right;
+    }
 
-[dir="rtl"] .dropdown-menu.pull-right {
-    right: auto;
-    left: 0;
-}
+    [dir="rtl"] .dropdown-menu.pull-right {
+        right: auto;
+        left: 0;
+    }
 
-[dir="rtl"] .pagination {
-    direction: rtl;
-}
+    [dir="rtl"] .pagination {
+        direction: rtl;
+    }
 
-[dir="rtl"] .pagination > li > a,
-[dir="rtl"] .pagination > li > span {
-    float: right;
-}
+    [dir="rtl"] .pagination > li > a,
+    [dir="rtl"] .pagination > li > span {
+        float: right;
+    }
 
-[dir="rtl"] .breadcrumb {
-    direction: rtl;
-}
+    [dir="rtl"] .breadcrumb {
+        direction: rtl;
+    }
 
-[dir="rtl"] .modal-footer {
-    text-align: left;
-}
+    [dir="rtl"] .modal-footer {
+        text-align: left;
+    }
 
-/* ---------- Tables ---------- */
+    /* ---------- Tables ---------- */
 
-[dir="rtl"] .table th,
-[dir="rtl"] .table td {
-    text-align: right;
-}
+    [dir="rtl"] .table th,
+    [dir="rtl"] .table td {
+        text-align: right;
+    }
 
-/* The register centres its cells regardless of direction. */
-[dir="rtl"] #register th,
-[dir="rtl"] #register td {
-    text-align: center;
-}
+    /* The register centres its cells regardless of direction. */
+    [dir="rtl"] #register th,
+    [dir="rtl"] #register td {
+        text-align: center;
+    }
 
-/* ---------- Login page (Bootstrap 5, logical utilities already flip) ---------- */
+    /* ---------- Login page (Bootstrap 5, logical utilities already flip) ---------- */
 
-[dir="rtl"] .form-floating > label {
-    right: 0;
-    left: auto;
-    text-align: right;
+    [dir="rtl"] .form-floating > label {
+        right: 0;
+        left: auto;
+        text-align: right;
+    }
 }
