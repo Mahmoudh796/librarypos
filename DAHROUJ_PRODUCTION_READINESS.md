@@ -10,6 +10,8 @@ secrets and no operator credentials.
 - Certification date: 2026-10-15
 - Runtime: PHP 8.2.34, CodeIgniter 4.7.4, MySQL/MariaDB (InnoDB)
 - Application version: `Config\App::$application_version` = `3.4.3`
+- Certified commit: `340c8ddfb2e7f482e06a96a2d4e04ba94df91b4a` (= `origin/master`)
+- Certified commit: `340c8ddfb2e7f482e06a96a2d4e04ba94df91b4a` (= `origin/master`)
 
 > This is a **certification** document. It is not a deployment instruction set.
 > Performing the go-live actions is an operator responsibility performed on the
@@ -37,6 +39,7 @@ operator at go-live; none of them require code changes.
 | Session driver | Database handler (file handler automatic fallback pre-migration) |
 | Frontend | Bootstrap 3 + Bootswatch, jQuery; hand-written CSS/JS in `public/` |
 | Locales shipped | 43 supported locales including `ar-EG`, `ar-LB`, `en`, `en-GB` |
+| Runtime CLI (`spark`) | `db:backup`, `db:create`, `db:seed`, `db:table`, `env:provision` |
 
 ## 3. Build, install and upgrade
 
@@ -189,6 +192,9 @@ See `BACKUP_AND_RECOVERY.md`. Summary:
    `OSPOSRulesTest` used a `@dataProvider` doc-comment, which PHPUnit 11
    deprecates; it now uses `#[DataProvider(...)]`. Behavior is unchanged.
 
+Certified commits: `fa9aa7442` (items authorization fix + regression tests) and
+`340c8ddfb` (deprecation fix + this document), both pushed to `origin/master`.
+
 ## 12. Minor, non-blocking operational requirements
 
 These do not block go-live but should be satisfied by the operator:
@@ -197,6 +203,12 @@ These do not block go-live but should be satisfied by the operator:
 
 - Build the front-end assets (`npm run build`) so `public/resources/` exists;
   without it the app is not runnable.
+- Put a MySQL/MariaDB dump utility on the machine's `PATH` so `db:backup` can
+  find it: `resolveDumpExecutable()` auto-discovers only `mariadb-dump` /
+  `mysqldump` from `PATH`. If it is not on `PATH`, set `backup.dumpExecutable`
+  in `.env` to the full path (e.g. `C:\Program Files\MariaDB 10.6\bin\mariadb-dump.exe`).
+  `db:backup` deliberately refuses to run under `ENVIRONMENT=testing` and refuses
+  any database whose name contains "test" — these are safety guards, not faults.
 - Set `app.allowedHostnames` / `ALLOWED_HOSTNAMES` to the real hostname(s).
 - Provision `encryption.key` and `throttle.key` (auto-minted or via
   `php spark env:provision`).
