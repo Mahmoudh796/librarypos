@@ -73,8 +73,8 @@ return [
     "search"                         => "Tìm kiếm",
     "search_options"                 => "Tùy chọn tìm kiếm",
     "searched_for"                   => "Tìm kiếm bằng",
-    "software_short"                 => "",
-    "software_title"                 => "",
+    "software_short"                 => "Dahrouj",
+    "software_title"                 => "Dahrouj",
     "state"                          => "Tỉnh",
     "submit"                         => "Gửi",
     "total_spent"                    => "Trả tổng cộng",
@@ -84,6 +84,6 @@ return [
     "welcome"                        => "Chào mừng",
     "welcome_message"                => "Chọn 1 trong những tính năng dưới đây để bắt đầu.",
     "yes"                            => "",
-    "you_are_using_ospos"            => "Bạn đang sử dụng Open Source Point Of Sale phiên bản",
+    "you_are_using_ospos"            => "Bạn đang sử dụng Dahrouj phiên bản",
     "zip"                            => "Mã bưu điện",
 ];

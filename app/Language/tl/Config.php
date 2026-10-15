@@ -224,7 +224,7 @@ return [
     'number_locale_required'                    => 'Number Locale is a required field.',
     'number_locale_tooltip'                     => 'Find a suitable locale through this link.',
     'os_timezone'                               => '',
-    'ospos_info'                                => 'OSPOS Installation Info',
+    'ospos_info'                                => 'Dahrouj Installation Info',
     'payment_options_order'                     => 'Payment Options Order',
     'payment_reference_code_length_limits'      => 'Code ng Sanggunian sa Pagbabayad<br>Mga Limitasyon sa Haba',
     'payment_reference_code_length_max_label'   => 'Max',

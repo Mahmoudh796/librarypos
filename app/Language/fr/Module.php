@@ -29,7 +29,7 @@ return [
     "messages"                   => "Messages",
     "messages_desc"              => "Envoyer un message aux Client, Fournisseurs, Employés et al.",
     "migrate"                    => "Émigrer",
-    "migrate_desc"               => "Mettre à jour la base de données OSPOS.",
+    "migrate_desc"               => "Mettre à jour la base de données Dahrouj.",
     "office"                     => "Bureau",
     "office_desc"                => "Liste des modules de menu du bureau.",
     "receivings"                 => "Entrées Stock",

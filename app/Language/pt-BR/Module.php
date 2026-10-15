@@ -29,7 +29,7 @@ return [
     "messages"                   => "Mensagens",
     "messages_desc"              => "Enviar mensagens para os clientes, fornecedores, colaboradores etc.",
     "migrate"                    => "Migrar",
-    "migrate_desc"               => "Atualize o banco de dados do OSPOS.",
+    "migrate_desc"               => "Atualize o banco de dados do Dahrouj.",
     "office"                     => "Escritório",
     "office_desc"                => "Listar módulos de menu do escritório.",
     "receivings"                 => "Recebimento",

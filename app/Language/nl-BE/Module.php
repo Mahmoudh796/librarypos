@@ -29,7 +29,7 @@ return [
     "messages"                   => "Messages",
     "messages_desc"              => "Send Messages to Customers, Suppliers, Employees et al.",
     "migrate"                    => "Migreer",
-    "migrate_desc"               => "Update de OSPOS database.",
+    "migrate_desc"               => "Update de Dahrouj database.",
     "office"                     => "Kantoor",
     "office_desc"                => "Toon kantoor menu modules.",
     "receivings"                 => "Orders",

@@ -73,8 +73,8 @@ return [
     'search' => "Pesquisar",
     'search_options' => "Opções de pesquisa",
     'searched_for' => "Pesquisar por",
-    'software_short' => "ospos",
-    'software_title' => "Ponto de Venda de Código Aberto",
+    'software_short' => "Dahrouj",
+    'software_title' => "Dahrouj",
     'state' => "Estado",
     'submit' => "Enviar",
     'total_spent' => "Total gasto",
@@ -84,6 +84,6 @@ return [
     'welcome' => "Bem-vindo",
     'welcome_message' => "Bem-vindo.",
     'yes' => "Sim",
-    'you_are_using_ospos' => "Você está usando Open Source Point Of Sale Versão",
+    'you_are_using_ospos' => "Você está usando Dahrouj Versão",
     'zip' => "CEP",
 ];

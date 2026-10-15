@@ -224,7 +224,7 @@ return [
     'number_locale_required'                    => 'Locale-Nummer ist ein Pflichtfeld.',
     'number_locale_tooltip'                     => 'Finden Sie eine korrekte Lokale über diesen Link.',
     'os_timezone'                               => '',
-    'ospos_info'                                => 'OSPOS Installations Information',
+    'ospos_info'                                => 'Dahrouj Installations Information',
     'payment_options_order'                     => 'Zahlungsarten Reihenfolge',
     'payment_reference_code_length_limits'      => 'Zahlungsreferenzcode<br>Längenbeschränkungen',
     'payment_reference_code_length_max_label'   => 'Max',

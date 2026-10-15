@@ -224,7 +224,7 @@ return [
     'number_locale_required'                    => 'מספר אזור הינו שדה חובה.',
     'number_locale_tooltip'                     => 'מצא אזור תואם באמצעות קישור זה.',
     'os_timezone'                               => '',
-    'ospos_info'                                => 'OSPOS פרטי התקנה',
+    'ospos_info'                                => 'Dahrouj פרטי התקנה',
     'payment_options_order'                     => 'סידור אפשרויות תשלום',
     'payment_reference_code_length_limits'      => 'קוד אסמכתא לתשלום<br>מגבלות אורך',
     'payment_reference_code_length_max_label'   => 'מקס',

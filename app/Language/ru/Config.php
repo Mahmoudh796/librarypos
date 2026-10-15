@@ -224,7 +224,7 @@ return [
     'number_locale_required'                    => 'Региональный номер - обязательное поле.',
     'number_locale_tooltip'                     => 'Найдите подходящий регион по этой ссылке.',
     'os_timezone'                               => 'Часовой пояс системы:',
-    'ospos_info'                                => 'Информация об установке OSPOS',
+    'ospos_info'                                => 'Информация об установке Dahrouj',
     'payment_options_order'                     => 'Параметры оплаты заказа',
     'payment_reference_code_length_limits'      => 'Код ссылки на платёж<br>Ограничения длины',
     'payment_reference_code_length_max_label'   => 'Макс',

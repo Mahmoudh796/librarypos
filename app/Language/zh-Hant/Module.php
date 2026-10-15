@@ -29,7 +29,7 @@ return [
     "messages"                   => "留言",
     "messages_desc"              => "向客戶、供應商、員工等發送消息。",
     "migrate"                    => "遷移",
-    "migrate_desc"               => "更新 OSPOS 數據庫。",
+    "migrate_desc"               => "更新 Dahrouj 數據庫。",
     "office"                     => "辦公室",
     "office_desc"                => "列出辦公菜單模塊。",
     "receivings"                 => "進貨",
