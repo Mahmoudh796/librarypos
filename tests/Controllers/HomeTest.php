@@ -6,6 +6,7 @@ use CodeIgniter\Database\Config;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
+use CodeIgniter\Test\TestResponse;
 use App\Models\Employee;
 use RuntimeException;
 
@@ -546,5 +547,124 @@ class HomeTest extends CIUnitTestCase
 
         $response->assertRedirect();
         $this->assertStringContainsString('no_access', $response->getRedirectUrl());
+    }
+
+    // ========== Operational Dashboard Tests ==========
+
+    /**
+     * Render the landing page for the currently logged-in employee.
+     *
+     * The CI4 View service is a process-wide singleton that retains its data
+     * between renders (View::$saveData), so a dashboard card rendered by an
+     * earlier test would otherwise bleed into the next response. A real HTTP
+     * request gets a fresh process, so clearing the retained data is test-only.
+     *
+     * @return TestResponse
+     */
+    private function renderDashboard(): TestResponse
+    {
+        service('renderer')->resetData();
+
+        return $this->get('/home');
+    }
+
+    /**
+     * The Home module alone must not expose the KPI dashboard: both card
+     * groups are gated behind the matching reports grants.
+     *
+     * @return void
+     */
+    public function testDashboardHiddenWithoutReportGrants(): void
+    {
+        $employeeId = $this->createNonAdminEmployee([
+            'username' => 'dashboardnogrants',
+            'email'    => 'dashboardnogrants@test.com',
+            'grants'   => [
+                ['permission_id' => 'home', 'menu_group' => 'home'],
+            ],
+        ]);
+        $this->loginAs($employeeId);
+
+        $response = $this->renderDashboard();
+
+        $response->assertStatus(200);
+        $response->assertDontSee('id="dashboard"');
+    }
+
+    /**
+     * reports_sales unlocks the sales KPI cards but not the inventory cards.
+     *
+     * @return void
+     */
+    public function testSalesGrantShowsSalesCardsOnly(): void
+    {
+        $employeeId = $this->createNonAdminEmployee([
+            'username' => 'dashboardsalesonly',
+            'email'    => 'dashboardsalesonly@test.com',
+            'grants'   => [
+                ['permission_id' => 'home', 'menu_group' => 'home'],
+                ['permission_id' => 'reports_sales', 'menu_group' => 'reports'],
+            ],
+        ]);
+        $this->loginAs($employeeId);
+
+        $response = $this->renderDashboard();
+
+        $response->assertStatus(200);
+        $response->assertSee('id="dashboard"');
+        $response->assertSee('Sales Today');
+        $response->assertDontSee('Low Stock');
+    }
+
+    /**
+     * reports_inventory unlocks the inventory KPI cards but not the sales cards.
+     *
+     * @return void
+     */
+    public function testInventoryGrantShowsInventoryCardsOnly(): void
+    {
+        $employeeId = $this->createNonAdminEmployee([
+            'username' => 'dashboardinventoryonly',
+            'email'    => 'dashboardinventoryonly@test.com',
+            'grants'   => [
+                ['permission_id' => 'home', 'menu_group' => 'home'],
+                ['permission_id' => 'reports_inventory', 'menu_group' => 'reports'],
+            ],
+        ]);
+        $this->loginAs($employeeId);
+
+        $response = $this->renderDashboard();
+
+        $response->assertStatus(200);
+        $response->assertSee('id="dashboard"');
+        $response->assertSee('Low Stock');
+        $response->assertDontSee('Sales Today');
+    }
+
+    /**
+     * Both grants render the full dashboard (sales and inventory sections).
+     *
+     * @return void
+     */
+    public function testBothGrantsRenderFullDashboard(): void
+    {
+        $employeeId = $this->createNonAdminEmployee([
+            'username' => 'dashboardboth',
+            'email'    => 'dashboardboth@test.com',
+            'grants'   => [
+                ['permission_id' => 'home', 'menu_group' => 'home'],
+                ['permission_id' => 'reports_sales', 'menu_group' => 'reports'],
+                ['permission_id' => 'reports_inventory', 'menu_group' => 'reports'],
+            ],
+        ]);
+        $this->loginAs($employeeId);
+
+        $response = $this->renderDashboard();
+
+        $response->assertStatus(200);
+        $response->assertSee('id="dashboard"');
+        $response->assertSee('Sales Today');
+        $response->assertSee('Inventory Value (Cost)');
+        $response->assertSee('Inventory Value (Retail)');
     }
 }
