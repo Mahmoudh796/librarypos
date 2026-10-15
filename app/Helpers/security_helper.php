@@ -60,7 +60,7 @@ function initializeEnvFile(string $configPath): bool
         if (file_exists($examplePath)) {
             @copy($examplePath, $configPath);
         } else {
-            @file_put_contents($configPath, "# OSPOS Configuration\n\n");
+            @file_put_contents($configPath, "# Dahrouj Configuration\n\n");
         }
         @chmod($configPath, 0640);
     }

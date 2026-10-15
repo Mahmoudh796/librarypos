@@ -15,7 +15,7 @@ CREATE TABLE `ospos_app_config` (
 
 INSERT INTO `ospos_app_config` (`key`, `value`) VALUES
     ('address', '123 Nowhere street'),
-    ('company', 'Open Source Point of Sale'),
+    ('company', 'Dahrouj'),
     ('default_tax_rate', '8'),
     ('email', 'changeme@example.com'),
     ('fax', ''),

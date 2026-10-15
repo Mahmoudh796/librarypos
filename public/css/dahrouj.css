@@ -113,6 +113,35 @@
         opacity: 0.85;
     }
 
+    /* ---------- Authentication / database setup screen ---------- */
+
+    .dj-auth-brand {
+        color: var(--dj-accent);
+    }
+
+    .dj-auth-brand .dj-brand-ar {
+        font-size: 44px;
+    }
+
+    .dj-auth-brand .dj-brand-en {
+        font-size: 26px;
+    }
+
+    .dj-auth-brand-sm .dj-brand-ar {
+        font-size: 22px;
+    }
+
+    .dj-auth-brand-sm .dj-brand-en {
+        font-size: 15px;
+    }
+
+    .dj-auth-attribution {
+        display: block;
+        margin-top: var(--dj-space-2);
+        font-size: 12px;
+        color: var(--dj-text-muted);
+    }
+
     /* ---------- Navigation ---------- */
 
     .navbar-default {

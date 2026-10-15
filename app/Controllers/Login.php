@@ -125,15 +125,17 @@ class Login extends BaseController
 
             return $this->response->setJSON([
                 'success' => true,
-                'message' => 'Migration completed successfully'
+                'message' => lang('Login.migration_complete_migrate')
             ]);
 
         } catch (\Exception $e) {
+            // Keep the technical detail (SQL, paths) in the server log for
+            // administrators instead of returning it to the browser.
             log_message('error', 'Migration failed: ' . $e->getMessage());
 
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Migration failed: ' . $e->getMessage()
+                'message' => lang('Login.migration_failed')
             ])->setStatusCode(500);
         }
     }

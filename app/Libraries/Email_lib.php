@@ -42,7 +42,7 @@ class Email_lib
 
         $email_config = [
             'mailType'    => 'html',
-            'userAgent'   => 'OSPOS',
+            'userAgent'   => 'Dahrouj',
             'validate'    => true,
             'protocol'    => $this->config['protocol'] ?? 'mail',
             'mailPath'    => $this->config['mailpath'] ?? '/usr/sbin/sendmail',

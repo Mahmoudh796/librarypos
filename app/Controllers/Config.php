@@ -87,7 +87,7 @@ class Config extends Secure_Controller
         if (file_exists('license/LICENSE')) {
             $license[$i]['text'] = file_get_contents('license/LICENSE', false, null, 0, 3000);
         } else {
-            $license[$i]['text'] = 'LICENSE file must be in OSPOS license directory. You are not allowed to use OSPOS application until the distribution copy of LICENSE file is present.';
+            $license[$i]['text'] = 'LICENSE file must be in the license directory. You are not allowed to use the application until the distribution copy of the LICENSE file is present.';
         }
 
         $dir = new DirectoryIterator('license');    // Read all the files in the dir license
