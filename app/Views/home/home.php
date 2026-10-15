@@ -43,7 +43,7 @@ $formatPercent = static function (?float $percent): string {
             <div class="row">
                 <div class="col-sm-6 col-md-3">
                     <div class="panel panel-primary">
-                        <div class="panel-heading"><?= lang('Dashboard.sales_today') ?></div>
+                        <div class="panel-heading"><span class="glyphicon glyphicon-stats" aria-hidden="true"></span> <?= lang('Dashboard.sales_today') ?></div>
                         <div class="panel-body">
                             <h3><?= to_currency($today['gross_sales']) ?></h3>
                             <small><?= lang('Dashboard.net_sales') ?>: <?= to_currency($today['net_sales']) ?></small>
@@ -52,7 +52,7 @@ $formatPercent = static function (?float $percent): string {
                 </div>
                 <div class="col-sm-6 col-md-3">
                     <div class="panel panel-info">
-                        <div class="panel-heading"><?= lang('Dashboard.transactions') ?></div>
+                        <div class="panel-heading"><span class="glyphicon glyphicon-list" aria-hidden="true"></span> <?= lang('Dashboard.transactions') ?></div>
                         <div class="panel-body">
                             <h3><?= to_quantity_decimals($today['transaction_count']) ?></h3>
                             <small><?= lang('Dashboard.average_transaction') ?>: <?= to_currency($today['average_transaction']) ?></small>
@@ -61,7 +61,7 @@ $formatPercent = static function (?float $percent): string {
                 </div>
                 <div class="col-sm-6 col-md-3">
                     <div class="panel panel-warning">
-                        <div class="panel-heading"><?= lang('Dashboard.gross_profit') ?></div>
+                        <div class="panel-heading"><span class="glyphicon glyphicon-usd" aria-hidden="true"></span> <?= lang('Dashboard.gross_profit') ?></div>
                         <div class="panel-body">
                             <h3><?= to_currency($today['gross_profit']) ?></h3>
                             <small><?= lang('Dashboard.cost') ?>: <?= to_currency($today['cost']) ?></small>
@@ -70,7 +70,7 @@ $formatPercent = static function (?float $percent): string {
                 </div>
                 <div class="col-sm-6 col-md-3">
                     <div class="panel panel-default">
-                        <div class="panel-heading"><?= lang('Dashboard.returns') ?> / <?= lang('Dashboard.discounts') ?></div>
+                        <div class="panel-heading"><span class="glyphicon glyphicon-retweet" aria-hidden="true"></span> <?= lang('Dashboard.returns') ?> / <?= lang('Dashboard.discounts') ?></div>
                         <div class="panel-body">
                             <h3><?= to_currency($today['returns']) ?></h3>
                             <small><?= lang('Dashboard.discounts') ?>: <?= to_currency($today['discounts']) ?></small>
@@ -163,7 +163,7 @@ $formatPercent = static function (?float $percent): string {
             <div class="row">
                 <div class="col-sm-6 col-md-3">
                     <div class="panel panel-warning">
-                        <div class="panel-heading"><?= lang('Dashboard.low_stock') ?></div>
+                        <div class="panel-heading"><span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> <?= lang('Dashboard.low_stock') ?></div>
                         <div class="panel-body">
                             <h3><?= to_quantity_decimals($inventory_dashboard['low_stock_count']) ?></h3>
                         </div>
@@ -171,7 +171,7 @@ $formatPercent = static function (?float $percent): string {
                 </div>
                 <div class="col-sm-6 col-md-3">
                     <div class="panel panel-danger">
-                        <div class="panel-heading"><?= lang('Dashboard.out_of_stock') ?></div>
+                        <div class="panel-heading"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> <?= lang('Dashboard.out_of_stock') ?></div>
                         <div class="panel-body">
                             <h3><?= to_quantity_decimals($inventory_dashboard['out_of_stock_count']) ?></h3>
                         </div>
@@ -179,7 +179,7 @@ $formatPercent = static function (?float $percent): string {
                 </div>
                 <div class="col-sm-6 col-md-3">
                     <div class="panel panel-default">
-                        <div class="panel-heading"><?= lang('Dashboard.inventory_cost_value') ?></div>
+                        <div class="panel-heading"><span class="glyphicon glyphicon-tags" aria-hidden="true"></span> <?= lang('Dashboard.inventory_cost_value') ?></div>
                         <div class="panel-body">
                             <h3><?= to_currency($inventory_dashboard['cost_value']) ?></h3>
                         </div>
@@ -187,7 +187,7 @@ $formatPercent = static function (?float $percent): string {
                 </div>
                 <div class="col-sm-6 col-md-3">
                     <div class="panel panel-default">
-                        <div class="panel-heading"><?= lang('Dashboard.inventory_retail_value') ?></div>
+                        <div class="panel-heading"><span class="glyphicon glyphicon-tag" aria-hidden="true"></span> <?= lang('Dashboard.inventory_retail_value') ?></div>
                         <div class="panel-body">
                             <h3><?= to_currency($inventory_dashboard['retail_value']) ?></h3>
                         </div>

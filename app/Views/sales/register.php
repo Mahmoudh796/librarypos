@@ -61,7 +61,14 @@ if (isset($success)) {
 helper('url');
 ?>
 
-<div id="register_wrapper">
+<?php if ($mode == 'return') : ?>
+    <div class="dj-return-banner" role="status">
+        <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+        <span><?= lang(ucfirst($controller_name) . '.return') ?></span>
+    </div>
+<?php endif ?>
+
+<div id="register_wrapper" class="dj-register">
 
     <!-- Top register controls -->
     <?= form_open("$controller_name/changeMode", ['id' => 'mode_form', 'class' => 'form-horizontal panel panel-default']) ?>
@@ -72,6 +79,9 @@ helper('url');
                 </li>
                 <li class="pull-left">
                     <?= form_dropdown('mode', $modes, $mode, ['onchange' => "$('#mode_form').submit();", 'class' => 'selectpicker show-menu-arrow', 'data-style' => 'btn-default btn-sm', 'data-width' => 'fit']) ?>
+                </li>
+                <li class="pull-left">
+                    <span class="dj-mode-badge<?= $mode == 'return' ? ' dj-mode-return' : '' ?>"><?= esc($mode_label) ?></span>
                 </li>
                 <?php if ($config['dinner_table_enable']) { ?>
                     <li class="pull-left first_li">
@@ -155,7 +165,10 @@ helper('url');
             <?php if (count($cart) == 0) { ?>
                 <tr>
                     <td colspan="8">
-                        <div class="alert alert-dismissible alert-info"><?= lang(ucfirst($controller_name) . '.no_items_in_cart') ?></div>
+                        <div class="dj-empty">
+                            <span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span>
+                            <?= lang(ucfirst($controller_name) . '.no_items_in_cart') ?>
+                        </div>
                     </td>
                 </tr>
             <?php
@@ -177,9 +190,15 @@ helper('url');
                                     <?= form_input(['name' => 'name', 'id' => 'name', 'class' => 'form-control input-sm', 'value' => $item['name'], 'tabindex' => ++$tabindex]) ?>
                                 </td>
                             <?php } else { ?>
-                                <td><?= esc($item['item_number']) ?></td>
+                                <td><span class="ltr-inline"><?= esc($item['item_number']) ?></span></td>
                                 <td style="text-align: center;">
-                                    <?= esc($item['name']) . ' ' . esc(implode(' ', [$item['attribute_values'], $item['attribute_dtvalues']])) ?>
+                                    <span class="dj-cart-item-name"><?= esc($item['name']) ?></span>
+                                    <?php
+                                    $attribute_label = trim(implode(' ', [$item['attribute_values'], $item['attribute_dtvalues']]));
+                                    if ($attribute_label !== '') {
+                                        echo ' <span class="dj-cart-variant">' . esc($attribute_label) . '</span>';
+                                    }
+                                    ?>
                                     <br>
                                     <?php if ($item['stock_type'] == '0'): echo '[' . to_quantity_decimals($item['in_stock']) . ' in ' . esc($item['stock_name']) . ']';
                                     endif; ?>
@@ -384,7 +403,7 @@ helper('url');
                     <th style="width: 45%; text-align: right;"><?= to_currency_tax($tax['sale_tax_amount']) ?></th>
                 </tr>
             <?php } ?>
-            <tr>
+            <tr class="dj-total-row">
                 <th style="width: 55%; font-size: 150%"><?= lang(ucfirst($controller_name) . '.total') ?></th>
                 <th style="width: 45%; font-size: 150%; text-align: right;"><span id="sale_total"><?= to_currency($total) ?></span></th>
             </tr>
@@ -396,7 +415,7 @@ helper('url');
                     <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.payments_total') ?></th>
                     <th style="width: 45%; text-align: right;"><?= to_currency($payments_total) ?></th>
                 </tr>
-                <tr>
+                <tr class="dj-amount-due-row">
                     <th style="width: 55%; font-size: 120%"><?= lang(ucfirst($controller_name) . '.amount_due') ?></th>
                     <th style="width: 45%; font-size: 120%; text-align: right;"><span id="sale_amount_due"><?= to_currency($amount_due) ?></span></th>
                 </tr>
@@ -461,7 +480,7 @@ helper('url');
 
                         if (!$due_payment || ($due_payment && isset($customer))) {    // TODO: $due_payment is not needed because the first clause insures that it will always be true if it gets to this point.  Can be shortened to if (!$due_payment || isset($customer))
                     ?>
-                            <div class="btn btn-sm btn-success pull-right" id="finish_sale_button" tabindex="<?= ++$tabindex ?>">
+                            <div class="btn btn-sm btn-success pull-right" id="finish_sale_button" role="button" tabindex="<?= ++$tabindex ?>">
                                 <span class="glyphicon glyphicon-ok">&nbsp;</span><?= lang(ucfirst($controller_name) . '.complete_sale') ?>
                             </div>
                     <?php
@@ -503,7 +522,7 @@ helper('url');
                         </table>
                     <?= form_close() ?>
 
-                    <div class="btn btn-sm btn-success pull-right" id="add_payment_button" tabindex="<?= ++$tabindex ?>">
+                    <div class="btn btn-sm btn-success pull-right" id="add_payment_button" role="button" tabindex="<?= ++$tabindex ?>">
                         <span class="glyphicon glyphicon-credit-card">&nbsp;</span><?= lang(ucfirst($controller_name) . '.add_payment') ?>
                     </div>
                 <?php } ?>
@@ -533,12 +552,12 @@ helper('url');
 
             <?= form_open("$controller_name/cancel", ['id' => 'buttons_form']) ?>
             <div class="form-group" id="buttons_sale">
-                <div class="btn btn-sm btn-default pull-left" id="suspend_sale_button"><span class="glyphicon glyphicon-align-justify">&nbsp;</span><?= lang(ucfirst($controller_name) . '.suspend_sale') ?></div>
+                <div class="btn btn-sm btn-default pull-left" id="suspend_sale_button" role="button" tabindex="0"><span class="glyphicon glyphicon-align-justify">&nbsp;</span><?= lang(ucfirst($controller_name) . '.suspend_sale') ?></div>
                 <?php if (!$pos_mode && isset($customer)) { // Only show this part if the payment covers the total ?>
-                    <div class="btn btn-sm btn-success" id="finish_invoice_quote_button"><span class="glyphicon glyphicon-ok">&nbsp;</span><?= esc($mode_label) ?></div>
+                    <div class="btn btn-sm btn-success" id="finish_invoice_quote_button" role="button" tabindex="0"><span class="glyphicon glyphicon-ok">&nbsp;</span><?= esc($mode_label) ?></div>
                 <?php } ?>
 
-                <div class="btn btn-sm btn-danger pull-right" id="cancel_sale_button"><span class="glyphicon glyphicon-remove">&nbsp;</span><?= lang(ucfirst($controller_name) . '.cancel_sale') ?></div>
+                <div class="btn btn-sm btn-danger pull-right" id="cancel_sale_button" role="button" tabindex="0"><span class="glyphicon glyphicon-remove">&nbsp;</span><?= lang(ucfirst($controller_name) . '.cancel_sale') ?></div>
             </div>
             <?= form_close() ?>
 

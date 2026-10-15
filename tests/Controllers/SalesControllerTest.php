@@ -902,4 +902,76 @@ class SalesControllerTest extends CIUnitTestCase
         $this->assertNotEmpty($cart);
         $this->assertNotSame($itemId, array_values($cart)[0]['item_id']);
     }
+
+    public function testRegisterRendersRtlDirectionForArabicEmployee(): void
+    {
+        $cashierId = $this->createEmployee(
+            first_name: 'Cashier',
+            last_name:  'Arabic',
+            email:      'cashier-arabic.' . uniqid() . '@test.com',
+            username:   'cashier_arabic_' . uniqid(),
+            grants: [
+                ['permission_id' => 'sales', 'menu_group' => 'home'],
+                ['permission_id' => 'sales_stock', 'menu_group' => 'home'],
+            ],
+            employee: ['language_code' => 'ar-EG', 'language' => 'arabic'],
+        );
+        $this->loginAs($cashierId);
+
+        $response = $this->get('/sales');
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('lang="ar-EG" dir="rtl"', $response->getBody());
+    }
+
+    public function testRegisterRendersLtrDirectionForEnglishEmployee(): void
+    {
+        $cashierId = $this->createCashierEmployee();
+        $this->loginAs($cashierId);
+
+        $response = $this->get('/sales');
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('dir="ltr"', $response->getBody());
+    }
+
+    public function testRegisterRendersDahroujBrandWordmark(): void
+    {
+        $cashierId = $this->createCashierEmployee();
+        $this->loginAs($cashierId);
+
+        $response = $this->get('/sales');
+
+        $response->assertStatus(200);
+        // assertSee() searches decoded text, so it matches the Arabic wordmark even
+        // though getBody() returns the DOM parser's numerically-encoded HTML.
+        $response->assertSee('دحروج');
+        $response->assertSee('Dahrouj');
+    }
+
+    public function testRegisterShowsReturnModeMarkerWhenInReturnMode(): void
+    {
+        $cashierId = $this->createCashierWithReturnGrant();
+        $this->loginAs($cashierId);
+        $this->withSession(array_merge($this->session, ['sale_id' => NEW_ENTRY, 'sales_mode' => 'return']));
+
+        $response = $this->get('/sales');
+
+        $response->assertStatus(200);
+        $body = $response->getBody();
+        $this->assertStringContainsString('dj-return-banner', $body);
+        $this->assertStringContainsString('dj-mode-return', $body);
+    }
+
+    public function testRegisterDoesNotShowReturnModeMarkerDuringSale(): void
+    {
+        $cashierId = $this->createCashierEmployee();
+        $this->loginAs($cashierId);
+        $this->withSession(array_merge($this->session, ['sale_id' => NEW_ENTRY, 'sales_mode' => 'sale']));
+
+        $response = $this->get('/sales');
+
+        $response->assertStatus(200);
+        $this->assertStringNotContainsString('dj-return-banner', $response->getBody());
+    }
 }
