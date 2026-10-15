@@ -23,9 +23,6 @@ $request = Services::request();
     <?php $theme = (empty($config['theme']) ? 'flatly' : esc($config['theme'])); ?>
     <link rel="stylesheet" href="resources/bootswatch/<?= "$theme" ?>/bootstrap.min.css">
 
-    <link rel="stylesheet" href="css/dahrouj.css">
-    <link rel="stylesheet" href="css/rtl.css">
-
     <?php if (ENVIRONMENT == 'development' || get_cookie('debug') == 'true' || $request->getGet('debug') == 'true') : ?>
         <!-- inject:debug:css -->
         <!-- endinject -->
@@ -42,6 +39,10 @@ $request = Services::request();
         <!-- inject:prod:js -->
         <!-- endinject -->
     <?php endif; ?>
+
+    <!-- Dahrouj theme loads after the bundled application stylesheets so it wins the cascade. -->
+    <link rel="stylesheet" href="css/dahrouj.css">
+    <link rel="stylesheet" href="css/rtl.css">
 
     <?= view('partial/header_js') ?>
     <?= view('partial/lang_lines') ?>
