@@ -9,6 +9,7 @@ use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\Test\CIUnitTestCase;
 use Config\OSPOS;
 use Config\Services;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 
 /**
@@ -100,9 +101,7 @@ class OSPOSRulesTest extends CIUnitTestCase
         $this->assertNull($error);
     }
 
-    /**
-     * @dataProvider validPathStrictProvider
-     */
+    #[DataProvider('validPathStrictProvider')]
     public function testValidPathStrict(string $candidate, bool $expected): void
     {
         $rules = new OSPOSRules();
