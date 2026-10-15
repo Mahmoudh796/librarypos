@@ -1394,6 +1394,19 @@ class Items extends Secure_Controller
         $employee_id = $this->employee->get_logged_in_employee_info()->person_id;
         $cur_item_info = $this->item->get_info($item_id);
         $location_id = $this->request->getPost('stock_location');
+
+        // The stock location must be one the employee is granted for the items
+        // module. The location dropdown is only a convenience; a tampered
+        // request must not be able to adjust stock at a location the employee
+        // cannot access.
+        if ($location_id === null || !$this->stock_location->is_allowed_location((int) $location_id, 'items')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => lang('Items.error_adding_updating') . ' ' . $cur_item_info->name,
+                'id'      => NEW_ENTRY,
+            ]);
+        }
+
         $quantity_change = parse_quantity($this->request->getPost('newquantity'));
         $inv_data = [
             'trans_date'      => date('Y-m-d H:i:s'),

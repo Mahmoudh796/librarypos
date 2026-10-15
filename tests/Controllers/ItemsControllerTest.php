@@ -14,12 +14,14 @@ use App\Models\Attribute;
 use App\Models\Stock_location;
 use App\Models\Supplier;
 use Tests\Support\EmployeeFixtureTrait;
+use Tests\Support\ItemFixtureTrait;
 
 class ItemsControllerTest extends CIUnitTestCase
 {
     use DatabaseTestTrait;
     use FeatureTestTrait;
     use EmployeeFixtureTrait;
+    use ItemFixtureTrait;
 
     protected $migrate = true;
     protected $migrateOnce = true;
@@ -86,6 +88,30 @@ class ItemsControllerTest extends CIUnitTestCase
         ]);
     }
 
+    /**
+     * Inserts a stock location (and its per-module permission rows) directly,
+     * bypassing the "grant to every employee" side effect of
+     * Stock_location::save_value(). Models a location that exists but is not
+     * granted to the current employee.
+     */
+    protected function createUngrantedStockLocation(): int
+    {
+        $name = 'Off-limits ' . uniqid();
+
+        $this->db->table('stock_locations')->insert(['location_name' => $name, 'deleted' => 0]);
+        $locationId = (int) $this->db->insertID();
+
+        foreach (['items', 'sales', 'receivings'] as $module) {
+            $this->db->table('permissions')->insert([
+                'permission_id' => $module . '_' . str_replace(' ', '_', $name),
+                'module_id'     => $module,
+                'location_id'   => $locationId,
+            ]);
+        }
+
+        return $locationId;
+    }
+
     protected function baseItemPostData(): array
     {
         return [
@@ -100,6 +126,76 @@ class ItemsControllerTest extends CIUnitTestCase
             'item_type'     => (string) ITEM,
             'tax_percents'  => ['5'],
         ];
+    }
+
+    /**
+     * The inventory-adjustment endpoint must only touch stock locations the
+     * employee is granted for the items module. The location dropdown is a
+     * convenience, not a security boundary, so a crafted request targeting a
+     * location the employee cannot access must be rejected and must not write
+     * any quantity or inventory history.
+     */
+    public function testPostSaveInventoryRejectsLocationOutsideEmployeeGrants(): void
+    {
+        $employeeId = $this->createItemsEmployee();
+        $this->loginAsItemsEmployee($employeeId);
+
+        $itemId = $this->createTestItem();
+
+        // Create a second stock location the employee is NOT granted. It is
+        // inserted directly because Stock_location::save_value() grants every
+        // new location to all employees; the state we need is a location that
+        // exists but is not granted to this employee.
+        $otherLocationId = $this->createUngrantedStockLocation();
+
+        $response = $this->post("/items/saveInventory/$itemId", [
+            'stock_location' => (string) $otherLocationId,
+            'newquantity'    => '5',
+            'trans_comment'  => 'attempted out-of-grant adjustment',
+        ]);
+
+        $response->assertStatus(200);
+        $result = json_decode($response->getJSON(), true);
+        $this->assertFalse($result['success']);
+
+        $this->assertSame(0.0, $this->getItemQuantity($itemId, $otherLocationId));
+        $this->assertSame(
+            0,
+            $this->db->table('item_quantities')
+                ->where('item_id', $itemId)
+                ->where('location_id', $otherLocationId)
+                ->countAllResults()
+        );
+        $this->assertSame(
+            0,
+            $this->db->table('inventory')
+                ->where('trans_items', $itemId)
+                ->where('trans_location', $otherLocationId)
+                ->countAllResults()
+        );
+    }
+
+    /**
+     * The same endpoint must still succeed for a location the employee is
+     * granted, so the guard above does not break legitimate adjustments.
+     */
+    public function testPostSaveInventoryAcceptsGrantedLocation(): void
+    {
+        $employeeId = $this->createItemsEmployee();
+        $this->loginAsItemsEmployee($employeeId);
+
+        $itemId = $this->createTestItem();
+
+        $response = $this->post("/items/saveInventory/$itemId", [
+            'stock_location' => '1',
+            'newquantity'    => '7',
+            'trans_comment'  => 'granted adjustment',
+        ]);
+
+        $response->assertStatus(200);
+        $result = json_decode($response->getJSON(), true);
+        $this->assertTrue($result['success']);
+        $this->assertSame(7.0, $this->getItemQuantity($itemId, 1));
     }
 
     /**
