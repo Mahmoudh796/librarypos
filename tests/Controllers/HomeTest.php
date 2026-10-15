@@ -8,6 +8,7 @@ use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use CodeIgniter\Test\TestResponse;
 use App\Models\Employee;
+use Config\OSPOS;
 use RuntimeException;
 
 /**
@@ -666,5 +667,46 @@ class HomeTest extends CIUnitTestCase
         $response->assertSee('Sales Today');
         $response->assertSee('Inventory Value (Cost)');
         $response->assertSee('Inventory Value (Retail)');
+    }
+
+    /**
+     * The dashboard is the highest-traffic page after login: it must keep the
+     * Dahrouj identity and must never fall back to the upstream product brand.
+     *
+     * TestResponse::getBody() re-serializes the parsed DOM, which turns every
+     * non-ASCII character into a numeric HTML entity, so the body is decoded
+     * before matching the Arabic wordmark.
+     *
+     * @return void
+     */
+    public function testDashboardKeepsDahroujBrandingWithoutLegacyProductIdentity(): void
+    {
+        $ospos = config(OSPOS::class);
+        $originalCompany = $ospos->settings['company'] ?? null;
+        $ospos->settings['company'] = 'Dahrouj';
+
+        try {
+            $this->resetSession();
+            $response = $this->renderDashboard();
+
+            $response->assertStatus(200);
+
+            $body = html_entity_decode($response->getBody(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+            $this->assertStringContainsString('دحروج', $body);
+            $this->assertStringContainsString('Dahrouj', $body);
+
+            $this->assertStringNotContainsString('OSPOS', $body);
+            $this->assertStringNotContainsString('Open Source Point of Sale', $body);
+
+            // The legacy upstream emblem must not be rendered anywhere.
+            $this->assertStringNotContainsString('M154.88998', $body);
+        } finally {
+            if ($originalCompany === null) {
+                unset($ospos->settings['company']);
+            } else {
+                $ospos->settings['company'] = $originalCompany;
+            }
+        }
     }
 }
