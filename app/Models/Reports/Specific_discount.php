@@ -97,6 +97,8 @@ class Specific_discount extends Report
 
         $builder->where('discount >=', $inputs['discount']);    // TODO: Duplicated code
         $builder->where('discount_type', $inputs['discount_type']);
+        helper('report');
+        apply_report_location_filter($builder, $inputs, 'item_location');
 
         switch ($inputs['sale_type']) {
             case 'complete':
@@ -170,6 +172,8 @@ class Specific_discount extends Report
 
         $builder->where('discount >=', $inputs['discount']);    // TODO: Duplicated code
         $builder->where('discount_type', $inputs['discount_type']);
+        helper('report');
+        apply_report_location_filter($builder, $inputs, 'item_location');
 
         // TODO: this needs to be converted to a switch statement
         if ($inputs['sale_type'] == 'complete') {

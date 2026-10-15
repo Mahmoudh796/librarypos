@@ -123,6 +123,57 @@ class Reports extends Secure_Controller
     }
 
     /**
+     * Resolves a report's location filter against the locations the logged-in
+     * employee is actually granted.
+     *
+     * The location dropdown is not a security boundary: the location is a URL
+     * segment, so an employee limited to Branch A could otherwise request
+     * Branch B (or "all") and read every branch. This method turns the request
+     * into an effective filter, and the report models apply the returned
+     * allowed_location_ids when the filter is "all".
+     *
+     * @param string $locationId Requested location id or 'all'
+     * @param string $module_id Grant module the location grants belong to
+     * @return array{0: string, 1: array<int>|null} Effective [location_id, allowed_location_ids]
+     */
+    private function _resolveLocation(string $locationId, string $module_id = 'sales'): array
+    {
+        $allowed = array_map('intval', array_keys($this->stock_location->get_allowed_locations($module_id)));
+        $locationCount = $this->stock_location->get_all()->getNumRows();
+        $restricted = count($allowed) < $locationCount;
+
+        if ($locationId === '' || $locationId === 'all') {
+            return ['all', $restricted ? $allowed : null];
+        }
+
+        if (in_array((int) $locationId, $allowed, true)) {
+            return [(string) (int) $locationId, null];
+        }
+
+        // Unknown or unauthorized location: match nothing instead of every location.
+        return ['all', []];
+    }
+
+    /**
+     * Injects the resolved location filter into a report's inputs.
+     *
+     * @param array $inputs
+     * @param string $module_id
+     * @return array
+     */
+    private function _reportInputs(array $inputs, string $module_id = 'sales'): array
+    {
+        [$locationId, $allowedLocationIds] = $this->_resolveLocation((string) ($inputs['location_id'] ?? 'all'), $module_id);
+        $inputs['location_id'] = $locationId;
+
+        if ($allowedLocationIds !== null) {
+            $inputs['allowed_location_ids'] = $allowedLocationIds;
+        }
+
+        return $inputs;
+    }
+
+    /**
      * Summary Sales Report.
      * @param string $start_date
      * @param string $end_date
@@ -140,6 +191,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_sales->getData($inputs);
         $summary = $this->summary_sales->getSummaryData($inputs);
@@ -187,6 +239,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_categories->getData($inputs);
         $summary = $this->summary_categories->getSummaryData($inputs);
@@ -270,6 +323,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_customers->getData($inputs);
         $summary = $this->summary_customers->getSummaryData($inputs);
@@ -318,6 +372,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_suppliers->getData($inputs);
         $summary = $this->summary_suppliers->getSummaryData($inputs);
@@ -364,6 +419,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_items->getData($inputs);
         $summary = $this->summary_items->getSummaryData($inputs);
@@ -414,6 +470,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_employees->getData($inputs);
         $summary = $this->summary_employees->getSummaryData($inputs);
@@ -462,6 +519,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_taxes->getData($inputs);
         $summary = $this->summary_taxes->getSummaryData($inputs);
@@ -504,6 +562,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_sales_taxes->getData($inputs);
         $summary = $this->summary_sales_taxes->getSummaryData($inputs);
@@ -603,6 +662,7 @@ class Reports extends Secure_Controller
             'sale_type'   => 'complete',
             'location_id' => 'all'
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_payments->getData($inputs);
         $summary = $this->summary_payments->getSummaryData($inputs);
@@ -780,6 +840,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_sales->getData($inputs);
         $summary = $this->summary_sales->getSummaryData($inputs);
@@ -826,6 +887,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
 
         $report_data = $this->summary_items->getData($inputs);
@@ -873,6 +935,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_categories->getData($inputs);
         $summary = $this->summary_categories->getSummaryData($inputs);
@@ -916,6 +979,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
 
         $report_data = $this->summary_suppliers->getData($inputs);
@@ -961,6 +1025,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_employees->getData($inputs);
         $summary = $this->summary_employees->getSummaryData($inputs);
@@ -1005,6 +1070,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_taxes->getData($inputs);
         $summary = $this->summary_taxes->getSummaryData($inputs);
@@ -1049,6 +1115,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_sales_taxes->getData($inputs);
         $summary = $this->summary_sales_taxes->getSummaryData($inputs);
@@ -1093,6 +1160,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_customers->getData($inputs);
         $summary = $this->summary_customers->getSummaryData($inputs);
@@ -1188,6 +1256,7 @@ class Reports extends Secure_Controller
             'sale_type'   => $sale_type,
             'location_id' => $location_id
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $report_data = $this->summary_payments->getData($inputs);
         $summary = $this->summary_payments->getSummaryData($inputs);
@@ -1276,6 +1345,7 @@ class Reports extends Secure_Controller
         $this->clearCache();
 
         $inputs = ['start_date' => $start_date, 'end_date' => $end_date, 'customer_id' => $customer_id, 'sale_type' => $sale_type, 'payment_type' => $payment_type];
+        $inputs = $this->_reportInputs($inputs);
 
         $specific_customer = model(Specific_customer::class);
 
@@ -1403,6 +1473,7 @@ class Reports extends Secure_Controller
         $this->clearCache();
 
         $inputs = ['start_date' => $start_date, 'end_date' => $end_date, 'employee_id' => $employee_id, 'sale_type' => $sale_type];
+        $inputs = $this->_reportInputs($inputs);
 
         $specific_employee = model(Specific_employee::class);
 
@@ -1534,6 +1605,7 @@ class Reports extends Secure_Controller
             'sale_type'     => $sale_type,
             'discount_type' => $discount_type
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $specific_discount = model(Specific_discount::class);
 
@@ -1712,6 +1784,7 @@ class Reports extends Secure_Controller
             'supplier_id' => $supplier_id,
             'sale_type'   => $sale_type
         ];
+        $inputs = $this->_reportInputs($inputs);
 
         $specific_supplier = model(Specific_supplier::class);
 
@@ -1942,6 +2015,7 @@ class Reports extends Secure_Controller
         $definition_names = $this->attribute->getDefinitionsByFlags(attribute::SHOW_IN_RECEIVINGS, true);
 
         $inputs = ['start_date' => $start_date, 'end_date' => $end_date, 'receiving_type' => $receiving_type, 'location_id' => $location_id, 'definition_ids' => array_keys($definition_names)];
+        $inputs = $this->_reportInputs($inputs, 'receivings');
 
         $this->detailed_receivings->create($inputs);
 
@@ -2024,7 +2098,7 @@ class Reports extends Secure_Controller
     {
         $this->clearCache();
 
-        $inputs = [];
+        $inputs = $this->_reportInputs([], 'items');
 
         $inventory_low = model(Inventory_low::class);
 
@@ -2082,6 +2156,7 @@ class Reports extends Secure_Controller
         $this->clearCache();
 
         $inputs = ['location_id' => $location_id, 'item_count' => $item_count];
+        $inputs = $this->_reportInputs($inputs, 'items');
 
         $report_data = $this->inventory_summary->getData($inputs);
 

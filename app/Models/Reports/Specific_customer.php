@@ -94,6 +94,8 @@ class Specific_customer extends Report
             MAX(comment) AS comment');
 
         $builder->where('customer_id', $inputs['customer_id']);    // TODO: Duplicated code
+        helper('report');
+        apply_report_location_filter($builder, $inputs, 'item_location');
 
         if ($inputs['payment_type'] == 'invoices') {
             $builder->where('sale_type', SALE_TYPE_INVOICE);
@@ -172,6 +174,8 @@ class Specific_customer extends Report
         $builder->select('SUM(subtotal) AS subtotal, SUM(tax) AS tax, SUM(total) AS total, SUM(cost) AS cost, SUM(profit) AS profit');
 
         $builder->where('customer_id', $inputs['customer_id']);    // TODO: Duplicate code
+        helper('report');
+        apply_report_location_filter($builder, $inputs, 'item_location');
 
         if ($inputs['payment_type'] == 'invoices') {
             $builder->where('sale_type', SALE_TYPE_INVOICE);

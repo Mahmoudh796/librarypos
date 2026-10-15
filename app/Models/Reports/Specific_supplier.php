@@ -78,6 +78,8 @@ class Specific_supplier extends Report
             MAX(discount) AS discount');
 
         $builder->where('supplier_id', $inputs['supplier_id']);    // TODO: Duplicated code
+        helper('report');
+        apply_report_location_filter($builder, $inputs);
 
         switch ($inputs['sale_type']) {
             case 'complete':
@@ -132,6 +134,8 @@ class Specific_supplier extends Report
         $builder = $this->db->table('sales_items_temp');
         $builder->select('SUM(subtotal) AS subtotal, SUM(tax) AS tax, SUM(total) AS total, SUM(cost) AS cost, SUM(profit) AS profit');
         $builder->where('supplier_id', $inputs['supplier_id']);
+        helper('report');
+        apply_report_location_filter($builder, $inputs);
 
         switch ($inputs['sale_type']) {
             case 'complete':

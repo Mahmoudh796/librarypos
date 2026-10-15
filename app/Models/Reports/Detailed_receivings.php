@@ -97,9 +97,8 @@ class Detailed_receivings extends Report
         $builder->join('people AS employee', 'receivings_items_temp.employee_id = employee.person_id');
         $builder->join('suppliers AS supplier', 'receivings_items_temp.supplier_id = supplier.person_id', 'left');
 
-        if ($inputs['location_id'] != 'all') {
-            $builder->where('item_location', $inputs['location_id']);
-        }
+        helper('report');
+        apply_report_location_filter($builder, $inputs, 'item_location');
 
         if ($inputs['receiving_type'] == 'receiving') {    // TODO: These if statements should be replaced with a switch statement
             $builder->where('quantity_purchased >', 0);
@@ -158,9 +157,8 @@ class Detailed_receivings extends Report
         $builder = $this->db->table('receivings_items_temp');
         $builder->select('SUM(total) AS total');
 
-        if ($inputs['location_id'] != 'all') {
-            $builder->where('item_location', $inputs['location_id']);
-        }
+        helper('report');
+        apply_report_location_filter($builder, $inputs, 'item_location');
 
         switch ($inputs['receiving_type']) {
             case 'receiving':

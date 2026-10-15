@@ -65,9 +65,8 @@ class Inventory_summary extends Report
             $builder->where('item_quantities.quantity >', 0);
         }
 
-        if ($inputs['location_id'] != 'all') {
-            $builder->where('stock_locations.location_id', $inputs['location_id']);
-        }
+        helper('report');
+        apply_report_location_filter($builder, $inputs, 'stock_locations.location_id');
 
         $builder->orderBy('items.name');
         $builder->orderBy('items.qty_per_pack');

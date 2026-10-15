@@ -119,9 +119,8 @@ class Detailed_sales extends Report
             MAX(payment_type) AS payment_type,
             MAX(comment) AS comment');
 
-        if ($inputs['location_id'] != 'all') {    // TODO: Duplicated code
-            $builder->where('item_location', $inputs['location_id']);
-        }
+        helper('report');
+        apply_report_location_filter($builder, $inputs, 'item_location');
 
         switch ($inputs['sale_type']) {
             case 'complete':
@@ -218,9 +217,8 @@ class Detailed_sales extends Report
         $builder = $this->db->table('sales_items_temp');
         $builder->select('SUM(subtotal) AS subtotal, SUM(tax) AS tax, SUM(total) AS total, SUM(cost) AS cost, SUM(profit) AS profit');
 
-        if ($inputs['location_id'] != 'all') {    // TODO: Duplicated code
-            $builder->where('item_location', $inputs['location_id']);
-        }
+        helper('report');
+        apply_report_location_filter($builder, $inputs, 'item_location');
 
         switch ($inputs['sale_type']) {
             case 'complete':

@@ -32,7 +32,13 @@ class Inventory_low extends Report
      */
     public function getData(array $inputs): array
     {    // TODO: convert to using QueryBuilder. Use App/Models/Reports/Summary_taxes.php getData() as a reference template
+        helper('report');
         $item = model(Item::class);
+
+        // Constrain the report to the locations the employee is granted. Without
+        // this the previous query returned every branch for everyone.
+        $locationWhere = get_report_location_where($inputs, 'item_quantities.location_id');
+
         $query = $this->db->query("SELECT " . $item->get_item_name('name') . ",
             items.item_number,
             item_quantities.quantity,
@@ -44,7 +50,7 @@ class Inventory_low extends Report
             WHERE items.deleted = 0
             AND items.stock_type = 0
             AND item_quantities.quantity <= items.reorder_level
-            AND stock_locations.deleted = 0
+            AND stock_locations.deleted = 0" . $locationWhere . "
             ORDER BY items.name");
 
         return $query->getResultArray() ?: [];
