@@ -47,6 +47,55 @@ function current_language(bool $load_system_language = false): string
 }
 
 /**
+ * Language codes written right-to-left (Arabic, Persian, Hebrew, Urdu and Central Kurdish).
+ * The list holds both full codes and their primary subtag so a new regional variant
+ * (e.g. ar-SA) is treated as RTL without an explicit entry.
+ *
+ * @return string[]
+ */
+function get_rtl_language_codes(): array
+{
+    return ['ar', 'ar-EG', 'ar-LB', 'fa', 'he', 'ckb', 'ur'];
+}
+
+/**
+ * Whether a language code (or the currently active language) is written right-to-left.
+ *
+ * @param string|null $language_code
+ * @return bool
+ */
+function is_rtl_language(?string $language_code = null): bool
+{
+    $language_code = $language_code ?? current_language_code();
+
+    if (empty($language_code)) {
+        return false;
+    }
+
+    $normalized = strtolower(str_replace('_', '-', trim($language_code)));
+
+    foreach (get_rtl_language_codes() as $rtl_code) {
+        if ($normalized === strtolower($rtl_code)) {
+            return true;
+        }
+    }
+
+    // Fall back to the primary subtag so regional variants inherit the script direction.
+    return in_array(explode('-', $normalized)[0], ['ar', 'fa', 'he', 'ckb', 'ur'], true);
+}
+
+/**
+ * The document text direction ('rtl' or 'ltr') for a language code or the current language.
+ *
+ * @param string|null $language_code
+ * @return string
+ */
+function get_text_direction(?string $language_code = null): string
+{
+    return is_rtl_language($language_code) ? 'rtl' : 'ltr';
+}
+
+/**
  * @return string[]
  */
 function get_languages(): array

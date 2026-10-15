@@ -12,7 +12,7 @@ $request = Services::request();
 ?>
 
 <!doctype html>
-<html lang="<?= current_language_code() ?>">
+<html lang="<?= current_language_code() ?>" dir="<?= get_text_direction() ?>">
 
 <head>
     <meta charset="utf-8">
@@ -22,6 +22,9 @@ $request = Services::request();
     <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
     <?php $theme = (empty($config['theme']) ? 'flatly' : esc($config['theme'])); ?>
     <link rel="stylesheet" href="resources/bootswatch/<?= "$theme" ?>/bootstrap.min.css">
+
+    <link rel="stylesheet" href="css/dahrouj.css">
+    <link rel="stylesheet" href="css/rtl.css">
 
     <?php if (ENVIRONMENT == 'development' || get_cookie('debug') == 'true' || $request->getGet('debug') == 'true') : ?>
         <!-- inject:debug:css -->
@@ -54,13 +57,14 @@ $request = Services::request();
     <div class="wrapper">
         <div class="topbar">
             <div class="container">
-                <div class="navbar-left">
+                <div class="navbar-left dj-clock">
+                    <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
                     <div id="liveclock"><?= date($config['dateformat'] . ' ' . $config['timeformat']) ?></div>
                 </div>
 
-                <div class="navbar-right" style="margin: 0;">
+                <div class="navbar-right dj-account" style="margin: 0;">
                     <?= anchor("home/changePassword/$user_info->person_id", "$user_info->first_name $user_info->last_name", ['class' => 'modal-dlg', 'data-btn-submit' => lang('Common.submit'), 'title' => lang('Employees.change_password')]) ?>
-                    <span>&nbsp;|&nbsp;</span>
+                    <span class="dj-sep">&nbsp;|&nbsp;</span>
                     <?= anchor('home/logout', lang('Login.logout')) ?>
                 </div>
 
@@ -80,15 +84,19 @@ $request = Services::request();
                         <span class="icon-bar"></span>
                     </button>
 
-                    <a class="navbar-brand hidden-sm" href="<?= site_url() ?>">OSPOS</a>
+                    <a class="navbar-brand hidden-sm dj-brand" href="<?= site_url() ?>" title="<?= esc($config['company']) ?>">
+                        <span class="dj-brand-ar" lang="ar" dir="rtl">دحروج</span>
+                        <span class="dj-brand-en">Dahrouj</span>
+                    </a>
                 </div>
 
                 <div class="navbar-collapse collapse">
                     <ul class="nav navbar-nav navbar-right">
                         <?php foreach ($allowed_modules as $module): ?>
-                            <li class="<?= $module->module_id == $request->getUri()->getSegment(1) ? 'active' : '' ?>">
-                                <a href="<?= base_url($module->module_id) ?>" title="<?= lang("Module.$module->module_id") ?>" class="menu-icon">
-                                    <img src="<?= base_url("images/menubar/$module->module_id.svg") ?>" style="border: none;" alt="Module Icon"><br>
+                            <?php $isActive = $module->module_id == $request->getUri()->getSegment(1); ?>
+                            <li class="<?= $isActive ? 'active' : '' ?> dj-nav-item">
+                                <a href="<?= base_url($module->module_id) ?>" title="<?= lang("Module.$module->module_id") ?>" class="menu-icon"<?= $isActive ? ' aria-current="page"' : '' ?>>
+                                    <img src="<?= base_url("images/menubar/$module->module_id.svg") ?>" style="border: none;" alt=""><br>
                                     <?= lang('Module.' . $module->module_id) ?>
                                 </a>
                             </li>

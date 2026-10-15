@@ -56,4 +56,64 @@ class LocaleHelperTest extends CIUnitTestCase
     {
         $this->assertFalse(isValidDate('2024-06'));
     }
+
+    public function testArabicLanguageCodesAreRtl(): void
+    {
+        $this->assertTrue(is_rtl_language('ar-EG'));
+        $this->assertTrue(is_rtl_language('ar-LB'));
+        $this->assertTrue(is_rtl_language('ar'));
+    }
+
+    public function testArabicRegionalVariantIsRtlViaPrimarySubtag(): void
+    {
+        // A regional variant that has no explicit entry still inherits the script direction.
+        $this->assertTrue(is_rtl_language('ar-SA'));
+    }
+
+    public function testUnderscoreSeparatedLanguageCodeIsNormalized(): void
+    {
+        $this->assertTrue(is_rtl_language('ar_EG'));
+    }
+
+    public function testWhitespaceAroundLanguageCodeIsTrimmed(): void
+    {
+        $this->assertTrue(is_rtl_language('  ar-EG  '));
+    }
+
+    public function testPersianHebrewUrduAndKurdishAreRtl(): void
+    {
+        $this->assertTrue(is_rtl_language('fa'));
+        $this->assertTrue(is_rtl_language('he'));
+        $this->assertTrue(is_rtl_language('ur'));
+        $this->assertTrue(is_rtl_language('ckb'));
+    }
+
+    public function testLatinLanguagesAreNotRtl(): void
+    {
+        $this->assertFalse(is_rtl_language('en'));
+        $this->assertFalse(is_rtl_language('en-GB'));
+        $this->assertFalse(is_rtl_language('tr'));
+        $this->assertFalse(is_rtl_language('az'));
+        $this->assertFalse(is_rtl_language('fr'));
+    }
+
+    public function testEmptyLanguageCodeIsNotRtl(): void
+    {
+        $this->assertFalse(is_rtl_language(''));
+    }
+
+    public function testGetTextDirectionReturnsRtlForArabic(): void
+    {
+        $this->assertSame('rtl', get_text_direction('ar-EG'));
+    }
+
+    public function testGetTextDirectionReturnsLtrForLatinLanguages(): void
+    {
+        $this->assertSame('ltr', get_text_direction('en-GB'));
+    }
+
+    public function testGetRtlLanguageCodesIncludesArabicPrimarySubtag(): void
+    {
+        $this->assertContains('ar', get_rtl_language_codes());
+    }
 }

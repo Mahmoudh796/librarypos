@@ -16,7 +16,7 @@ $request = Services::request();
 ?>
 
 <!doctype html>
-<html lang="<?= current_language_code() ?>">
+<html lang="<?= current_language_code() ?>" dir="<?= get_text_direction() ?>">
 
 <head>
     <meta charset="utf-8">
@@ -34,6 +34,7 @@ $request = Services::request();
     ?>
     <link rel="stylesheet" href="resources/bootswatch5/<?= esc($theme, 'attr') ?>/bootstrap.min.css">
     <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/rtl.css">
     <meta name="theme-color" content="#2c3e50">
 </head>
 

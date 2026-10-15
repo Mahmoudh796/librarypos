@@ -1,0 +1,500 @@
+/*
+ * Dahrouj application theme.
+ *
+ * Loaded after the Bootswatch theme (resources/bootswatch/<theme>/bootstrap.min.css)
+ * so equal-specificity overrides win. Design tokens live here; components consume
+ * them instead of hard-coded colours so the identity stays centralised.
+ *
+ * Every layout rule is wrapped in @media screen. The receipt, invoice and barcode
+ * documents that share the app shell keep their dedicated print stylesheets
+ * (receipt.css / invoice.css / ospos_print.css) untouched.
+ */
+
+:root {
+    /* Palette: restrained neutrals with a single Dahrouj accent. */
+    --dj-accent: #0f766e;
+    --dj-accent-strong: #0b5e58;
+    --dj-accent-soft: rgba(15, 118, 110, 0.12);
+    --dj-bg: #f4f6f8;
+    --dj-surface: #ffffff;
+    --dj-surface-alt: #f8fafc;
+    --dj-border: #dfe4ea;
+    --dj-border-strong: #c7ced6;
+    --dj-text: #1f2d3d;
+    --dj-text-muted: #6b7785;
+    --dj-success: #1e9e6a;
+    --dj-warning: #b7791f;
+    --dj-danger: #c0392b;
+    --dj-info: #2b6cb0;
+
+    /* Spacing scale. */
+    --dj-space-1: 4px;
+    --dj-space-2: 8px;
+    --dj-space-3: 12px;
+    --dj-space-4: 16px;
+    --dj-space-5: 24px;
+
+    /* Radii, control height and elevation. */
+    --dj-radius: 6px;
+    --dj-radius-sm: 4px;
+    --dj-control-height: 34px;
+    --dj-shadow: 0 1px 2px rgba(31, 45, 61, 0.08);
+    --dj-shadow-raised: 0 4px 14px rgba(31, 45, 61, 0.12);
+
+    /* Arabic-aware system font stack: no external font dependency. */
+    --dj-font: "Segoe UI", "Helvetica Neue", "Noto Naskh Arabic", "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+    --dj-font-mono: Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+@media screen {
+    /* ---------- Shell ---------- */
+
+    body {
+        background-color: var(--dj-bg);
+        color: var(--dj-text);
+        font-family: var(--dj-font);
+    }
+
+    .wrapper {
+        font-size: 13px;
+        color: var(--dj-text);
+    }
+
+    .container {
+        padding-inline: var(--dj-space-4);
+    }
+
+    .topbar {
+        background: #14212e;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 0.35em 0;
+    }
+
+    .topbar .dj-clock {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+        opacity: 0.9;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .topbar .dj-account a {
+        color: #eaf2f0;
+        text-decoration: none;
+    }
+
+    .topbar .dj-account a:hover,
+    .topbar .dj-account a:focus {
+        color: #ffffff;
+        text-decoration: underline;
+    }
+
+    .topbar .dj-sep {
+        opacity: 0.5;
+    }
+
+    /* ---------- Brand wordmark ---------- */
+
+    .dj-brand {
+        display: inline-flex;
+        align-items: baseline;
+        gap: var(--dj-space-2);
+        font-weight: 700;
+        letter-spacing: 0.01em;
+    }
+
+    .dj-brand-ar {
+        font-size: 20px;
+        line-height: 1;
+    }
+
+    .dj-brand-en {
+        font-size: 15px;
+        opacity: 0.85;
+    }
+
+    /* ---------- Navigation ---------- */
+
+    .navbar-default {
+        background-color: var(--dj-surface);
+        border-bottom: 1px solid var(--dj-border);
+        margin-bottom: var(--dj-space-4);
+    }
+
+    .navbar-default .navbar-nav > li > a.menu-icon {
+        color: var(--dj-text-muted);
+        border-bottom: 3px solid transparent;
+        transition: color 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
+    }
+
+    .navbar-default .navbar-nav > li > a.menu-icon:hover,
+    .navbar-default .navbar-nav > li > a.menu-icon:focus {
+        color: var(--dj-accent);
+        background-color: var(--dj-surface-alt);
+    }
+
+    .navbar-default .navbar-nav > li.active > a.menu-icon {
+        color: var(--dj-accent);
+        background-color: var(--dj-surface-alt);
+        border-bottom-color: var(--dj-accent);
+    }
+
+    .navbar .menu-icon img {
+        opacity: 0.9;
+    }
+
+    /* ---------- Page titles ---------- */
+
+    #page_title,
+    .page-header {
+        font-family: var(--dj-font);
+        font-weight: 600;
+        color: var(--dj-text);
+    }
+
+    .page-header {
+        border-bottom: 1px solid var(--dj-border);
+        margin-top: var(--dj-space-3);
+    }
+
+    /* ---------- Panels / cards ---------- */
+
+    .panel {
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius);
+        box-shadow: var(--dj-shadow);
+    }
+
+    .panel > .panel-heading {
+        border-radius: var(--dj-radius) var(--dj-radius) 0 0;
+        font-weight: 600;
+    }
+
+    .panel-primary > .panel-heading,
+    .panel-heading.dj-heading-accent {
+        background-color: var(--dj-accent);
+        border-color: var(--dj-accent);
+        color: #ffffff;
+    }
+
+    /* ---------- Tables ---------- */
+
+    .table > thead > tr > th {
+        border-bottom: 2px solid var(--dj-border-strong);
+        color: var(--dj-text-muted);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .table > tbody > tr:hover {
+        background-color: var(--dj-surface-alt);
+    }
+
+    .table.table-condensed > tbody > tr > td,
+    .table.table-condensed > tbody > tr > th {
+        vertical-align: middle;
+    }
+
+    /* Financial columns stay tabular so digits line up when scanning. */
+    .table .text-right,
+    #register td.text-right,
+    .table td.dj-numeric {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* ---------- Forms ---------- */
+
+    .control-label {
+        font-weight: 600;
+        color: var(--dj-text);
+    }
+
+    .form-control {
+        border-color: var(--dj-border-strong);
+        border-radius: var(--dj-radius-sm);
+        box-shadow: none;
+        height: var(--dj-control-height);
+    }
+
+    .form-control:focus {
+        border-color: var(--dj-accent);
+        box-shadow: 0 0 0 3px var(--dj-accent-soft);
+    }
+
+    select.form-control,
+    .selectpicker.form-control {
+        height: auto;
+    }
+
+    .help-block,
+    .text-muted {
+        color: var(--dj-text-muted) !important;
+    }
+
+    .has-error .form-control {
+        border-color: var(--dj-danger);
+    }
+
+    .has-error .control-label,
+    .has-error .help-block {
+        color: var(--dj-danger);
+    }
+
+    /* Red asterisk convention for required fields. */
+    .dj-required::after {
+        content: " *";
+        color: var(--dj-danger);
+    }
+
+    /* ---------- Buttons ---------- */
+
+    .btn {
+        border-radius: var(--dj-radius-sm);
+        font-weight: 600;
+    }
+
+    .btn-primary {
+        background-color: var(--dj-accent);
+        border-color: var(--dj-accent-strong);
+    }
+
+    .btn-primary:hover,
+    .btn-primary:focus,
+    .btn-primary:active,
+    .btn-primary.active {
+        background-color: var(--dj-accent-strong);
+        border-color: var(--dj-accent-strong);
+    }
+
+    .btn-danger {
+        background-color: var(--dj-danger);
+        border-color: #a53125;
+    }
+
+    /* ---------- Alerts and empty states ---------- */
+
+    .alert {
+        border: 1px solid transparent;
+        border-radius: var(--dj-radius-sm);
+    }
+
+    .dj-empty {
+        padding: var(--dj-space-5) var(--dj-space-4);
+        text-align: center;
+        color: var(--dj-text-muted);
+        background-color: var(--dj-surface-alt);
+        border: 1px dashed var(--dj-border-strong);
+        border-radius: var(--dj-radius);
+    }
+
+    .dj-empty .glyphicon {
+        display: block;
+        font-size: 28px;
+        margin-bottom: var(--dj-space-2);
+        opacity: 0.55;
+    }
+
+    /* ---------- Status pills (never colour-only: text is always present) ---------- */
+
+    .dj-status {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.5;
+        white-space: nowrap;
+    }
+
+    .dj-status-normal {
+        color: #0f5c3f;
+        background-color: rgba(30, 158, 106, 0.16);
+        border: 1px solid rgba(30, 158, 106, 0.4);
+    }
+
+    .dj-status-low {
+        color: #7a520f;
+        background-color: rgba(183, 121, 31, 0.16);
+        border: 1px solid rgba(183, 121, 31, 0.42);
+    }
+
+    .dj-status-out {
+        color: #8e2b20;
+        background-color: rgba(192, 57, 43, 0.16);
+        border: 1px solid rgba(192, 57, 43, 0.42);
+    }
+
+    /* ---------- Dashboard KPIs ---------- */
+
+    #dashboard .panel {
+        height: 100%;
+    }
+
+    #dashboard .panel-body h3 {
+        margin: var(--dj-space-1) 0;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    #dashboard .panel-body small {
+        color: var(--dj-text-muted);
+    }
+
+    #dashboard .page-header {
+        margin-top: 0;
+    }
+
+    /* ---------- Cashier register ---------- */
+
+    #register_wrapper .panel {
+        box-shadow: var(--dj-shadow);
+    }
+
+    #register_wrapper .panel-body {
+        padding: var(--dj-space-3);
+    }
+
+    #register {
+        background-color: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius);
+        box-shadow: var(--dj-shadow);
+    }
+
+    #register th {
+        color: var(--dj-text-muted);
+        border-bottom: 2px solid var(--dj-border-strong);
+    }
+
+    #register tbody > tr:hover {
+        background-color: var(--dj-surface-alt);
+    }
+
+    #register .form-control.input-sm {
+        height: 30px;
+    }
+
+    /* Variant identity (Phase 2): colour/size stays legible next to the product name. */
+    .dj-cart-item-name {
+        font-weight: 600;
+        color: var(--dj-text);
+    }
+
+    .dj-cart-variant {
+        color: var(--dj-accent-strong);
+        font-weight: 600;
+    }
+
+    #overall_sale {
+        border-top: 3px solid var(--dj-accent);
+    }
+
+    .dj-total-row th {
+        border-top: 2px solid var(--dj-border-strong);
+        padding-top: var(--dj-space-2);
+    }
+
+    .dj-amount-due-row th {
+        background-color: var(--dj-accent-soft);
+    }
+
+    #sale_totals,
+    #payment_totals {
+        border-top: 1px solid var(--dj-border);
+    }
+
+    #sale_totals tr:last-child th,
+    #payment_totals tr:last-child th {
+        color: var(--dj-text);
+    }
+
+    /* Primary completion actions must be visually unmistakable. */
+    #finish_sale_button,
+    #finish_invoice_quote_button {
+        font-size: 14px;
+        padding: 8px 14px;
+        box-shadow: var(--dj-shadow);
+    }
+
+    #suspend_sale_button,
+    #cancel_sale_button {
+        min-width: 120px;
+    }
+
+    /* Return mode: restrained warning banding, never mistaken for a sale. */
+    .dj-return-banner {
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+        margin-bottom: var(--dj-space-3);
+        padding: var(--dj-space-3) var(--dj-space-4);
+        color: #7a520f;
+        background-color: rgba(183, 121, 31, 0.14);
+        border: 1px solid rgba(183, 121, 31, 0.5);
+        border-inline-start: 5px solid var(--dj-warning);
+        border-radius: var(--dj-radius);
+        font-weight: 600;
+    }
+
+    .dj-return-banner .glyphicon {
+        font-size: 18px;
+    }
+
+    .dj-mode-badge {
+        display: inline-block;
+        margin-inline-start: var(--dj-space-2);
+        padding: 1px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #ffffff;
+        background-color: var(--dj-accent);
+        vertical-align: middle;
+    }
+
+    .dj-mode-badge.dj-mode-return {
+        background-color: var(--dj-warning);
+    }
+
+    /* Values that must never mirror under RTL (SKUs, barcodes, serials, money). */
+    .ltr-inline,
+    .dj-ltr {
+        direction: ltr;
+        unicode-bidi: isolate;
+        display: inline-block;
+    }
+
+    /* ---------- Accessibility ---------- */
+
+    a:focus-visible,
+    button:focus-visible,
+    .btn:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    [tabindex]:focus-visible {
+        outline: 2px solid var(--dj-accent);
+        outline-offset: 2px;
+    }
+
+    /* ---------- Responsive register ---------- */
+
+    @media (max-width: 991px) {
+        #register_wrapper {
+            float: none;
+            width: 100%;
+        }
+
+        #overall_sale {
+            float: none;
+            width: 100%;
+            margin-left: 0;
+            margin-top: var(--dj-space-3);
+        }
+
+        /* Keep the cart usable on narrow screens without breaking the columns. */
+        #register_wrapper {
+            overflow-x: auto;
+        }
+    }
+}
