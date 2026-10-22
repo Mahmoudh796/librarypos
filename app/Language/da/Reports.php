@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Rabatter",
     "discounts_summary_report"                => "Oversigtsrapport om rabatter",
     "earned"                                  => "Optjente point",
+    "edit_inputs"                       => "",
     "employee"                                => "Medarbejder",
     "employees"                               => "Medarbejdere",
     "employees_summary_report"                => "Medarbejdersammendragsrapport",

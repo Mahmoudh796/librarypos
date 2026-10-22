@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Remises",
     "discounts_summary_report"                => "Rapport sommaire des remises",
     "earned"                                  => "Points gagnés",
+    "edit_inputs"                       => "",
     "employee"                                => "Employé",
     "employees"                               => "Employés",
     "employees_summary_report"                => "Rapport sommaire des employés",

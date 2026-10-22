@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Kedvezmények",
     "discounts_summary_report"                => "Kedvezmények összegző riport",
     "earned"                                  => "",
+    "edit_inputs"                       => "",
     "employee"                                => "Dolgozó",
     "employees"                               => "Dolgozók",
     "employees_summary_report"                => "Dolgozói összesített riport",

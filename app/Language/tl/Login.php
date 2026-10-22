@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "I'm not a robot.",
     "go"                                  => "Go",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "The installation is not correct, check your php.ini file.",
     "invalid_username_and_password"       => "Invalid Username or Password.",
     "login"                               => "Login",
+    "login_subtitle"                      => "",
     "logout"                              => "",
     "migrating_database"                  => "Inililipat ang Database",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "Password",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'Masyadong maraming pagtatangka. Mangyaring maghintay sandali at subukang muli.',
     "username"                            => "Username",
     "welcome"                             => ""

@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Скидки",
     "discounts_summary_report"                => "Сводный отчет о скидках",
     "earned"                                  => "Заработанные очки",
+    "edit_inputs"                       => "",
     "employee"                                => "Сотрудник",
     "employees"                               => "Сотрудники",
     "employees_summary_report"                => "Сводный отчет о сотрудниках",

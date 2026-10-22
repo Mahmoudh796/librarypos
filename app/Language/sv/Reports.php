@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Rabatter",
     "discounts_summary_report"                => "Sammanfattningsrapport för rabatter",
     "earned"                                  => "Intjänade poäng",
+    "edit_inputs"                       => "",
     "employee"                                => "Anställd",
     "employees"                               => "Anställda",
     "employees_summary_report"                => "Sammanfattningsrapport för anställda",

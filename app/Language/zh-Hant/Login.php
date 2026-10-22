@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "我不是機器人。",
     "go"                                  => "登入",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "安裝不正確，請檢查您的php.ini文件。",
     "invalid_username_and_password"       => "帳號或密碼錯誤。",
     "login"                               => "登入",
+    "login_subtitle"                      => "",
     "logout"                              => "登出",
     "migrating_database"                  => "正在遷移資料庫",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "密碼",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => '嘗試次數過多。請稍候片刻後再試一次。',
     "username"                            => "帳號",
     "welcome"                             => "歡迎來到 {0}！"

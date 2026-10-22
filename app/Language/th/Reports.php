@@ -41,6 +41,7 @@ return [
     'discounts' => "ส่วนลด",
     'discounts_summary_report' => "รายงานสรุปส่วนลด",
     'earned' => "คะแนนที่ได้รับ",
+    'edit_inputs'                       => '',
     'employee' => "พนักงาน",
     'employees' => "พนักงาน",
     'employees_summary_report' => "รายงานสรุปพนักงาน",

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "من روبات نیستم.",
     "go"                                  => "برو",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "نصب صحیح نیست ، پرونده php.ini خود را بررسی کنید.",
     "invalid_username_and_password"       => "نام کاربری یا گذرواژه نامعتبر است.",
     "login"                               => "وارد شدن",
+    "login_subtitle"                      => "",
     "logout"                              => "",
     "migrating_database"                  => "در حال انتقال پایگاه داده",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "کلمه عبور",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'تعداد تلاش‌ها بیش از حد مجاز است. لطفاً کمی صبر کنید و دوباره امتحان کنید.',
     "username"                            => "نام کاربری",
     "welcome"                             => ""

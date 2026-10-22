@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "ฉันไม่ใช่หุ่นยนต์นะ",
     "go"                                  => "เข้าสู่ระบบ",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "การติดตั้งไม่ถูกต้องตรวจสอบการตั้งค่าที่ไฟล์ php.ini ของคุณ",
     "invalid_username_and_password"       => "ชื่อผู้ใช้งานและ/หรือรหัสผ่านเข้าระบบไม่ถูกต้อง",
     "login"                               => "ลงชื่อเข้าใช้",
+    "login_subtitle"                      => "",
     "logout"                              => "ออกจากระบบ",
     "migrating_database"                  => "กำลังย้ายฐานข้อมูล",
     "migration_auth_message"              => "ผู้ดูแลระบบจำเป็นต้องมีสิทธิ์ในการปรับปรุงฐานข้อมูลเวอร์ชั่น {0} กรุณาเข้าระบบเพื่อดำเนินการต่อ",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "จําเป็นต้องมีการปรับปรุงฐานข้อมูล",
     "migration_running"                   => "",
     "password"                            => "รหัสผ่าน",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "จำเป็นต้องระบุชื่อผู้ใช้งาน",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'พยายามมากเกินไป กรุณารอสักครู่แล้วลองใหม่อีกครั้ง',
     "username"                            => "ชื่อผู้ใช้",
     "welcome"                             => "ยินดีต้อนรับสู่ {0}!"

@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Punguzo",
     "discounts_summary_report"                => "Ripoti ya Muhtasari wa Punguzo",
     "earned"                                  => "Alama Zilizopatikana",
+    "edit_inputs"                       => "",
     "employee"                                => "Mfanyakazi",
     "employees"                               => "Wafanyakazi",
     "employees_summary_report"                => "Ripoti ya Muhtasari wa Wafanyakazi",

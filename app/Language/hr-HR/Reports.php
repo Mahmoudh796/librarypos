@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Popusti",
     "discounts_summary_report"                => "Zbrojni izvještaj o popustima",
     "earned"                                  => "",
+    "edit_inputs"                       => "",
     "employee"                                => "Radnik",
     "employees"                               => "Radnici",
     "employees_summary_report"                => "Zbrojni izvještaj po radnicima",

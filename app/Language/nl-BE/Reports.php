@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Kortingen",
     "discounts_summary_report"                => "Overzicht Kortingen",
     "earned"                                  => "Punten Verdiend",
+    "edit_inputs"                       => "",
     "employee"                                => "Werknemer",
     "employees"                               => "Werknemrs",
     "employees_summary_report"                => "Rapport Overzicht Werknemers",

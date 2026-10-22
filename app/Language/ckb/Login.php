@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "من ڕۆبۆت نیم.",
     "go"                                  => "بەردەوامبە",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "دابەزاندن دروست نییە، فایلیphp.ini ـەکەت بپشکنە.",
     "invalid_username_and_password"       => "ناوی بەکارهێنەر و/یان وشەی نهێنی نادروست.",
     "login"                               => "چوونەژوورەوە",
+    "login_subtitle"                      => "",
     "logout"                              => "چوونەدەرەوە",
     "migrating_database"                  => "",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "وشەی نهێنی",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "خانەی ناوی بەکارهێنەر پێویستە.",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'هەوڵدانی زۆر زیادە. تکایە کەمێک چاوەڕێ بکە و دووبارە هەوڵ بدەرەوە.',
     "username"                            => "ناوی بەکارهێنەر",
     "welcome"                             => "بەخێربێن بۆ {0}!"

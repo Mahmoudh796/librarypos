@@ -9,7 +9,7 @@ return [
     "cashups"                    => "Incassi",
     "cashups_desc"               => "Aggiungi, aggiorna, elimina e cerca incassi.",
     "config"                     => "Configurazione",
-    "config_desc"                => "Modifica Configurazione Dahrouj.",
+    "config_desc"                => "Modifica Configurazione رؤية.",
     "customers"                  => "Clienti",
     "customers_desc"             => "Aggiungi, Aggiorna, Modifica, e Ricerca Clienti.",
     "employees"                  => "Impiegati",

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "",
     "go"                                  => "Ulaz",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "",
     "invalid_username_and_password"       => "Neispravno ime/lozinka",
     "login"                               => "Prijava",
+    "login_subtitle"                      => "",
     "logout"                              => "",
     "migrating_database"                  => "Migracija baze podataka",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "Lozinka",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'Previše pokušaja. Pričekajte trenutak i pokušajte ponovno.',
     "username"                            => "Korisničko ime",
     "welcome"                             => ""

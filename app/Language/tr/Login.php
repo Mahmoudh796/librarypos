@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "Ben robot değilim.",
     "go"                                  => "Giriş",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "Yükleme doğru değil, php.ini dosyanızı gözden geçirin.",
     "invalid_username_and_password"       => "Geçersiz kullanıcı adı ve/veya parola.",
     "login"                               => "Giriş",
+    "login_subtitle"                      => "",
     "logout"                              => "Çıkış",
     "migrating_database"                  => "Veritabanı Taşınıyor",
     "migration_auth_message"              => "Veritabanı göçünün {0} versiyonuna yetkilendirilmesi için yönetici kimlik bilgileri gereklidir. Devam etmek için giriş yapın.",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "Veritabanı Göçü Gerekli",
     "migration_running"                   => "Veritabanı göçleri çalışıyor...",
     "password"                            => "Parola",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "Kullanıcı adı alanı gereklidir.",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'Çok fazla deneme yapıldı. Lütfen bir süre bekleyip tekrar deneyin.',
     "username"                            => "Kullanıcı Adı",
     "welcome"                             => "{0}'e Hoş Geldiniz!"

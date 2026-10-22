@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "Jag är inte en robot.",
     "go"                                  => "Logga in",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "Installationen är inte korrekt, kontrollera din php.ini fil.",
     "invalid_username_and_password"       => "Ogiltigt användarnamn eller lösenord.",
     "login"                               => "Login",
+    "login_subtitle"                      => "",
     "logout"                              => "Logga ut",
     "migrating_database"                  => "Migrerar databas",
     "migration_auth_message"              => "Admin-uppgifter krävs för att godkänna databasmigrationen till version {0}. Logga in för att fortsätta.",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "Databasmigration krävs",
     "migration_running"                   => "Kör databasmigrationer...",
     "password"                            => "Lösenord",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "Fältet för användarnamn krävs.",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'För många försök. Vänta en stund och försök igen.',
     "username"                            => "Användarnamn",
     "welcome"                             => "Välkommen till {0}!"

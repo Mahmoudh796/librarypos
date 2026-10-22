@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Slevy",
     "discounts_summary_report"                => "Přehled podle slev",
     "earned"                                  => "Points Earned",
+    "edit_inputs"                       => "",
     "employee"                                => "Zaměstnanec",
     "employees"                               => "Zaměstnanci",
     "employees_summary_report"                => "Přehled podle zaměstnanců",

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "Mimi si roboti.",
     "go"                                  => "Nenda",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "Usakinishaji si sahihi, angalia faili yako ya php.ini.",
     "invalid_username_and_password"       => "Jina la mtumiaji na/au nenosiri si sahihi.",
     "login"                               => "Ingia",
+    "login_subtitle"                      => "",
     "logout"                              => "Toka",
     "migrating_database"                  => "Inahama hifadhidata",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "Nenosiri",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "Jina la mtumiaji ni lazima.",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'Majaribio mengi mno. Tafadhali subiri kidogo kisha ujaribu tena.',
     "username"                            => "Jina la Mtumiaji",
     "welcome"                             => "Karibu kwenye {0}!"

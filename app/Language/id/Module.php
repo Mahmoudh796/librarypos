@@ -29,7 +29,7 @@ return [
     'messages' => "Pesan",
     'messages_desc' => "Kirim pesan pada Pelanggan, Pemasok, dan Karyawan.",
     'migrate' => "Migrasi",
-    'migrate_desc' => "Perbaharui basis data Dahrouj.",
+    'migrate_desc' => "Perbaharui basis data رؤية.",
     'office' => "Kantor",
     'office_desc' => "Daftar modul menu Kantor.",
     'receivings' => "Penerimaan",

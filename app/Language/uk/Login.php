@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "Я не робот.",
     "go"                                  => "Увійти",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "Налаштування невірні, перевірте php.ini.",
     "invalid_username_and_password"       => "Невірний логін або пароль.",
     "login"                               => "Логін",
+    "login_subtitle"                      => "",
     "logout"                              => "",
     "migrating_database"                  => "Міграція бази даних",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "Пароль",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'Забагато спроб. Будь ласка, зачекайте трохи і спробуйте знову.',
     "username"                            => "Ім'я користувача",
     "welcome"                             => ""

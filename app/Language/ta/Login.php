@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "ரோபோ ஸ்கிரிப்ட்கள் அல்ல.",
     "go"                                  => "செல்",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "நிறுவியத்தில் தவறு , php.ini கோப்பை சரி பார்க்கவும் .",
     "invalid_username_and_password"       => "பயனர்பெயர் அல்லது கடவுச்சொல் தவறு.",
     "login"                               => "உள்நுழைய",
+    "login_subtitle"                      => "",
     "logout"                              => "விடுபதிகை",
     "migrating_database"                  => "தரவுத்தளம் இடம்பெயர்கிறது",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "கடவுச்சொல்",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'பல முறை முயற்சி செய்யப்பட்டது. தயவுசெய்து சிறிது நேரம் காத்திருந்து மீண்டும் முயற்சிக்கவும்.',
     "username"                            => "பயனர்பெயர்",
     "welcome"                             => "{0} க்கு வருக!"

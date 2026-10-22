@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "Tôi không phải là robot.",
     "go"                                  => "Đăng nhập",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "Phần cài đặt chưa đúng, kiểm tra tập tin php.ini của bạn.",
     "invalid_username_and_password"       => "Tài khoản hoặc mật khẩu không hợp lệ.",
     "login"                               => "Đăng nhập",
+    "login_subtitle"                      => "",
     "logout"                              => "Đăng xuất",
     "migrating_database"                  => "Đang di chuyển cơ sở dữ liệu",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "Mật khẩu",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'Quá nhiều lần thử. Vui lòng đợi một chút và thử lại.',
     "username"                            => "Tài khoản",
     "welcome"                             => "Chào mừng đến với {0}!"

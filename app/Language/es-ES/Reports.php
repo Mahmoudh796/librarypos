@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Descuentos",
     "discounts_summary_report"                => "Reporte de Resumen de Descuentos",
     "earned"                                  => "Reporte de puntos ganados",
+    "edit_inputs"                       => "",
     "employee"                                => "Empleado",
     "employees"                               => "Empleados",
     "employees_summary_report"                => "Reporte de Resumen de Empleados",

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "Back to sign in",
+    "forgot_username_or_password"         => "Forgot your username or password?",
     "gcaptcha"                            => "I'm not a robot.",
     "go"                                  => "Go",
     "initialization_message"              => "The database has not been initialized.",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "The installation is not correct, check your php.ini file.",
     "invalid_username_and_password"       => "Invalid username and/or password.",
     "login"                               => "Login",
+    "login_subtitle"                      => "Sign in to access the library management system",
     "logout"                              => "Logout",
     "migrating_database"                  => "Updating Database",
     "migration_auth_message"              => "An administrator must sign in to authorize this update.",
@@ -24,8 +27,12 @@ return [
     "migration_required"                  => "Database update required",
     "migration_running"                   => "Please wait, this may take a moment.",
     "password"                            => "Password",
+    "recovery_contact_admin"              => "Authorized administrator",
+    "recovery_message"                    => "For security, username and password recovery is handled by an authorized administrator. Please contact your system administrator to reset your sign-in details.",
+    "recovery_title"                      => "Recover your account",
     "required_username"                   => "The username field is required.",
+    "sign_in"                             => "Sign in",
     'too_many_attempts'                   => 'Too many attempts. Please wait a moment and try again.',
     "username"                            => "Username",
-    "welcome"                             => "Welcome to {0}!"
+    "welcome"                             => "Welcome to {0}"
 ];

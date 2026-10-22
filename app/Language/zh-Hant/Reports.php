@@ -41,6 +41,7 @@ return [
     "discounts"                               => "折扣",
     "discounts_summary_report"                => "折扣摘要報告",
     "earned"                                  => "獲得積分",
+    "edit_inputs"                       => "",
     "employee"                                => "員工",
     "employees"                               => "員工",
     "employees_summary_report"                => "員工摘要報告",

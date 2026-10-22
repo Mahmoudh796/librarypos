@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "אני לא רובוט.",
     "go"                                  => "שלח",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "ההתקנה אינה נכונה, בדוק את קובץ php.ini.",
     "invalid_username_and_password"       => "שם משתמש או סיסמה לא נכונים.",
     "login"                               => "כניסה",
+    "login_subtitle"                      => "",
     "logout"                              => "",
     "migrating_database"                  => "מעביר בסיס נתונים",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "סיסמה",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'יותר מדי ניסיונות. אנא המתן רגע ונסה שוב.',
     "username"                            => "שם משתמש",
     "welcome"                             => ""

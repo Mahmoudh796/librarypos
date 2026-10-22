@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Rabatte",
     "discounts_summary_report"                => "Bericht: Rabatte (summarisch)",
     "earned"                                  => "",
+    "edit_inputs"                       => "",
     "employee"                                => "Mitarbeiter",
     "employees"                               => "Mitarbeiter",
     "employees_summary_report"                => "Bericht: Mitarbeiter (summarisch)",

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "ខ្ញុំមិនមែនជាម៉ាស៊ីនទេ។",
     "go"                                  => "ចាប់ផ្ដើម",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "ការបញ្ចូលមិនត្រឹមត្រូវ, សូមពិនិត្យមើលឯកសារ php.ini របស់អ្នក។",
     "invalid_username_and_password"       => "ឈ្មោះឬក៏ពាក្យសំងាត់មិនត្រឹមត្រូវ។",
     "login"                               => "ចូល",
+    "login_subtitle"                      => "",
     "logout"                              => "",
     "migrating_database"                  => "កំពុងធ្វើចំណាកស្រុកមូលដ្ឋានទិន្នន័យ",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "ពាក្យសំងាត់",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'ការព្យាយាមច្រើនពេក។ សូមរង់ចាំបន្តិច ហើយព្យាយាមម្តងទៀត។',
     "username"                            => "ឈ្មោះ",
     "welcome"                             => ""

@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Знижки",
     "discounts_summary_report"                => "Підсумковий звіт про знижки",
     "earned"                                  => "Зароблені бали",
+    "edit_inputs"                       => "",
     "employee"                                => "Працівник",
     "employees"                               => "Працівники",
     "employees_summary_report"                => "Підсумковий звіт про працівників",

@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Popusti",
     "discounts_summary_report"                => "Zbirni izvještaj o popustima",
     "earned"                                  => "Zarađeni bodovi",
+    "edit_inputs"                   => "",
     "employee"                                => "Zaposlenik",
     "employees"                               => "Zaposleni",
     "employees_summary_report"                => "Zbirni izveštaj zaposlenih",

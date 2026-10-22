@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "",
     "go"                                  => "Juhúúúúúú!",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "",
     "invalid_username_and_password"       => "Érvénytelen felhasználói név vagy jelszó",
     "login"                               => "Belépés",
+    "login_subtitle"                      => "",
     "logout"                              => "",
     "migrating_database"                  => "Adatbázis migrálása",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "Jelszó",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'Túl sok próbálkozás. Kérjük, várjon egy kicsit, majd próbálja újra.',
     "username"                            => "Felhasználó név",
     "welcome"                             => ""

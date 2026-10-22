@@ -41,6 +41,7 @@ return [
     'discounts' => "داشکاندنەکان",
     'discounts_summary_report' => "ڕاپۆرتی پوختەی داشکاندنەکان",
     'earned' => "خاڵە بەدەست هێنراوەکان",
+    'edit_inputs'                       => '',
     'employee' => "فەرمانبەر",
     'employees' => "کارمەندان",
     'employees_summary_report' => "ڕاپۆرتی پوختەی کارمەندان",

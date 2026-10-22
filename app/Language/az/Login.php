@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "Mən robot deyiləm.",
     "go"                                  => "daxil ol",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "Quraşdırma düzgün deyil, php.ini faylını yoxlayın.",
     "invalid_username_and_password"       => "Yanlış istifadəçi adı və ya şifrə.",
     "login"                               => "Giriş",
+    "login_subtitle"                      => "",
     "logout"                              => "Çıxış",
     "migrating_database"                  => "Verilənlər bazası miqrasiya edilir",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "Şifrə",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'Həddindən artıq cəhd. Zəhmət olmasa bir az gözləyib yenidən cəhd edin.',
     "username"                            => "İstifadəçi",
     "welcome"                             => "{0} -ə xoş gəlmisiniz!"

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "Saya bukan robot.",
     "go"                                  => "Lanjut",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "Instalasi tidak benar, periksa file php.ini Anda.",
     "invalid_username_and_password"       => "Nama Pengguna Atau Sandi Salah.",
     "login"                               => "Masuk",
+    "login_subtitle"                      => "",
     "logout"                              => "Keluar",
     "migrating_database"                  => "Migrasi Database",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "Kata kunci",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "Kolom nama pengguna wajib diisi.",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'Terlalu banyak percobaan. Harap tunggu sebentar dan coba lagi.',
     "username"                            => "Nama Anda",
     "welcome"                             => "Selamat Datang di {0}!"

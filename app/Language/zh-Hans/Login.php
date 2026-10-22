@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "我不是机器人。",
     "go"                                  => "登入",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "安装不正确，请检查您的php.ini文件。",
     "invalid_username_and_password"       => "无效的用户名或密码。",
     "login"                               => "登入",
+    "login_subtitle"                      => "",
     "logout"                              => "退出",
     "migrating_database"                  => "正在迁移数据库",
     "migration_auth_message"              => "",
@@ -24,6 +27,10 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "密码",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => '太多次尝试。请稍等片刻后重试。',
     "username"                            => "用户名",
     "welcome"                             => "欢迎来到 {0}!"

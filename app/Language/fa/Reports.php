@@ -41,6 +41,7 @@ return [
     "discounts"                               => "تخفیف",
     "discounts_summary_report"                => "گزارش خلاصه تخفیف",
     "earned"                                  => "امتیاز به دست آورده",
+    "edit_inputs"                       => "",
     "employee"                                => "کارمند",
     "employees"                               => "کارمندان",
     "employees_summary_report"                => "گزارش خلاصه کارمندان",

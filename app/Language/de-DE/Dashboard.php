@@ -6,6 +6,7 @@ return [
     "dashboard"                  => "",
     "discounts"                  => "",
     "gross_profit"               => "",
+    "inventory"                  => "",
     "inventory_cost_value"       => "",
     "inventory_retail_value"     => "",
     "low_stock"                  => "",

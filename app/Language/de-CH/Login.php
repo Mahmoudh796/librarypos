@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "",
     "go"                                  => "Start",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "",
     "invalid_username_and_password"       => "Ungültiger Benutzername/Passwort",
     "login"                               => "Login",
+    "login_subtitle"                      => "",
     "logout"                              => "Abmelden",
     "migrating_database"                  => "Datenbank wird migriert",
     "migration_auth_message"              => "Administrator-Anmeldedaten sind erforderlich, um die Datenbank-Migration auf Version {0} zu autorisieren. Bitte melden Sie sich an, um fortzufahren.",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "Datenbank-Migration erforderlich",
     "migration_running"                   => "Datenbank-Migrationen werden ausgeführt...",
     "password"                            => "Passwort",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "Das Feld Benutzername ist erforderlich.",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'Zu viele Versuche. Bitte warten Sie einen Moment und versuchen Sie es erneut.',
     "username"                            => "Benutzername",
     "welcome"                             => "Willkommen bei {0}!"

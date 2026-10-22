@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "",
     "go"                                  => "",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "",
     "invalid_username_and_password"       => "",
     "login"                               => "",
+    "login_subtitle"                      => "",
     "logout"                              => "",
     "migrating_database"                  => "ഡേറ്റാബേസ് മൈഗ്രേറ്റ് ചെയ്യുന്നു",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'വളരെയധികം ശ്രമങ്ങൾ. ദയവായി അല്പസമയം കാത്തിരുന്ന് വീണ്ടും ശ്രമിക്കുക.',
     "username"                            => "",
     "welcome"                             => ""

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "ຂ້ອຍບໍ່ແມ່ນເຄື່ອງຈັກ.",
     "go"                                  => "Go",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "ການຕິດຕັ້ງມີຂໍ້ຜິດພາດ, ກະລຸນາກວດສອບ php.ini file.",
     "invalid_username_and_password"       => "Username ຫຼື Password ບໍ່ຖືກຕ້ອງ.",
     "login"                               => "ເຂົ້າລະບົບ",
+    "login_subtitle"                      => "",
     "logout"                              => "",
     "migrating_database"                  => "ກໍາລັງຍ້າຍຖານຂໍ້ມູນ",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "Password",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'ພະຍາຍາມຫຼາຍເກີນໄປ. ກະລຸນາລໍຖ້າບຶດໜຶ່ງ ແລ້ວລອງໃໝ່ອີກຄັ້ງ.',
     "username"                            => "Username",
     "welcome"                             => ""

@@ -41,6 +41,7 @@ return [
     "discounts"                               => "",
     "discounts_summary_report"                => "",
     "earned"                                  => "",
+    "edit_inputs"                       => "",
     "employee"                                => "",
     "employees"                               => "",
     "employees_summary_report"                => "",

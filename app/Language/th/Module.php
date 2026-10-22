@@ -29,7 +29,7 @@ return [
     "messages"                   => "Messages",
     "messages_desc"              => "ส่งข้อความถึง ลูกค้า, คู่ค้า และพนักงาน",
     "migrate"                    => "โยกย้าย",
-    "migrate_desc"               => "ปรับปรุงฐานข้อมูล Dahrouj",
+    "migrate_desc"               => "ปรับปรุงฐานข้อมูล رؤية",
     "office"                     => "สำนักงาน",
     "office_desc"                => "แสดงรายการเมนูโมดูลสำนักงาน",
     "receivings"                 => "สินค้าเข้า",

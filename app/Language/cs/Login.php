@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "Nejsem robot.",
     "go"                                  => "Přihlásit",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "Instalace není v pořádku, zkontrolujte soubor php.ini.",
     "invalid_username_and_password"       => "Neplatné jméno nebo heslo.",
     "login"                               => "Login",
+    "login_subtitle"                      => "",
     "logout"                              => "",
     "migrating_database"                  => "Migrace databáze",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "Heslo",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'Příliš mnoho pokusů. Počkejte chvíli a zkuste to znovu.',
     "username"                            => "Uživatelské jméno",
     "welcome"                             => ""

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "Nie jestem robotem.",
     "go"                                  => "Idź",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "Instalacja nie jest poprawna, sprawdź swój plik php.ini.",
     "invalid_username_and_password"       => "Niepoprawna nazwa użytkownika i/lub hasło.",
     "login"                               => "Zaloguj",
+    "login_subtitle"                      => "",
     "logout"                              => "Wyloguj",
     "migrating_database"                  => "Migracja bazy danych",
     "migration_auth_message"              => "",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "",
     "migration_running"                   => "",
     "password"                            => "Hasło",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'Zbyt wiele prób. Proszę chwilę poczekać i spróbować ponownie.',
     "username"                            => "Nazwa użytkownika",
     "welcome"                             => "Witaj w {0}!"

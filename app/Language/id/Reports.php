@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Diskon",
     "discounts_summary_report"                => "Laporan Ringkasan Diskon",
     "earned"                                  => "Poin yang diperoleh",
+    "edit_inputs"                       => "",
     "employee"                                => "Karyawan",
     "employees"                               => "Karyawan",
     "employees_summary_report"                => "Laporan Ringkasan Karyawan",

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "Ik ben geen robot.",
     "go"                                  => "Aanmelden",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "De installatie is niet juist, controleer uw php.ini bestand.",
     "invalid_username_and_password"       => "Ongeldige gebruikersnaam en/of wachtwoord.",
     "login"                               => "Aanmelden",
+    "login_subtitle"                      => "",
     "logout"                              => "Afmelden",
     "migrating_database"                  => "Database migreren",
     "migration_auth_message"              => "Beheerdersreferenties zijn vereist om de databasemigratie naar versie {0} te autoriseren. Log in om verder te gaan.",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "Database migratie vereist",
     "migration_running"                   => "Databasemigraties uitvoeren...",
     "password"                            => "Wachtwoord",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "Het gebruikersnaam veld is verplicht.",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'Te veel pogingen. Wacht even en probeer het opnieuw.',
     "username"                            => "Gebruikersnaam",
     "welcome"                             => "Welkom bij {0}!"

@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Endirimlər",
     "discounts_summary_report"                => "əməkdaş",
     "earned"                                  => "əməkdaş",
+    "edit_inputs"                   => "",
     "employee"                                => "əməkdaşın hesabatı",
     "employees"                               => "İşçilər",
     "employees_summary_report"                => "İşçilərin Xülasəsi Hesabatı",

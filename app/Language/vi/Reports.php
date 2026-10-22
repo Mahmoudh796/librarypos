@@ -41,6 +41,7 @@ return [
     "discounts"                               => "Giảm giá",
     "discounts_summary_report"                => "Báo cáo tổng thể Giảm giá",
     "earned"                                  => "Điểm tích lũy",
+    "edit_inputs"                       => "",
     "employee"                                => "Nhân viên",
     "employees"                               => "Nhân viên",
     "employees_summary_report"                => "Báo cáo tổng thể theo Nhân viên",

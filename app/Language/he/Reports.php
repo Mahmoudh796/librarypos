@@ -41,6 +41,7 @@ return [
     "discounts"                               => "הנחות",
     "discounts_summary_report"                => "דוח סיכום הנחות",
     "earned"                                  => "נקודות שהורווחו",
+    "edit_inputs"                       => "",
     "employee"                                => "עובד",
     "employees"                               => "עובדים",
     "employees_summary_report"                => "דוח סיכום של העובדים",

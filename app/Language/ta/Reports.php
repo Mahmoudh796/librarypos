@@ -41,6 +41,7 @@ return [
     "discounts"                               => "தள்ளுபடிகள்",
     "discounts_summary_report"                => "தள்ளுபடிகளுக்கான சுருக்கமான அறிக்கை",
     "earned"                                  => "சம்பாதித்த புள்ளிகள்",
+    "edit_inputs"                       => "",
     "employee"                                => "ஊழியர்",
     "employees"                               => "ஊழியர்கள்",
     "employees_summary_report"                => "ஊழியர்களின் சுருக்க அறிக்கை",

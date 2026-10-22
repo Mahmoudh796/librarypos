@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "back_to_login"                       => "",
+    "forgot_username_or_password"         => "",
     "gcaptcha"                            => "No soy un robot.",
     "go"                                  => "Entrar",
     "initialization_message"              => "",
@@ -10,6 +12,7 @@ return [
     "invalid_installation"                => "La instalacion no es correcta, revise el archivo php.ini.",
     "invalid_username_and_password"       => "Usuario y/o Password Invalido.",
     "login"                               => "Login",
+    "login_subtitle"                      => "",
     "logout"                              => "Salir",
     "migrating_database"                  => "Migrando base de datos",
     "migration_auth_message"              => "Se requieren credenciales de administrador para autorizar la migración de la base de datos a la versión {0}. Inicie sesión para continuar.",
@@ -24,7 +27,11 @@ return [
     "migration_required"                  => "Migración de base de datos requerida",
     "migration_running"                   => "Ejecutando migraciones de base de datos...",
     "password"                            => "Contraseña",
+    "recovery_contact_admin"              => "",
+    "recovery_message"                    => "",
+    "recovery_title"                      => "",
     "required_username"                   => "El nombre de usuario es obligatorio.",
+    "sign_in"                             => "",
     'too_many_attempts'                   => 'Demasiados intentos. Por favor espera un momento e intenta de nuevo.',
     "username"                            => "Usuario",
     "welcome"                             => "Bienvenido a {0}!"

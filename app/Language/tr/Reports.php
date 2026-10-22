@@ -41,6 +41,7 @@ return [
     "discounts"                               => "İndirimler",
     "discounts_summary_report"                => "İndirim Özet Raporu",
     "earned"                                  => "Kazanılan Puanlar",
+    "edit_inputs"                       => "",
     "employee"                                => "Personel",
     "employees"                               => "Personeller",
     "employees_summary_report"                => "Personel Özet Raporu",
