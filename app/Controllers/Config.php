@@ -252,7 +252,7 @@ class Config extends Secure_Controller
         $data['tax_jurisdiction_options'] = $this->tax_lib->get_tax_jurisdiction_options();
         $data['show_office_group'] = $this->module->get_show_office_group();
         $data['currency_code'] = $this->config['currency_code'] ?? '';
-        $data['dbVersion'] = mysqli_get_server_info($this->db->getConnection());
+        $data['dbVersion'] = $this->db->query('SELECT VERSION() AS v')->getRow()->v ?? 'unknown';
 
         // Load all the license statements, they are already XSS cleaned in the private function
         $data['licenses'] = $this->_licenses();
