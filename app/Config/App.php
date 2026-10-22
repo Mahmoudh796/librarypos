@@ -8,7 +8,7 @@ use RuntimeException;
 class App extends BaseConfig
 {
     /**
-     * This is the code version of the Open Source Point of Sale you're running.
+     * This is the code version of the application you're running.
      */
     public string $application_version = '3.4.3';
 
