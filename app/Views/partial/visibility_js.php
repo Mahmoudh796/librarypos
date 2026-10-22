@@ -25,8 +25,10 @@ function safeRemoveItem(key) {
     }
 }
 
-// Load saved column visibility from localStorage
-const savedVisibility = JSON.parse(safeGetItem('columnVisibility')) || { cost: false, profit: false };
+// Load saved column visibility from localStorage.
+// A first-time visitor (no stored state) sees cost/profit columns and
+// summary rows until the toggle hides them.
+const savedVisibility = JSON.parse(safeGetItem('columnVisibility')) || { cost: true, profit: true };
 let visibleColumns = savedVisibility;
 
 // Function to save column visibility to localStorage
@@ -34,7 +36,9 @@ function saveColumnVisibility(visibility) {
     safeSetItem('columnVisibility', JSON.stringify(visibility));
 }
 
-// Apply column visibility on table initialization
+// Apply saved column visibility on table initialization.
+// The bootstrapTable is created with these columns pre-filtered by the
+// caller, so only refresh an already-initialized table here.
 function applyColumnVisibility(columns) {
     return columns.map(function (col) {
         if (visibleColumns[col.field] !== undefined) {
@@ -44,6 +48,10 @@ function applyColumnVisibility(columns) {
     });
 }
 
+function isTableInitialized() {
+    return $('#table').data('bootstrap.table') !== undefined;
+}
+
 // Event listener for column visibility toggle
 $('#table').on('column-switch.bs.table', function (e, field, checked) {
     visibleColumns[field] = checked; // Save the visibility of this column
@@ -51,30 +59,31 @@ $('#table').on('column-switch.bs.table', function (e, field, checked) {
 });
 
 // Ensure that saved column visibility is applied immediately after table load
-$('#table').bootstrapTable('refreshOptions', {
-    columns: $('#table').bootstrapTable('getOptions').columns // Force refresh to apply column visibility
-});
+if (isTableInitialized()) {
+    $('#table').bootstrapTable('refreshOptions', {
+        columns: $('#table').bootstrapTable('getOptions').columns // Force refresh to apply column visibility
+    });
+}
 
 // Initialize visibility settings from localStorage
-let summaryVisibility = JSON.parse(safeGetItem('summaryVisibility')) || { cost: false, profit: false };
+let summaryVisibility = JSON.parse(safeGetItem('summaryVisibility')) || { cost: true, profit: true };
+
+// A summary row is a cost/profit row when its data-key mentions either term.
+function summaryRowState(key) {
+    if (/cost/.test(key)) {
+        return summaryVisibility.cost;
+    }
+    if (/profit/.test(key)) {
+        return summaryVisibility.profit;
+    }
+    return true;
+}
 
 // Function to apply visibility for cost and profit rows
 function applySummaryVisibility() {
-    const rows = $('#report_summary .summary_row');
-    const costRow = rows.eq(rows.length - 2); // Second-to-last row
-    const profitRow = rows.eq(rows.length - 1); // Last row
-
-    if (summaryVisibility.cost === false) {
-        costRow.hide(); // Hide the cost row
-    } else {
-        costRow.show(); // Show the cost row
-    }
-
-    if (summaryVisibility.profit === false) {
-        profitRow.hide(); // Hide the profit row
-    } else {
-        profitRow.show(); // Show the profit row
-    }
+    $('#report_summary .summary_row[data-key]').each(function () {
+        summaryRowState($(this).data('key')) ? $(this).show() : $(this).hide();
+    });
 }
 
 // Toggle visibility when the button is clicked
@@ -84,6 +93,21 @@ $('#toggleCostProfitButton').click(function () {
 
     safeSetItem('summaryVisibility', JSON.stringify(summaryVisibility));
     applySummaryVisibility();
+
+    // Mirror the state on matching cost/profit columns of the report table
+    if (isTableInitialized()) {
+        ['cost', 'profit'].forEach(function (field) {
+            if ($('#table th[data-field="' + field + '"]').length > 0) {
+                visibleColumns[field] = summaryVisibility[field];
+                if (summaryVisibility[field]) {
+                    $('#table').bootstrapTable('showColumn', field);
+                } else {
+                    $('#table').bootstrapTable('hideColumn', field);
+                }
+            }
+        });
+        saveColumnVisibility(visibleColumns);
+    }
 });
 
 // Apply saved visibility state on page load

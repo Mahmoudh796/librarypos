@@ -19,20 +19,28 @@ $(function () {
         }
     };
 
+    // A first-time visitor (no stored state) sees every summary row until the
+    // toggle hides the cost/profit ones.
     let summaryVisibility = JSON.parse(safeGetItem("summaryVisibility")) || {
-        cost: false,
-        profit: false,
+        cost: true,
+        profit: true,
     };
 
+    // A summary row is a cost/profit row when its data-key mentions either term.
+    function summaryRowState(key) {
+        if (/cost/.test(key)) {
+            return summaryVisibility.cost;
+        }
+        if (/profit/.test(key)) {
+            return summaryVisibility.profit;
+        }
+        return true;
+    }
+
     function applySummaryVisibility() {
-        const rows = $("#chart_report_summary .summary_row");
-        if (rows.length < 2) return; // Prevent errors if data is missing
-
-        const costRow = rows.eq(rows.length - 2);
-        const profitRow = rows.eq(rows.length - 1);
-
-        summaryVisibility.cost ? costRow.show() : costRow.hide();
-        summaryVisibility.profit ? profitRow.show() : profitRow.hide();
+        $("#chart_report_summary .summary_row[data-key]").each(function () {
+            summaryRowState($(this).data("key")) ? $(this).show() : $(this).hide();
+        });
     }
 
     $("#toggleCostProfitButton").on("click", function () {

@@ -13,6 +13,13 @@
     dialog_support.init("a.modal-dlg");
 </script>
 
+<?php $reportPath = get_report_path_info(); ?>
+
+<div class="dj-page-head">
+    <?= view('partial/page_path', ['crumbs' => $reportPath['crumbs']]) ?>
+    <?= view('partial/page_nav') ?>
+</div>
+
 <div id="page_title"><?= esc($title) ?></div>
 
 <div id="page_subtitle"><?= esc($subtitle) ?></div>
@@ -22,6 +29,9 @@
 <div id="toolbar">
     <div class="pull-left form-inline" role="toolbar">
         <!-- Toggle Button -->
+        <a id="edit_report_inputs" class="btn btn-default btn-sm print_hide" href="<?= $reportPath['input_path'] ?>">
+            <span class="glyphicon glyphicon-filter">&nbsp;</span><?= lang('Reports.edit_inputs') ?>
+        </a>
         <button id="toggleCostProfitButton" class="btn btn-default btn-sm print_hide">
             <?php echo lang('Reports.toggle_cost_and_profit'); ?>
         </button>
@@ -32,7 +42,7 @@
 
 <div id="chart_report_summary">
     <?php foreach ($summary_data_1 as $name => $value) { ?>
-        <div class="summary_row"><?= lang("Reports.$name") . ': ' . esc(to_currency($value)) ?></div>
+        <div class="summary_row" data-key="<?= esc($name) ?>"><?= lang("Reports.$name") . ': ' . (is_numeric($value) ? '<span class="dj-money" dir="ltr">' . esc(to_currency($value)) . '</span>' : esc($value)) ?></div>
     <?php } ?>
 </div>
 
