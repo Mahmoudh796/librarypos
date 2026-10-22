@@ -69,6 +69,7 @@
     ],
     },
     "locale": {
+    "direction": "<?= get_text_direction() ?>",
     "format": '<?= dateformat_momentjs($config['dateformat']) ?>',
     "separator": " - ",
     "applyLabel": "<?= lang('Datepicker.apply') ?>",
@@ -174,6 +175,7 @@
     ],
     },
     "locale": {
+    "direction": "<?= get_text_direction() ?>",
     "format": '<?= dateformat_momentjs($config['dateformat'] . ' ' . $config['timeformat']) ?>',
     "separator": " - ",
     "applyLabel": "<?= lang('Datepicker.apply') ?>",

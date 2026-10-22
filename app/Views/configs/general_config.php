@@ -12,6 +12,7 @@
 <?= form_open('config/saveGeneral/', ['id' => 'general_config_form', 'enctype' => 'multipart/form-data', 'class' => 'form-horizontal']) ?>
     <div id="config_wrapper">
         <fieldset id="config_info">
+<h3 class="dj-settings-title"><span class="glyphicon glyphicon-th" aria-hidden="true"></span><?= lang('Config.general_configuration') ?></h3>
 
             <div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
             <ul id="general_error_message_box" class="error_message_box"></ul>
@@ -58,7 +59,7 @@
                         <?= form_input([
                             'name'  => 'default_sales_discount',
                             'id'    => 'default_sales_discount',
-                            'class' => 'form-control input-sm required',
+                            'class' => 'form-control input-sm required dj-input-number',
                             'type'  => 'number',
                             'min'   => 0,
                             'max'   => 100,
@@ -88,7 +89,7 @@
                         <?= form_input([
                             'name'  => 'default_receivings_discount',
                             'id'    => 'default_receivings_discount',
-                            'class' => 'form-control input-sm required',
+                            'class' => 'form-control input-sm required dj-input-number',
                             'type'  => 'number',
                             'min'   => 0,
                             'max'   => 100,
@@ -145,7 +146,7 @@
                     <?= form_input([
                         'name'  => 'lines_per_page',
                         'id'    => 'lines_per_page',
-                        'class' => 'form-control input-sm required',
+                        'class' => 'form-control input-sm required dj-input-number',
                         'type'  => 'number',
                         'min'   => 10,
                         'max'   => 1000,
@@ -191,7 +192,7 @@
                         <?= form_input([
                             'name'           => 'image_max_width',
                             'id'             => 'image_max_width',
-                            'class'          => 'form-control input-sm required',
+                            'class'          => 'form-control input-sm required dj-input-number',
                             'type'           => 'number',
                             'min'            => 128,
                             'max'            => 3840,
@@ -210,7 +211,7 @@
                         <?= form_input([
                             'name'           => 'image_max_height',
                             'id'             => 'image_max_height',
-                            'class'          => 'form-control input-sm required',
+                            'class'          => 'form-control input-sm required dj-input-number',
                             'type'           => 'number',
                             'min'            => 128,
                             'max'            => 3840,
@@ -229,7 +230,7 @@
                         <?= form_input([
                             'name'           => 'image_max_size',
                             'id'             => 'image_max_size',
-                            'class'          => 'form-control input-sm required',
+                            'class'          => 'form-control input-sm required dj-input-number',
                             'type'           => 'number',
                             'min'            => 128,
                             'max'            => 2048,
@@ -248,7 +249,7 @@
                             'options'                   => $image_allowed_types,
                             'selected'                  => $selected_image_allowed_types,
                             'id'                        => 'image_allowed_types',
-                            'class'                     => 'selectpicker show-menu-arrow',
+                            'class'                     => 'selectpicker show-menu-arrow dj-input-code',
                             'data-none-selected-text'   => lang('Common.none_selected_text'),
                             'data-selected-text-format' => 'count > 1',
                             'data-style'                => 'btn-default btn-sm',
@@ -282,7 +283,7 @@
                     <?= form_input([
                         'name'  => 'gcaptcha_site_key',
                         'id'    => 'gcaptcha_site_key',
-                        'class' => 'form-control input-sm required',
+                        'class' => 'form-control input-sm required dj-input-code',
                         'value' => $config['gcaptcha_site_key']
                     ]) ?>
                 </div>
@@ -294,7 +295,7 @@
                     <?= form_input([
                         'name'  => 'gcaptcha_secret_key',
                         'id'    => 'gcaptcha_secret_key',
-                        'class' => 'form-control input-sm required',
+                        'class' => 'form-control input-sm required dj-input-secret',
                         'value' => $config['gcaptcha_secret_key']
                     ]) ?>
                 </div>

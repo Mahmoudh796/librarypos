@@ -7,6 +7,7 @@
 <?= form_open('config/saveReceipt/', ['id' => 'receipt_config_form', 'class' => 'form-horizontal']) ?>
     <div id="config_wrapper">
         <fieldset id="config_info">
+<h3 class="dj-settings-title"><span class="glyphicon glyphicon-print" aria-hidden="true"></span><?= lang('Config.receipt_configuration') ?></h3>
 
             <div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
             <ul id="receipt_error_message_box" class="error_message_box"></ul>
@@ -36,7 +37,7 @@
                             'max'   => '20',
                             'name'  => 'receipt_font_size',
                             'id'    => 'receipt_font_size',
-                            'class' => 'form-control input-sm required',
+                            'class' => 'form-control input-sm required dj-input-number',
                             'value' => $config['receipt_font_size']
                         ]) ?>
                         <span class="input-group-addon input-sm">px</span>
@@ -54,7 +55,7 @@
                             'max'   => '30',
                             'name'  => 'print_delay_autoreturn',
                             'id'    => 'print_delay_autoreturn',
-                            'class' => 'form-control input-sm required',
+                            'class' => 'form-control input-sm required dj-input-number',
                             'value' => $config['print_delay_autoreturn']
                         ]) ?>
                         <span class="input-group-addon input-sm">s</span>
@@ -261,7 +262,7 @@
                             'max'   => '20',
                             'name'  => 'print_top_margin',
                             'id'    => 'print_top_margin',
-                            'class' => 'form-control input-sm required',
+                            'class' => 'form-control input-sm required dj-input-number',
                             'value' => $config['print_top_margin']
                         ]) ?>
                         <span class="input-group-addon input-sm">px</span>
@@ -279,7 +280,7 @@
                             'max'   => '20',
                             'name'  => 'print_left_margin',
                             'id'    => 'print_left_margin',
-                            'class' => 'form-control input-sm required',
+                            'class' => 'form-control input-sm required dj-input-number',
                             'value' => $config['print_left_margin']
                         ]) ?>
                         <span class="input-group-addon input-sm">px</span>
@@ -297,7 +298,7 @@
                             'max'   => '20',
                             'name'  => 'print_bottom_margin',
                             'id'    => 'print_bottom_margin',
-                            'class' => 'form-control input-sm required',
+                            'class' => 'form-control input-sm required dj-input-number',
                             'value' => $config['print_bottom_margin']
                         ]) ?>
                         <span class="input-group-addon input-sm">px</span>
@@ -315,7 +316,7 @@
                             'max'   => '20',
                             'name'  => 'print_right_margin',
                             'id'    => 'print_right_margin',
-                            'class' => 'form-control input-sm required',
+                            'class' => 'form-control input-sm required dj-input-number',
                             'value' => $config['print_right_margin']
                         ]) ?>
                         <span class="input-group-addon input-sm">px</span>

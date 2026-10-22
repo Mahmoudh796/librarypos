@@ -10,6 +10,7 @@
 <?= form_open('config/saveLocale/', ['id' => 'locale_config_form', 'class' => 'form-horizontal']) ?>
     <div id="config_wrapper">
         <fieldset id="config_info">
+<h3 class="dj-settings-title"><span class="glyphicon glyphicon-globe" aria-hidden="true"></span><?= lang('Config.locale_configuration') ?></h3>
 
             <div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
             <ul id="locale_error_message_box" class="error_message_box"></ul>
@@ -20,16 +21,14 @@
                     <?= form_input([
                         'name'  => 'number_locale',
                         'id'    => 'number_locale',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-code',
                         'value' => $config['number_locale']
                     ]) ?>
                     <?= form_hidden(['name' => 'save_number_locale', 'value' => $config['number_locale']]) ?>
                 </div>
                 <div class="col-xs-5 col-sm-7 col-md-8">
                     <p class="form-control-static">
-                        <a href="https://github.com/opensourcepos/opensourcepos/wiki/Localisation-support" target="_blank" style="text-decoration: none;">
-                            <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="right" title="<?= lang('Config.number_locale_tooltip') ?>"></span>
-                        </a>
+                        <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="right" title="<?= lang('Config.number_locale_tooltip') ?>"></span>
                         <span id="number_locale_example" style="padding-left: 1em;">
                             <?= to_currency(1234567890.12300) ?>
                         </span>
@@ -55,7 +54,7 @@
                     <?= form_input([
                         'name'  => 'currency_symbol',
                         'id'    => 'currency_symbol',
-                        'class' => 'form-control input-sm number_locale',
+                        'class' => 'form-control input-sm number_locale dj-input-code',
                         'value' => $config['currency_symbol']
                     ]) ?>
                 </div>
@@ -67,7 +66,7 @@
                     <?= form_input([
                         'name'  => 'currency_code',
                         'id'    => 'currency_code',
-                        'class' => 'form-control input-sm number_locale',
+                        'class' => 'form-control input-sm number_locale dj-input-code',
                         'value' => $currency_code
                     ]) ?>
                 </div>
@@ -200,7 +199,7 @@
                 <div class="col-xs-8 col-sm-3 col-md-2">
                     <?= form_input([
                         'name'  => 'country_codes',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-code',
                         'value' => $config['country_codes']
                     ]) ?>
                 </div>

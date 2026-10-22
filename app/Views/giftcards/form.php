@@ -22,7 +22,7 @@
                 <?= form_input([
                     'name'  => 'person_name',
                     'id'    => 'person_name',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => $selected_person_name
                 ]) ?>
                 <?= form_hidden('person_id', (string)$selected_person_id) ?>
@@ -41,7 +41,7 @@
                 <?= form_input([
                     'name'  => 'giftcard_number',
                     'id'    => 'giftcard_number',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-code',
                     'value' => $giftcard_number
                 ]) ?>
             </div>
@@ -58,7 +58,7 @@
                     <?= form_input([
                         'name'  => 'giftcard_amount',
                         'id'    => 'giftcard_amount',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-number',
                         'value' => to_currency_no_money($giftcard_value)
                     ]) ?>
                     <?php if (is_right_side_currency_symbol()): ?>

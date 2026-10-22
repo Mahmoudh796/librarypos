@@ -22,7 +22,7 @@
                 <?= form_input([
                     'name'  => 'definition_name',
                     'id'    => 'definition_name',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => $definition_info->definition_name
                 ]) ?>
             </div>
@@ -70,7 +70,7 @@
                     <?= form_input([
                         'name'  => 'definition_unit',
                         'value' => $definition_info->definition_unit,
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-text',
                         'id'    => 'definition_unit'
                     ]) ?>
                 </div>
@@ -81,7 +81,7 @@
             <?= form_label(lang('Attributes.definition_values'), 'definition_value', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-8">
                 <div class="input-group">
-                    <?= form_input(['name' => 'definition_value', 'class' => 'form-control input-sm', 'id' => 'definition_value']) ?>
+                    <?= form_input(['name' => 'definition_value', 'class' => 'form-control input-sm dj-input-text', 'id' => 'definition_value']) ?>
                     <span id="add_attribute_value" class="input-group-addon input-sm btn btn-default">
                         <span class="glyphicon glyphicon-plus-sign"></span>
                     </span>

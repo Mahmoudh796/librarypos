@@ -19,7 +19,7 @@ foreach ($stock_locations as $location => $location_data) {
             <?php $form_data = [
                 'name'  => "stock_location[$location_id]",
                 'id'    => "stock_location[$location_id]",
-                'class' => 'stock_location valid_chars form-control input-sm required',
+                'class' => 'stock_location valid_chars form-control input-sm required dj-input-text',
                 'value' => $location_name
             ];
             $location_data['deleted'] && $form_data['disabled'] = 'disabled';

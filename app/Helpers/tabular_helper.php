@@ -308,7 +308,7 @@ function get_customer_data_row(object $person, object $stats): array
             "$controller/view/$person->person_id",
             '<span class="glyphicon glyphicon-edit"></span>',
             [
-                'class'           => 'modal-dlg',
+                'class'           => 'modal-dlg modal-dlg-wide',
                 'data-btn-submit' => lang('Common.submit'),
                 'title'           => lang(ucfirst($controller) . ".update")
             ]
@@ -378,7 +378,7 @@ function get_supplier_data_row(object $supplier): array
             "$controller/view/$supplier->person_id",
             '<span class="glyphicon glyphicon-edit"></span>',
             [
-                'class'           => "modal-dlg",
+                'class'           => "modal-dlg modal-dlg-wide",
                 'data-btn-submit' => lang('Common.submit'),
                 'title'           => lang(ucfirst($controller) . ".update")
             ]

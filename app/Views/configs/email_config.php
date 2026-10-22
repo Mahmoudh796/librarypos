@@ -34,7 +34,7 @@
                     <?= form_input([
                         'name'  => 'mailpath',
                         'id'    => 'mailpath',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-code',
                         'value' => $config['mailpath']
                     ]) ?>
                 </div>
@@ -46,7 +46,7 @@
                     <?= form_input([
                         'name'  => 'smtp_host',
                         'id'    => 'smtp_host',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-code',
                         'value' => $config['smtp_host']
                     ]) ?>
                 </div>
@@ -59,7 +59,7 @@
                         'type'  => 'number',
                         'name'  => 'smtp_port',
                         'id'    => 'smtp_port',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-number',
                         'value' => $config['smtp_port']
                     ]) ?>
                 </div>
@@ -88,7 +88,7 @@
                         'type'  => 'number',
                         'name'  => 'smtp_timeout',
                         'id'    => 'smtp_timeout',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-number',
                         'value' => $config['smtp_timeout']
                     ]) ?>
                 </div>
@@ -104,7 +104,7 @@
                         <?= form_input([
                             'name'  => 'smtp_user',
                             'id'    => 'smtp_user',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-code',
                             'value' => $config['smtp_user']
                         ]) ?>
                     </div>
@@ -121,7 +121,7 @@
                         <input type="password"
                                name="smtp_pass"
                                id="smtp_pass"
-                               class="form-control input-sm"
+                               class="form-control input-sm dj-input-secret"
                                placeholder="<?= !empty($smtp_pass_set) ? lang('Config.email_smtp_pass_set') : esc(lang('Config.email_smtp_pass')) ?>"
                                autocomplete="off">
                     </div>

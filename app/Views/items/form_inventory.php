@@ -21,7 +21,7 @@
                     <?= form_input([
                         'name'     => 'item_number',
                         'id'       => 'item_number',
-                        'class'    => 'form-control input-sm',
+                        'class'    => 'form-control input-sm dj-input-code',
                         'disabled' => '',
                         'value'    => $item_info->item_number
                     ]) ?>
@@ -35,7 +35,7 @@
                 <?= form_input([
                     'name'     => 'name',
                     'id'       => 'name',
-                    'class'    => 'form-control input-sm',
+                    'class'    => 'form-control input-sm dj-input-text',
                     'disabled' => '',
                     'value'    => $item_info->name
                 ]) ?>
@@ -50,7 +50,7 @@
                     <?= form_input([
                         'name'     => 'category',
                         'id'       => 'category',
-                        'class'    => 'form-control input-sm',
+                        'class'    => 'form-control input-sm dj-input-text',
                         'disabled' => '',
                         'value'    => $item_info->category
                     ]) ?>
@@ -71,7 +71,7 @@
                 <?= form_input([
                     'name'     => 'quantity',
                     'id'       => 'quantity',
-                    'class'    => 'form-control input-sm',
+                    'class'    => 'form-control input-sm dj-input-number',
                     'disabled' => '',
                     'value'    => to_quantity_decimals(current($item_quantities))
                 ]) ?>
@@ -84,7 +84,7 @@
                 <?= form_input([
                     'name'  => 'newquantity',
                     'id'    => 'newquantity',
-                    'class' => 'form-control input-sm'
+                    'class' => 'form-control input-sm dj-input-number'
                 ]) ?>
             </div>
         </div>
@@ -95,7 +95,7 @@
                 <?= form_textarea([
                     'name'  => 'trans_comment',
                     'id'    => 'trans_comment',
-                    'class' => 'form-control input-sm'
+                    'class' => 'form-control input-sm dj-input-text'
                 ]) ?>
             </div>
         </div>

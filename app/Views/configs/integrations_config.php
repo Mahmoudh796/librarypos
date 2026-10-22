@@ -24,7 +24,7 @@
                         <input type="password"
                                name="mailchimp_api_key"
                                id="mailchimp_api_key"
-                               class="form-control input-sm"
+                               class="form-control input-sm dj-input-secret"
                                placeholder="<?= $apiKeySet ? lang('Config.mailchimp_api_key_set') : esc(lang('Config.mailchimp_api_key')) ?>"
                                autocomplete="off">
                     </div>

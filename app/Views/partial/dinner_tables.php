@@ -19,7 +19,7 @@ foreach ($dinner_tables as $table_key => $table) {
             <?php $form_data = [
                 'name'  => "dinner_table_$dinner_table_id",
                 'id'    => "dinner_table_$dinner_table_id",
-                'class' => 'dinner_table valid_chars form-control input-sm required',
+                'class' => 'dinner_table valid_chars form-control input-sm required dj-input-text',
                 'value' => $dinner_table_name
             ];
             $table['deleted'] && $form_data['disabled'] = 'disabled';

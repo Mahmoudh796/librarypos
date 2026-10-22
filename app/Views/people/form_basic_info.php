@@ -11,7 +11,7 @@
         <?= form_input([
             'name'  => 'first_name',
             'id'    => 'first_name',
-            'class' => 'form-control input-sm',
+            'class' => 'form-control input-sm dj-input-text',
             'value' => $person_info->first_name
         ]) ?>
     </div>
@@ -23,13 +23,13 @@
         <?= form_input([
             'name'  => 'last_name',
             'id'    => 'last_name',
-            'class' => 'form-control input-sm',
+            'class' => 'form-control input-sm dj-input-text',
             'value' => $person_info->last_name
         ]) ?>
     </div>
 </div>
 
-<div class="form-group form-group-sm">
+<div class="form-group form-group-sm dj-field--full">
     <?= form_label(lang('Common.gender'), 'gender', !empty($basic_version) ? ['class' => 'control-label col-xs-3 text-danger required'] : ['class' => 'control-label col-xs-3']) ?>
     <div class="col-xs-4">
         <label class="radio-inline">
@@ -62,7 +62,7 @@
             <?= form_input([
                 'name'  => 'email',
                 'id'    => 'email',
-                'class' => 'form-control input-sm',
+                'class' => 'form-control input-sm dj-input-email',
                 'value' => $person_info->email
             ]) ?>
         </div>
@@ -77,7 +77,7 @@
             <?= form_input([
                 'name'  => 'phone_number',
                 'id'    => 'phone_number',
-                'class' => 'form-control input-sm',
+                'class' => 'form-control input-sm dj-input-phone',
                 'value' => $person_info->phone_number
             ]) ?>
         </div>
@@ -90,7 +90,7 @@
         <?= form_input([
             'name'  => 'address_1',
             'id'    => 'address_1',
-            'class' => 'form-control input-sm',
+            'class' => 'form-control input-sm dj-input-text',
             'value' => $person_info->address_1
         ]) ?>
     </div>
@@ -102,7 +102,7 @@
         <?= form_input([
             'name'  => 'address_2',
             'id'    => 'address_2',
-            'class' => 'form-control input-sm',
+            'class' => 'form-control input-sm dj-input-text',
             'value' => $person_info->address_2
         ]) ?>
     </div>
@@ -114,7 +114,7 @@
         <?= form_input([
             'name'  => 'city',
             'id'    => 'city',
-            'class' => 'form-control input-sm',
+            'class' => 'form-control input-sm dj-input-text',
             'value' => $person_info->city
         ]) ?>
     </div>
@@ -126,7 +126,7 @@
         <?= form_input([
             'name'  => 'state',
             'id'    => 'state',
-            'class' => 'form-control input-sm',
+            'class' => 'form-control input-sm dj-input-text',
             'value' => $person_info->state
         ]) ?>
     </div>
@@ -138,7 +138,7 @@
         <?= form_input([
             'name'  => 'zip',
             'id'    => 'postcode',
-            'class' => 'form-control input-sm',
+            'class' => 'form-control input-sm dj-input-code',
             'value' => $person_info->zip
         ]) ?>
     </div>
@@ -150,19 +150,19 @@
         <?= form_input([
             'name'  => 'country',
             'id'    => 'country',
-            'class' => 'form-control input-sm',
+            'class' => 'form-control input-sm dj-input-text',
             'value' => $person_info->country
         ]) ?>
     </div>
 </div>
 
-<div class="form-group form-group-sm">
+<div class="form-group form-group-sm dj-field--full">
     <?= form_label(lang('Common.comments'), 'comments', ['class' => 'control-label col-xs-3']) ?>
     <div class="col-xs-8">
         <?= form_textarea([
             'name'  => 'comments',
             'id'    => 'comments',
-            'class' => 'form-control input-sm',
+            'class' => 'form-control input-sm dj-input-text',
             'value' => $person_info->comments
         ]) ?>
     </div>

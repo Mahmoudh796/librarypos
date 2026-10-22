@@ -17,7 +17,7 @@
                 <?= form_input([
                     'name'  => 'category_name',
                     'id'    => 'category_name',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => $category_info->category_name
                 ]) ?>
             </div>
@@ -29,7 +29,7 @@
                 <?= form_textarea([
                     'name'  => 'category_description',
                     'id'    => 'category_description',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => $category_info->category_description
                 ]) ?>
             </div>

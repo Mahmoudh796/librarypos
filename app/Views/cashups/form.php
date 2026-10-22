@@ -28,7 +28,7 @@
                     <?= form_input([
                         'name'  => 'open_date',
                         'id'    => 'open_date',
-                        'class' => 'form-control input-sm datepicker',
+                        'class' => 'form-control input-sm datepicker dj-input-date',
                         'value' => to_datetime(strtotime($cash_ups_info->open_date))
                     ]) ?>
                 </div>
@@ -52,7 +52,7 @@
                     <?= form_input([
                         'name'  => 'open_amount_cash',
                         'id'    => 'open_amount_cash',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-number',
                         'value' => to_currency_no_money($cash_ups_info->open_amount_cash)
                     ]) ?>
                     <?php if (is_right_side_currency_symbol()): ?>
@@ -72,7 +72,7 @@
                     <?= form_input([
                         'name'  => 'transfer_amount_cash',
                         'id'    => 'transfer_amount_cash',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-number',
                         'value' => to_currency_no_money($cash_ups_info->transfer_amount_cash)
                     ]) ?>
                     <?php if (is_right_side_currency_symbol()): ?>
@@ -92,7 +92,7 @@
                     <?= form_input([
                         'name'  => 'close_date',
                         'id'    => 'close_date',
-                        'class' => 'form-control input-sm datepicker',
+                        'class' => 'form-control input-sm datepicker dj-input-date',
                         'value' => to_datetime(strtotime($cash_ups_info->close_date))
                     ]) ?>
                 </div>
@@ -116,7 +116,7 @@
                     <?= form_input([
                         'name'  => 'closed_amount_cash',
                         'id'    => 'closed_amount_cash',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-number',
                         'value' => to_currency_no_money($cash_ups_info->closed_amount_cash)
                     ]) ?>
                     <?php if (is_right_side_currency_symbol()): ?>
@@ -148,7 +148,7 @@
                     <?= form_input([
                         'name'  => 'closed_amount_due',
                         'id'    => 'closed_amount_due',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-number',
                         'value' => to_currency_no_money($cash_ups_info->closed_amount_due)
                     ]) ?>
                     <?php if (is_right_side_currency_symbol()): ?>
@@ -168,7 +168,7 @@
                     <?= form_input([
                         'name'  => 'closed_amount_card',
                         'id'    => 'closed_amount_card',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-number',
                         'value' => to_currency_no_money($cash_ups_info->closed_amount_card)
                     ]) ?>
                     <?php if (is_right_side_currency_symbol()): ?>
@@ -188,7 +188,7 @@
                     <?= form_input([
                         'name'  => 'closed_amount_check',
                         'id'    => 'closed_amount_check',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-number',
                         'value' => to_currency_no_money($cash_ups_info->closed_amount_check)
                     ]) ?>
                     <?php if (is_right_side_currency_symbol()): ?>
@@ -209,7 +209,7 @@
                         'name'     => 'closed_amount_total',
                         'id'       => 'closed_amount_total',
                         'readonly' => 'true',
-                        'class'    => 'form-control input-sm',
+                        'class'    => 'form-control input-sm dj-input-number',
                         'value'    => to_currency_no_money($cash_ups_info->closed_amount_total)
                     ]) ?>
                     <?php if (is_right_side_currency_symbol()): ?>
@@ -225,7 +225,7 @@
                 <?= form_textarea([
                     'name'  => 'description',
                     'id'    => 'description',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => $cash_ups_info->description
                 ]) ?>
             </div>

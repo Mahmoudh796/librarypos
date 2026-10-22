@@ -11,6 +11,7 @@
 <?= form_open('config/saveTax/', ['id' => 'tax_config_form', 'class' => 'form-horizontal']) ?>
     <div id="config_wrapper">
         <fieldset id="config_info">
+<h3 class="dj-settings-title"><span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span><?= lang('Config.tax_configuration') ?></h3>
 
             <div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
             <ul id="tax_error_message_box" class="error_message_box"></ul>
@@ -21,7 +22,7 @@
                     <?= form_input([
                         'name'  => 'tax_id',
                         'id'    => 'tax_id',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-code',
                         'value' => $config['tax_id']
                     ]) ?>
                 </div>
@@ -45,7 +46,7 @@
                     <?= form_input([
                         'name'  => 'default_tax_1_name',
                         'id'    => 'default_tax_1_name',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-text',
                         'value' => $config['default_tax_1_name'] !== false ? $config['default_tax_1_name'] : lang('Items.sales_tax_1')
                     ]) ?>
                 </div>
@@ -54,7 +55,7 @@
                         <?= form_input([
                             'name'  => 'default_tax_1_rate',
                             'id'    => 'default_tax_1_rate',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-number',
                             'value' => to_tax_decimals($config['default_tax_1_rate'])
                         ]) ?>
                         <span class="input-group-addon input-sm">%</span>
@@ -68,7 +69,7 @@
                     <?= form_input([
                         'name'  => 'default_tax_2_name',
                         'id'    => 'default_tax_2_name',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-text',
                         'value' => $config['default_tax_2_name'] !== false ? $config['default_tax_2_name'] : lang('Items.sales_tax_2')
                     ]) ?>
                 </div>
@@ -77,7 +78,7 @@
                         <?= form_input([
                             'name'  => 'default_tax_2_rate',
                             'id'    => 'default_tax_2_rate',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-number',
                             'value' => to_tax_decimals($config['default_tax_2_rate'])
                         ]) ?>
                         <span class="input-group-addon input-sm">%</span>

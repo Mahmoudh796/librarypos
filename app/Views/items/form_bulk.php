@@ -20,7 +20,7 @@
                 <?= form_input([
                     'name'  => 'name',
                     'id'    => 'name',
-                    'class' => 'form-control input-sm'
+                    'class' => 'form-control input-sm dj-input-text'
                 ]) ?>
             </div>
         </div>
@@ -33,7 +33,7 @@
                     <?= form_input([
                         'name'  => 'category',
                         'id'    => 'category',
-                        'class' => 'form-control input-sm'
+                        'class' => 'form-control input-sm dj-input-text'
                     ]) ?>
                 </div>
             </div>
@@ -56,7 +56,7 @@
                     <?= form_input([
                         'name'  => 'cost_price',
                         'id'    => 'cost_price',
-                        'class' => 'form-control input-sm'
+                        'class' => 'form-control input-sm dj-input-number'
                     ]) ?>
                     <?php if (is_right_side_currency_symbol()): ?>
                         <span class="input-group-addon input-sm"><b><?= esc($config['currency_symbol']) ?></b></span>
@@ -75,7 +75,7 @@
                     <?= form_input([
                         'name'  => 'unit_price',
                         'id'    => 'unit_price',
-                        'class' => 'form-control input-sm'
+                        'class' => 'form-control input-sm dj-input-number'
                     ]) ?>
                     <?php if (is_right_side_currency_symbol()): ?>
                         <span class="input-group-addon input-sm"><b><?= esc($config['currency_symbol']) ?></b></span>
@@ -90,7 +90,7 @@
                 <?= form_input([
                     'name'  => 'tax_names[]',
                     'id'    => 'tax_name_1',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => $config['default_tax_1_name']
                 ]) ?>
             </div>
@@ -99,7 +99,7 @@
                     <?= form_input([
                         'name'  => 'tax_percents[]',
                         'id'    => 'tax_percent_name_1',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-number',
                         'value' => to_tax_decimals($config['default_tax_1_rate'])
                     ]) ?>
                     <span class="input-group input-group-addon"><b>%</b></span>
@@ -113,7 +113,7 @@
                 <?= form_input([
                     'name'  => 'tax_names[]',
                     'id'    => 'tax_name_2',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => $config['default_tax_2_name']
                 ]) ?>
             </div>
@@ -122,7 +122,7 @@
                     <?= form_input([
                         'name'  => 'tax_percents[]',
                         'id'    => 'tax_percent_name_2',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-number',
                         'value' => to_tax_decimals($config['default_tax_2_rate'])
                     ]) ?>
                     <span class="input-group input-group-addon"><b>%</b></span>
@@ -136,7 +136,7 @@
                 <?= form_input([
                     'name'  => 'reorder_level',
                     'id'    => 'reorder_level',
-                    'class' => 'form-control input-sm'
+                    'class' => 'form-control input-sm dj-input-number'
                 ]) ?>
             </div>
         </div>
@@ -147,7 +147,7 @@
                 <?= form_textarea([
                     'name'  => 'description',
                     'id'    => 'description',
-                    'class' => 'form-control input-sm'
+                    'class' => 'form-control input-sm dj-input-text'
                 ]) ?>
             </div>
         </div>

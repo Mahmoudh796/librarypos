@@ -44,6 +44,102 @@
         text-align: left !important;
     }
 
+    /* ---------- Bootstrap 3 grid ---------- */
+
+    /*
+     * Bootstrap 3 floats its columns physically (`float: left`), so `direction`
+     * alone never mirrors the grid. Flip every grid column for RTL — and not
+     * only the ones that live inside a `.row`: the CRUD dialogs place the
+     * label column and the control column directly inside `.form-group`, so a
+     * `.row`-scoped rule left those dialogs ordered left-to-right inside an
+     * RTL document (caption on the left, field on the right).
+     *
+     * The two-column field grid (.dj-form-grid) neutralises the floats itself
+     * with a more specific rule, so it keeps its own layout.
+     */
+    [dir="rtl"] [class*="col-xs-"],
+    [dir="rtl"] [class*="col-sm-"],
+    [dir="rtl"] [class*="col-md-"],
+    [dir="rtl"] [class*="col-lg-"] {
+        float: right;
+    }
+
+    /* The only explicit grid offset in the app (item variants) must mirror too. */
+    [dir="rtl"] .col-xs-offset-3 {
+        margin-right: 25%;
+        margin-left: 0;
+    }
+
+    /* ---------- Form controls ---------- */
+
+    /*
+     * Bootstrap 3 reserves the control's space with physical padding, which
+     * leaves radios/checkboxes on the wrong side in RTL documents.
+     */
+    [dir="rtl"] .radio,
+    [dir="rtl"] .checkbox,
+    [dir="rtl"] .radio-inline,
+    [dir="rtl"] .checkbox-inline {
+        padding-right: 20px;
+        padding-left: 0;
+    }
+
+    [dir="rtl"] .radio input[type="radio"],
+    [dir="rtl"] .checkbox input[type="checkbox"],
+    [dir="rtl"] .radio-inline input[type="radio"],
+    [dir="rtl"] .checkbox-inline input[type="checkbox"] {
+        margin-right: -20px;
+        margin-left: 0;
+    }
+
+    [dir="rtl"] .radio-inline + .radio-inline,
+    [dir="rtl"] .checkbox-inline + .checkbox-inline {
+        margin-right: 10px;
+        margin-left: 0;
+    }
+
+    /*
+     * The mirrored caption.
+     *
+     * In LTR the caption column sits on the left and its text is right-aligned,
+     * so the caption hugs its field and the empty space of the fixed column
+     * stays on the outer edge of the form. Mirrored for RTL the caption column
+     * moves to the right, and the caption has to hug the field from that side
+     * too — right-aligning it would strand the caption at the far edge and
+     * leave a wide empty gutter between the caption and the field.
+     *
+     * The stacked .dj-form-grid captions are exempt: there the caption sits
+     * directly above its control, so it must share the control's start edge
+     * (which `text-align: start` resolves per direction).
+     */
+    [dir="rtl"] .form-horizontal .control-label {
+        text-align: left;
+    }
+
+    [dir="rtl"] .dj-form-grid .control-label {
+        text-align: start;
+    }
+
+    /*
+     * The required-field marker belongs at the *start* of the caption, which
+     * in Arabic is its right-hand side. Bootstrap's `::after` puts it at the
+     * logical end, so RTL moves it to `::before`.
+     */
+    [dir="rtl"] .form-horizontal .control-label.required::after {
+        content: none;
+    }
+
+    [dir="rtl"] .form-horizontal .control-label.required::before,
+    [dir="rtl"] .dj-check.required .dj-check-label::before {
+        content: " *";
+        color: var(--dj-danger, #c0392b);
+        font-weight: 700;
+    }
+
+    [dir="rtl"] .dj-check.required .dj-check-label::after {
+        content: none;
+    }
+
     /* ---------- Application shell ---------- */
 
     [dir="rtl"] .navbar-left {
@@ -132,6 +228,50 @@
         border-left: 0;
     }
 
+    /* ---------- Select controls (bootstrap-select) ---------- */
+
+    /*
+     * bootstrap-select renders the chosen value in a floated block that is
+     * hard-coded to the left and pins its caret to the right edge of the
+     * button. Both follow the reading direction: the value starts at the
+     * inline start edge and the caret sits on the opposite side.
+     */
+    [dir="rtl"] .bootstrap-select .dropdown-toggle .filter-option {
+        float: right;
+        text-align: right;
+    }
+
+    [dir="rtl"] .bs3.bootstrap-select .dropdown-toggle .filter-option {
+        padding-right: 0;
+        padding-left: inherit;
+    }
+
+    [dir="rtl"] .bootstrap-select .dropdown-toggle .caret {
+        right: auto;
+        left: 12px;
+    }
+
+    /* The tick of a chosen option and its label indent mirror with the menu. */
+    [dir="rtl"] .bootstrap-select .dropdown-menu li a.opt {
+        padding-right: 2.25em;
+        padding-left: 0;
+    }
+
+    [dir="rtl"] .bootstrap-select .dropdown-menu li small {
+        padding-right: 0.5em;
+        padding-left: 0;
+    }
+
+    [dir="rtl"] .bootstrap-select.show-tick .dropdown-menu li a span.text {
+        margin-right: 0;
+        margin-left: 34px;
+    }
+
+    [dir="rtl"] .bootstrap-select.show-tick .dropdown-menu .selected span.check-mark {
+        right: auto;
+        left: 15px;
+    }
+
     /* ---------- Dropdowns, pagination, breadcrumbs, modals ---------- */
 
     [dir="rtl"] .dropdown-menu {
@@ -141,6 +281,16 @@
     }
 
     [dir="rtl"] .dropdown-menu.pull-right {
+        right: auto;
+        left: 0;
+    }
+
+    /*
+     * The account menu is pinned to the inline-end edge of the header. In LTR
+     * that means its right edge tracks the trigger; in RTL the trigger sits at
+     * the far left, so the menu must open to the right instead.
+     */
+    [dir="rtl"] .dj-account-menu {
         right: auto;
         left: 0;
     }
@@ -162,6 +312,14 @@
         text-align: left;
     }
 
+    /*
+     * The page-navigation chevrons have to point along the reading direction:
+     * in Arabic "previous" is to the right and "next" is to the left.
+     */
+    [dir="rtl"] .dj-page-nav__btn .glyphicon {
+        transform: scaleX(-1);
+    }
+
     /* ---------- Tables ---------- */
 
     [dir="rtl"] .table th,
@@ -169,10 +327,79 @@
         text-align: right;
     }
 
+    /*
+     * Machine-readable and monetary columns keep their own left-to-right
+     * content: an amount reads "125.00 ج.م" and a barcode reads "6291041500213"
+     * whatever the interface language is. The content is isolated so the digit
+     * run never re-orders against the neighbouring Arabic cell, and the column
+     * is aligned to the outer (left) edge, mirroring the LTR layout where the
+     * same columns sit against the right edge.
+     */
+    [dir="rtl"] .table [data-field="sale_id"],
+    [dir="rtl"] .table [data-field="items.item_id"],
+    [dir="rtl"] .table [data-field="cashup_id"],
+    [dir="rtl"] .table [data-field="expense_id"],
+    [dir="rtl"] .table [data-field="expense_category_id"],
+    [dir="rtl"] .table [data-field="giftcard_id"],
+    [dir="rtl"] .table [data-field="item_kit_id"],
+    [dir="rtl"] .table [data-field="definition_id"],
+    [dir="rtl"] .table [data-field="definition_type"],
+    [dir="rtl"] .table [data-field="item_number"],
+    [dir="rtl"] .table [data-field="item_kit_number"],
+    [dir="rtl"] .table [data-field="giftcard_number"],
+    [dir="rtl"] .table [data-field="invoice_number"],
+    [dir="rtl"] .table [data-field="supplier_tax_code"],
+    [dir="rtl"] .table [data-field="phone_number"],
+    [dir="rtl"] .table [data-field="email"],
+    [dir="rtl"] .table [data-field="sale_time"],
+    [dir="rtl"] .table [data-field="date"],
+    [dir="rtl"] .table [data-field="open_date"],
+    [dir="rtl"] .table [data-field="close_date"],
+    [dir="rtl"] .table [data-field="amount"],
+    [dir="rtl"] .table [data-field="amount_due"],
+    [dir="rtl"] .table [data-field="amount_tendered"],
+    [dir="rtl"] .table [data-field="change_due"],
+    [dir="rtl"] .table [data-field="cost_price"],
+    [dir="rtl"] .table [data-field="unit_price"],
+    [dir="rtl"] .table [data-field="total"],
+    [dir="rtl"] .table [data-field="total_cost_price"],
+    [dir="rtl"] .table [data-field="total_unit_price"],
+    [dir="rtl"] .table [data-field="tax_amount"],
+    [dir="rtl"] .table [data-field="tax_percents"],
+    [dir="rtl"] .table [data-field="quantity"],
+    [dir="rtl"] .table [data-field="inventory"],
+    [dir="rtl"] .table [data-field="stock"],
+    [dir="rtl"] .table [data-field="closed_amount_card"],
+    [dir="rtl"] .table [data-field="closed_amount_cash"],
+    [dir="rtl"] .table [data-field="closed_amount_check"],
+    [dir="rtl"] .table [data-field="closed_amount_due"],
+    [dir="rtl"] .table [data-field="closed_amount_total"],
+    [dir="rtl"] .table [data-field="open_amount_cash"],
+    [dir="rtl"] .table [data-field="transfer_amount_cash"] {
+        direction: ltr;
+        text-align: left;
+        unicode-bidi: isolate;
+    }
+
     /* The register centres its cells regardless of direction. */
     [dir="rtl"] #register th,
     [dir="rtl"] #register td {
         text-align: center;
+    }
+
+    /* ---------- Shared workspace components ---------- */
+
+    /* The report-hub chevron must point toward the reading direction. */
+    [dir="rtl"] .reports-hub .list-group-item::before {
+        content: "\2039";
+    }
+
+    /* Register summary/totals keep their numeric columns left-to-right. */
+    [dir="rtl"] #sale_total,
+    [dir="rtl"] #sale_amount_due,
+    [dir="rtl"] #amount_tendered {
+        direction: ltr;
+        unicode-bidi: isolate;
     }
 
     /* ---------- Login page (Bootstrap 5, logical utilities already flip) ---------- */

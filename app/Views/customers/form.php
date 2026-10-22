@@ -34,11 +34,13 @@
 
     <div class="tab-content">
         <div class="tab-pane fade in active" id="customer_basic_info">
-            <fieldset>
-                <div class="form-group form-group-sm">
-                    <?= form_label(lang('Customers.consent'), 'consent', ['class' => 'control-label col-xs-3 text-danger required']) ?>
-                    <div class="col-xs-1">
-                        <?= form_checkbox('consent', 1, $person_info->consent == '' ? !$config['enforce_privacy'] : (bool)$person_info->consent) ?>
+            <fieldset class="dj-form-grid">
+                <div class="form-group form-group-sm dj-field--full">
+                    <div class="col-xs-12">
+                        <label class="dj-check required">
+                            <?= form_checkbox('consent', 1, $person_info->consent == '' ? !$config['enforce_privacy'] : (bool)$person_info->consent) ?>
+                            <span class="dj-check-label"><?= lang('Customers.consent') ?></span>
+                        </label>
                     </div>
                 </div>
 
@@ -75,7 +77,7 @@
                             <?= form_input([
                                 'name'    => 'discount',
                                 'id'      => 'discount',
-                                'class'   => 'form-control input-sm',
+                                'class'   => 'form-control input-sm dj-input-number',
                                 'onClick' => 'this.select();',
                                 'value'   => $person_info->discount_type === FIXED ? to_currency_no_money($person_info->discount) : to_decimals($person_info->discount)
                             ]) ?>
@@ -89,7 +91,7 @@
                         <?= form_input([
                             'name'  => 'company_name',
                             'id'    => 'customer_company_name',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-text',
                             'value' => $person_info->company_name
                         ]) ?>
                     </div>
@@ -101,7 +103,7 @@
                         <?= form_input([
                             'name'  => 'account_number',
                             'id'    => 'account_number',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-code',
                             'value' => $person_info->account_number
                         ]) ?>
                     </div>
@@ -113,7 +115,7 @@
                         <?= form_input([
                             'name'  => 'tax_id',
                             'id'    => 'tax_id',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-code',
                             'value' => $person_info->tax_id
                         ]) ?>
                     </div>
@@ -138,7 +140,7 @@
                             <?= form_input([
                                 'name'     => 'available_points',
                                 'id'       => 'available_points',
-                                'class'    => 'form-control input-sm',
+                                'class'    => 'form-control input-sm dj-input-number',
                                 'value'    => $person_info->points,
                                 'disabled' => ''
                             ]) ?>
@@ -146,10 +148,12 @@
                     </div>
                 <?php endif; ?>
 
-                <div class="form-group form-group-sm">
-                    <?= form_label(lang('Customers.taxable'), 'taxable', ['class' => 'control-label col-xs-3']) ?>
-                    <div class="col-xs-1">
-                        <?= form_checkbox('taxable', 1, $person_info->taxable == 1) ?>
+                <div class="form-group form-group-sm dj-field--check">
+                    <div class="col-xs-12">
+                        <label class="dj-check">
+                            <?= form_checkbox('taxable', 1, $person_info->taxable == 1) ?>
+                            <span class="dj-check-label"><?= lang('Customers.taxable') ?></span>
+                        </label>
                     </div>
                 </div>
 
@@ -161,7 +165,7 @@
                                 <?= form_input([
                                     'name'  => 'sales_tax_code_name',
                                     'id'    => 'sales_tax_code_name',
-                                    'class' => 'form-control input-sm',
+                                    'class' => 'form-control input-sm dj-input-text',
                                     'size'  => '50',
                                     'value' => $sales_tax_code_label
                                 ]) ?>
@@ -179,7 +183,7 @@
                             <?= form_input([
                                 'name'     => 'date',
                                 'id'       => 'datetime',
-                                'class'    => 'form-control input-sm',
+                                'class'    => 'form-control input-sm dj-input-date',
                                 'value'    => to_datetime(strtotime($person_info->date)),
                                 'readonly' => 'true'
                             ]) ?>
@@ -193,7 +197,7 @@
                         <?= form_input([
                             'name'     => 'employee',
                             'id'       => 'employee',
-                            'class'    => 'form-control input-sm',
+                            'class'    => 'form-control input-sm dj-input-text',
                             'value'    => $employee,
                             'readonly' => 'true'
                         ]) ?>
@@ -218,7 +222,7 @@
                                 <?= form_input([
                                     'name'     => 'total',
                                     'id'       => 'total',
-                                    'class'    => 'form-control input-sm',
+                                    'class'    => 'form-control input-sm dj-input-number',
                                     'value'    => to_currency_no_money($stats->total),
                                     'disabled' => ''
                                 ]) ?>
@@ -239,7 +243,7 @@
                                 <?= form_input([
                                     'name'     => 'max',
                                     'id'       => 'max',
-                                    'class'    => 'form-control input-sm',
+                                    'class'    => 'form-control input-sm dj-input-number',
                                     'value'    => to_currency_no_money($stats->max),
                                     'disabled' => ''
                                 ]) ?>
@@ -260,7 +264,7 @@
                                 <?= form_input([
                                     'name'     => 'min',
                                     'id'       => 'min',
-                                    'class'    => 'form-control input-sm',
+                                    'class'    => 'form-control input-sm dj-input-number',
                                     'value'    => to_currency_no_money($stats->min),
                                     'disabled' => ''
                                 ]) ?>
@@ -281,7 +285,7 @@
                                 <?= form_input([
                                     'name'     => 'average',
                                     'id'       => 'average',
-                                    'class'    => 'form-control input-sm',
+                                    'class'    => 'form-control input-sm dj-input-number',
                                     'value'    => to_currency_no_money($stats->average),
                                     'disabled' => ''
                                 ]) ?>
@@ -300,7 +304,7 @@
                                 <?= form_input([
                                     'name'     => 'quantity',
                                     'id'       => 'quantity',
-                                    'class'    => 'form-control input-sm',
+                                    'class'    => 'form-control input-sm dj-input-number',
                                     'value'    => to_quantity_decimals($stats->quantity),
                                     'disabled' => ''
                                 ]) ?>
@@ -315,7 +319,7 @@
                                 <?= form_input([
                                     'name'     => 'avg_discount',
                                     'id'       => 'avg_discount',
-                                    'class'    => 'form-control input-sm',
+                                    'class'    => 'form-control input-sm dj-input-number',
                                     'value'    => to_decimals($stats->avg_discount),
                                     'disabled' => ''
                                 ]) ?>
@@ -359,7 +363,7 @@
                         <div class="col-xs-4">
                             <?= form_input([
                                 'name'     => 'mailchimp_member_rating',
-                                'class'    => 'form-control input-sm',
+                                'class'    => 'form-control input-sm dj-input-number',
                                 'value'    => $mailchimp_info['member_rating'],
                                 'disabled' => ''
                             ]) ?>
@@ -371,7 +375,7 @@
                         <div class="col-xs-4">
                             <?= form_input([
                                 'name'     => 'mailchimp_activity_total',
-                                'class'    => 'form-control input-sm',
+                                'class'    => 'form-control input-sm dj-input-number',
                                 'value'    => $mailchimp_activity['total'],
                                 'disabled' => ''
                             ]) ?>
@@ -383,7 +387,7 @@
                         <div class="col-xs-4">
                             <?= form_input([
                                 'name'     => 'mailchimp_activity_lastopen',
-                                'class'    => 'form-control input-sm',
+                                'class'    => 'form-control input-sm dj-input-number',
                                 'value'    => $mailchimp_activity['lastopen'],
                                 'disabled' => ''
                             ]) ?>
@@ -395,7 +399,7 @@
                         <div class="col-xs-4">
                             <?= form_input([
                                 'name'     => 'mailchimp_activity_open',
-                                'class'    => 'form-control input-sm',
+                                'class'    => 'form-control input-sm dj-input-number',
                                 'value'    => $mailchimp_activity['open'],
                                 'disabled' => ''
                             ]) ?>
@@ -407,7 +411,7 @@
                         <div class="col-xs-4">
                             <?= form_input([
                                 'name'     => 'mailchimp_activity_click',
-                                'class'    => 'form-control input-sm',
+                                'class'    => 'form-control input-sm dj-input-number',
                                 'value'    => $mailchimp_activity['click'],
                                 'disabled' => ''
                             ]) ?>
@@ -419,7 +423,7 @@
                         <div class="col-xs-4">
                             <?= form_input([
                                 'name'     => 'mailchimp_activity_unopen',
-                                'class'    => 'form-control input-sm',
+                                'class'    => 'form-control input-sm dj-input-number',
                                 'value'    => $mailchimp_activity['unopen'],
                                 'disabled' => ''
                             ]) ?>
@@ -431,7 +435,7 @@
                         <div class="col-xs-4">
                             <?= form_input([
                                 'name'     => 'mailchimp_email_client',
-                                'class'    => 'form-control input-sm',
+                                'class'    => 'form-control input-sm dj-input-email',
                                 'value'    => $mailchimp_info['email_client'],
                                 'disabled' => ''
                             ]) ?>

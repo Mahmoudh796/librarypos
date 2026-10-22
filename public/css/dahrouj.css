@@ -10,17 +10,102 @@
  * (receipt.css / invoice.css / ospos_print.css) untouched.
  */
 
+/*
+ * Cairo, self-hosted.
+ *
+ * The brand typography is Cairo for both scripts, so it is shipped with the app
+ * instead of being requested from a font CDN: the interface must render
+ * identically on an offline till, and a first paint should never wait on a
+ * third-party host. The two subsets carry their own `unicode-range`, so a page
+ * only downloads the Arabic or the Latin face it actually uses (each ~13-15 KB).
+ */
+@font-face {
+    font-family: "Cairo";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("../fonts/cairo/cairo-arabic-400-normal.woff2") format("woff2");
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+
+@font-face {
+    font-family: "Cairo";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url("../fonts/cairo/cairo-arabic-500-normal.woff2") format("woff2");
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+
+@font-face {
+    font-family: "Cairo";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url("../fonts/cairo/cairo-arabic-600-normal.woff2") format("woff2");
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+
+@font-face {
+    font-family: "Cairo";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("../fonts/cairo/cairo-arabic-700-normal.woff2") format("woff2");
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+
+@font-face {
+    font-family: "Cairo";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("../fonts/cairo/cairo-latin-400-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: "Cairo";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url("../fonts/cairo/cairo-latin-500-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: "Cairo";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url("../fonts/cairo/cairo-latin-600-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: "Cairo";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("../fonts/cairo/cairo-latin-700-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
-    /* Palette: restrained neutrals with a single Dahrouj accent. */
+    /* Palette: restrained neutrals with a single Ru'ya teal/petrol accent. */
     --dj-accent: #0f766e;
     --dj-accent-strong: #0b5e58;
+    --dj-accent-deep: #094a46;
     --dj-accent-soft: rgba(15, 118, 110, 0.12);
+    --dj-accent-glow: rgba(15, 118, 110, 0.16);
     --dj-bg: #f4f6f8;
+    --dj-bg-warm: #f6f4ef;
     --dj-surface: #ffffff;
     --dj-surface-alt: #f8fafc;
     --dj-border: #dfe4ea;
     --dj-border-strong: #c7ced6;
     --dj-text: #1f2d3d;
+    --dj-text-strong: #16222f;
     --dj-text-muted: #6b7785;
     --dj-success: #1e9e6a;
     --dj-warning: #b7791f;
@@ -33,20 +118,166 @@
     --dj-space-3: 12px;
     --dj-space-4: 16px;
     --dj-space-5: 24px;
+    --dj-space-6: 32px;
+    --dj-space-7: 40px;
+
+    /*
+     * Vertical rhythm. The page gap is the breathing room between the global
+     * header and the page content; the dialog gutter keeps an open modal clear
+     * of the viewport edges without wasting vertical space on tall forms.
+     */
+    --dj-page-top-gap: clamp(16px, 2.2vh, 28px);
+    --dj-dialog-gutter: clamp(16px, 3.2vh, 40px);
 
     /* Radii, control height and elevation. */
     --dj-radius: 6px;
     --dj-radius-sm: 4px;
+    --dj-radius-md: 10px;
+    --dj-radius-lg: 22px;
     --dj-control-height: 34px;
     --dj-shadow: 0 1px 2px rgba(31, 45, 61, 0.08);
     --dj-shadow-raised: 0 4px 14px rgba(31, 45, 61, 0.12);
+    --dj-shadow-card:
+        0 1px 2px rgba(16, 32, 44, 0.05),
+        0 10px 26px rgba(16, 32, 44, 0.07),
+        0 28px 64px rgba(9, 74, 70, 0.07);
 
-    /* Arabic-aware system font stack: no external font dependency. */
-    --dj-font: "Segoe UI", "Helvetica Neue", "Noto Naskh Arabic", "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+    /*
+     * Shared UI stack. Cairo leads both script stacks because it is now shipped
+     * with the application (see the @font-face block above), so the Latin and
+     * Arabic halves of the interface share one typeface. The platform Arabic and
+     * Latin faces behind it only act as a safety net if the webfonts fail to
+     * load.
+     */
+    --dj-font-base: "Cairo", "Segoe UI Variable Text", "Segoe UI", "Noto Sans", Tahoma, Arial, sans-serif;
+
+    /*
+     * Arabic-script stack. Cairo is the brand face; the contemporary system
+     * Arabic faces behind it (SF Arabic, Dubai, Segoe UI, Noto Arabic) are the
+     * fallback when the webfont request is blocked, with Tahoma last.
+     */
+    --dj-font-ar: "Cairo", "SF Arabic", "Segoe UI Variable Text", "Dubai", "Segoe UI", "Noto Sans Arabic", "Noto Kufi Arabic", "Geeza Pro", Tahoma, Arial, sans-serif;
+
+    --dj-font: var(--dj-font-base);
     --dj-font-mono: Menlo, Monaco, Consolas, "Courier New", monospace;
+
+    /*
+     * Canonical Ru'ya token names. The --dj-* names above are the historical
+     * prefix: both point at the same values and stay valid, while every new
+     * rule should prefer the --ruya-* spelling so the brand namespace reads
+     * as the product it is.
+     */
+    --ruya-primary: var(--dj-accent);
+    --ruya-primary-hover: var(--dj-accent-strong);
+    --ruya-primary-soft: var(--dj-accent-soft);
+    --ruya-primary-glow: var(--dj-accent-glow);
+    --ruya-bg: var(--dj-bg);
+    --ruya-bg-warm: var(--dj-bg-warm);
+    --ruya-surface: var(--dj-surface);
+    --ruya-surface-alt: var(--dj-surface-alt);
+    --ruya-border: var(--dj-border);
+    --ruya-border-strong: var(--dj-border-strong);
+    --ruya-text: var(--dj-text);
+    --ruya-text-strong: var(--dj-text-strong);
+    --ruya-text-muted: var(--dj-text-muted);
+    --ruya-danger: var(--dj-danger);
+    --ruya-warning: var(--dj-warning);
+    --ruya-success: var(--dj-success);
+    --ruya-info: var(--dj-info);
+
+    --ruya-space-1: 4px;
+    --ruya-space-2: 8px;
+    --ruya-space-3: 12px;
+    --ruya-space-4: 16px;
+    --ruya-space-5: 20px;
+    --ruya-space-6: 24px;
+    --ruya-space-7: 32px;
+    --ruya-space-8: 40px;
+    --ruya-space-9: 48px;
+
+    --ruya-radius: var(--dj-radius);
+    --ruya-radius-sm: var(--dj-radius-sm);
+    --ruya-radius-md: var(--dj-radius-md);
+    --ruya-radius-lg: var(--dj-radius-lg);
+    --ruya-control-height: var(--dj-control-height);
+    --ruya-shadow: var(--dj-shadow);
+    --ruya-shadow-raised: var(--dj-shadow-raised);
+    --ruya-font: var(--dj-font);
+}
+
+/*
+ * Arabic-script content resolves the shared font token to the modern Arabic
+ * stack: a document whose language is Arabic/Kurdish/Persian/Urdu/Hebrew, and
+ * Arabic runs inside an otherwise Latin page (for example the language
+ * switcher's "العربية" endonym). Elements carrying an identifier/monospace face
+ * re-assert their own font, so SKUs, barcodes and serials are untouched.
+ */
+:lang(ar),
+:lang(ckb),
+:lang(fa),
+:lang(ur),
+:lang(he) {
+    --dj-font: var(--dj-font-ar);
 }
 
 @media screen {
+    /* ---------- Third-party widget font re-roots ---------- */
+
+    /*
+     * These selectors are the actual cascade reason an Arabic screen could show
+     * a Naskh system face: bundle components hard-code Latin-only stacks
+     * (jquery-ui ".ui-widget" hard-codes Arial, the chartist tooltip Oxygen,
+     * the legacy "#page_title" in reports an old brand face). Everything below
+     * matches their selector so the equal-specificity later-in-cascade rule
+     * wins, and the widget resolves the same document font token as the rest
+     * of the interface — no !important, no blanket override.
+     */
+    .ui-widget,
+    .ui-widget input,
+    .ui-widget select,
+    .ui-widget textarea,
+    .ui-widget button {
+        font-family: var(--dj-font);
+    }
+
+    .ct-tooltip {
+        font-family: var(--dj-font);
+    }
+
+    .daterangepicker,
+    .bootstrap-datetimepicker-widget,
+    .bootstrap-select,
+    .bootstrap-select .dropdown-toggle,
+    .bootstrap-select .dropdown-menu,
+    .bootstrap-tagsinput,
+    .bootstrap-dialog .modal-content,
+    .bootstrap-dialog .modal-header,
+    .bootstrap-dialog .modal-body,
+    .bootstrap-dialog .modal-footer,
+    .bootstrap-table,
+    .autocomplete-suggestions {
+        font-family: var(--dj-font);
+    }
+
+    /*
+     * The Bootswatch theme hard-codes every heading (element and .h* class),
+     * tooltip and popover to "Lato" — a face with zero Arabic coverage. A
+     * heading that only renders Arabic text therefore fulfils nothing in the
+     * Lato stack and Chromium performs per-script fallback for the missing
+     * glyphs, which resolves to a Naskh serif while the surrounding UI stays
+     * Cairo — the mixed serif/sans look on لوحة المعلومات, التقارير,
+     * الموظفين, النسخ الاحتياطي. Re-rooting the same selectors restores one
+     * face everywhere; icons (glyphicons are font-family on .glyphicon) and
+     * the barcode/sansation faces are deliberately NOT touched.
+     */
+    h1, h2, h3, h4, h5, h6,
+    .h1, .h2, .h3, .h4, .h5, .h6,
+    .tooltip,
+    .popover,
+    .delete {
+        font-family: var(--dj-font);
+    }
+
     /* ---------- Shell ---------- */
 
     body {
@@ -55,7 +286,15 @@
         font-family: var(--dj-font);
     }
 
+    /*
+     * The authenticated shell is a viewport-height column: the header and footer
+     * keep their natural size while the workspace absorbs whatever is left, so a
+     * short screen still fills the viewport instead of ending in dead space.
+     */
     .wrapper {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
         font-size: 13px;
         color: var(--dj-text);
     }
@@ -64,37 +303,13 @@
         padding-inline: var(--dj-space-4);
     }
 
-    .topbar {
-        background: #14212e;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 0.35em 0;
-    }
-
-    .topbar .dj-clock {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--dj-space-2);
-        opacity: 0.9;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .topbar .dj-account a {
-        color: #eaf2f0;
-        text-decoration: none;
-    }
-
-    .topbar .dj-account a:hover,
-    .topbar .dj-account a:focus {
-        color: #ffffff;
-        text-decoration: underline;
-    }
-
-    .topbar .dj-sep {
-        opacity: 0.5;
-    }
-
     /* ---------- Brand wordmark ---------- */
 
+    /*
+     * Base wordmark shared with the authentication screens (which pair it with
+     * .dj-auth-brand). The authenticated header scopes its own rules under
+     * .dj-header so the two surfaces can diverge without affecting each other.
+     */
     .dj-brand {
         display: inline-flex;
         align-items: baseline;
@@ -103,73 +318,1020 @@
         letter-spacing: 0.01em;
     }
 
-    .dj-brand-ar {
-        font-size: 20px;
-        line-height: 1;
-    }
-
-    .dj-brand-en {
-        font-size: 15px;
-        opacity: 0.85;
-    }
-
     /* ---------- Authentication / database setup screen ---------- */
 
-    .dj-auth-brand {
-        color: var(--dj-accent);
+    /*
+     * The auth screen (login, database initialisation and database update) is
+     * deliberately self-contained: it must stay presentable with only this
+     * stylesheet and login.css, because the bundled theme under
+     * resources/bootswatch5 is build-generated and may be absent.
+     *
+     * State switching therefore uses the native `hidden` attribute (which the
+     * user agent stylesheet already hides) instead of a framework utility
+     * class. The rule below outranks the display rules of the components.
+     */
+    .dj-auth {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        margin: 0;
+        color: var(--dj-text);
+        font-family: var(--dj-font);
+        background-color: var(--dj-bg);
+        background-image:
+            radial-gradient(1100px 620px at 88% -6%, rgba(15, 118, 110, 0.11), rgba(15, 118, 110, 0) 62%),
+            radial-gradient(900px 520px at 4% 108%, rgba(9, 74, 70, 0.07), rgba(9, 74, 70, 0) 60%),
+            linear-gradient(158deg, var(--dj-bg-warm) 0%, var(--dj-bg) 46%, #edf1f4 100%);
+        background-attachment: fixed;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
     }
 
-    .dj-auth-brand .dj-brand-ar {
-        font-size: 44px;
+    /* CSS-only faint grid keeps the surface from reading as flat, with no imagery. */
+    .dj-auth::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background-image:
+            linear-gradient(rgba(31, 45, 61, 0.026) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(31, 45, 61, 0.026) 1px, transparent 1px);
+        background-size: 46px 46px;
+        -webkit-mask-image: radial-gradient(1200px 760px at 50% 0%, #000 0%, transparent 78%);
+        mask-image: radial-gradient(1200px 760px at 50% 0%, #000 0%, transparent 78%);
     }
 
-    .dj-auth-brand .dj-brand-en {
-        font-size: 26px;
+    .dj-auth-main,
+    .dj-auth-footer {
+        position: relative;
+        z-index: 1;
     }
 
-    .dj-auth-brand-sm .dj-brand-ar {
-        font-size: 22px;
+    .dj-auth *,
+    .dj-auth *::before,
+    .dj-auth *::after {
+        box-sizing: border-box;
     }
 
-    .dj-auth-brand-sm .dj-brand-en {
-        font-size: 15px;
+    .dj-auth [hidden] {
+        display: none !important;
     }
 
-    .dj-auth-attribution {
+    .dj-auth-main {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(24px, 5vh, 56px) var(--dj-space-4);
+    }
+
+    .dj-auth-card {
+        position: relative;
+        width: 100%;
+        max-width: 440px;
+        padding: var(--dj-space-7) var(--dj-space-6) var(--dj-space-6);
+        background-color: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-lg);
+        box-shadow: var(--dj-shadow-card);
+        animation: dj-auth-enter 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    }
+
+    /* Slight translucency only where the browser can blur it; otherwise opaque. */
+    @supports ((-webkit-backdrop-filter: blur(10px)) or (backdrop-filter: blur(10px))) {
+        .dj-auth-card {
+            background-color: rgba(255, 255, 255, 0.87);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+    }
+
+    @keyframes dj-auth-enter {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .dj-auth-header {
+        margin-bottom: var(--dj-space-6);
+        text-align: center;
+    }
+
+    .dj-auth-logo {
         display: block;
-        margin-top: var(--dj-space-2);
-        font-size: 12px;
+        max-width: 180px;
+        max-height: 72px;
+        margin: 0 auto var(--dj-space-3);
+        object-fit: contain;
+    }
+
+    .dj-auth-brand {
+        display: block;
+        margin-bottom: var(--dj-space-2);
+        line-height: 1.2;
+    }
+
+    /*
+     * The wordmark is the hero: large, heavy and gradient-filled. Its line box
+     * and block padding are deliberately generous so the gradient background —
+     * which is clipped to the glyphs — always covers the full Arabic ink: the
+     * hamza above ؤ and the dots below ي must never fall outside the painted
+     * box, which is what made them look clipped. No letter-spacing is applied —
+     * Arabic is cursive and tracking would tear the joined glyphs apart.
+     */
+    .dj-auth-brand .dj-auth-wordmark {
+        display: inline-block;
+        font-size: clamp(40px, 9vw, 52px);
+        font-weight: 800;
+        line-height: 1.4;
+        padding-block: 0.08em;
+        padding-inline: 0.06em;
+        color: var(--dj-accent-strong);
+        background-image: linear-gradient(135deg, var(--dj-accent) 0%, var(--dj-accent-deep) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Supporting identity ("مكتبة رؤية" / "Ru'ya Library"), quieter than the title. */
+    .dj-auth-descriptor {
+        display: block;
+        margin: 0 0 var(--dj-space-4);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--dj-text-muted);
+        text-align: center;
+    }
+
+    @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+        .dj-auth-brand .dj-auth-wordmark {
+            color: var(--dj-accent-strong);
+        }
+    }
+
+    /* ---------- Sign-in / recovery language switcher ---------- */
+
+    /*
+     * Sits in the top corner of the card, in the inline-end corner so it flips
+     * with the document direction. Deliberately quiet: a small pill that never
+     * competes with the wordmark or the primary action.
+     */
+    .dj-lang {
+        position: absolute;
+        top: var(--dj-space-3);
+        inset-inline-end: var(--dj-space-4);
+        z-index: 2;
+        margin: 0;
+    }
+
+    .dj-lang-group {
+        display: inline-flex;
+        padding: 2px;
+        background-color: var(--dj-surface-alt);
+        border: 1px solid var(--dj-border);
+        border-radius: 999px;
+        box-shadow: var(--dj-shadow);
+    }
+
+    .dj-lang-option {
+        appearance: none;
+        margin: 0;
+        padding: 5px 12px;
+        background-color: transparent;
+        border: 0;
+        border-radius: 999px;
+        color: var(--dj-text-muted);
+        font-family: var(--dj-font);
+        font-size: 12.5px;
+        font-weight: 600;
+        line-height: 1.4;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .dj-lang-option:hover {
+        color: var(--dj-text-strong);
+    }
+
+    .dj-lang-option.is-active {
+        background-color: var(--dj-surface);
+        color: var(--dj-accent-strong);
+        box-shadow: 0 1px 2px rgba(16, 32, 44, 0.12);
+    }
+
+    .dj-lang-option:focus-visible {
+        outline: 2px solid var(--dj-accent-deep);
+        outline-offset: 2px;
+    }
+
+    .dj-auth-title {
+        margin: 0 0 var(--dj-space-2);
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.4;
+        letter-spacing: -0.01em;
+        text-align: center;
+        color: var(--dj-text-strong);
+    }
+
+    /* Plain supporting copy — deliberately not an input/alert surface. */
+    .dj-auth-subtitle {
+        margin: 0 auto var(--dj-space-5);
+        max-width: 34ch;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.75;
+        text-align: center;
         color: var(--dj-text-muted);
     }
 
-    /* ---------- Navigation ---------- */
+    .dj-auth-note,
+    .dj-auth-alert {
+        margin: 0 0 var(--dj-space-4);
+        padding: var(--dj-space-3) var(--dj-space-4);
+        border: 1px solid var(--dj-border);
+        border-inline-start-width: 4px;
+        border-radius: var(--dj-radius-sm);
+        font-size: 13px;
+        line-height: 1.5;
+        text-align: start;
+    }
 
-    .navbar-default {
+    .dj-auth-note {
+        background-color: var(--dj-surface-alt);
+        border-inline-start-color: var(--dj-accent);
+        color: var(--dj-text-muted);
+    }
+
+    .dj-auth-warning {
+        margin: 0 0 var(--dj-space-4);
+        padding: var(--dj-space-3) var(--dj-space-4);
+        background-color: rgba(183, 121, 31, 0.1);
+        border: 1px solid rgba(183, 121, 31, 0.42);
+        border-inline-start-width: 4px;
+        border-inline-start-color: var(--dj-warning);
+        border-radius: var(--dj-radius-sm);
+        font-size: 13px;
+        line-height: 1.5;
+        text-align: start;
+        color: #7a520f;
+    }
+
+    .dj-auth-alert {
+        background-color: rgba(192, 57, 43, 0.08);
+        border-color: rgba(192, 57, 43, 0.4);
+        border-inline-start-color: var(--dj-danger);
+        color: #8e2b20;
+    }
+
+    .dj-auth-alert > div + div {
+        margin-top: var(--dj-space-1);
+    }
+
+    .dj-auth-fields {
+        margin-bottom: var(--dj-space-5);
+    }
+
+    .dj-auth-field + .dj-auth-field {
+        margin-top: var(--dj-space-4);
+    }
+
+    .dj-auth-field label {
+        display: block;
+        margin-bottom: var(--dj-space-2);
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        color: var(--dj-text);
+    }
+
+    .dj-auth-field input {
+        width: 100%;
+        height: 48px;
+        padding: 0 var(--dj-space-4);
+        background-color: #fcfdfe;
+        border: 1px solid var(--dj-border-strong);
+        border-radius: var(--dj-radius-md);
+        color: var(--dj-text-strong);
+        font-family: inherit;
+        font-size: 15px;
+        transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+    }
+
+    .dj-auth-field input::placeholder {
+        color: #9aa5b1;
+    }
+
+    .dj-auth-field input:hover {
+        border-color: #aab4bf;
+    }
+
+    .dj-auth-field input:focus {
+        background-color: var(--dj-surface);
+        border-color: var(--dj-accent);
+        box-shadow: 0 0 0 3px var(--dj-accent-soft);
+        outline: none;
+    }
+
+    .dj-auth-field input[aria-invalid="true"],
+    .dj-auth-field.is-invalid input {
+        border-color: var(--dj-danger);
+        background-color: rgba(192, 57, 43, 0.04);
+    }
+
+    .dj-auth-field input[aria-invalid="true"]:focus,
+    .dj-auth-field.is-invalid input:focus {
+        box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.15);
+    }
+
+    .dj-auth-submit {
+        display: block;
+        width: 100%;
+        min-height: 50px;
+        padding: 0 var(--dj-space-5);
+        background-color: var(--dj-accent);
+        background-image: linear-gradient(180deg, var(--dj-accent) 0%, var(--dj-accent-strong) 100%);
+        border: 1px solid var(--dj-accent-strong);
+        border-radius: var(--dj-radius-md);
+        color: #ffffff;
+        font-family: inherit;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 48px;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: 0 1px 2px rgba(9, 74, 70, 0.24), 0 8px 18px rgba(15, 118, 110, 0.18);
+        transition: background-color 0.16s ease, box-shadow 0.16s ease, transform 0.12s ease;
+    }
+
+    .dj-auth-submit:hover {
+        background-color: var(--dj-accent-strong);
+        background-image: none;
+        color: #ffffff;
+        text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(9, 74, 70, 0.26), 0 12px 24px rgba(15, 118, 110, 0.22);
+    }
+
+    .dj-auth-submit:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(9, 74, 70, 0.28);
+    }
+
+    .dj-auth-submit:focus-visible {
+        outline: 2px solid var(--dj-accent-deep);
+        outline-offset: 3px;
+    }
+
+    .dj-auth-submit[disabled] {
+        opacity: 0.6;
+        cursor: default;
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* Secondary recovery action: deliberately quieter than the primary submit. */
+    .dj-auth-recovery {
+        margin: var(--dj-space-5) 0 0;
+        text-align: center;
+    }
+
+    .dj-auth-recovery-link {
+        display: inline-block;
+        padding: var(--dj-space-2) var(--dj-space-3);
+        border-radius: var(--dj-radius-sm);
+        color: var(--dj-text-muted);
+        font-size: 13.5px;
+        font-weight: 600;
+        line-height: 1.5;
+        text-decoration: none;
+        transition: color 0.16s ease, background-color 0.16s ease;
+    }
+
+    .dj-auth-recovery-link:hover,
+    .dj-auth-recovery-link:focus {
+        color: var(--dj-accent-strong);
+        background-color: var(--dj-accent-soft);
+        text-decoration: underline;
+    }
+
+    .dj-auth-recovery-link:focus-visible {
+        outline: 2px solid var(--dj-accent-deep);
+        outline-offset: 2px;
+    }
+
+    /* Administrator contact panel on the recovery screen. */
+    .dj-auth-contact {
+        margin: 0 0 var(--dj-space-5);
+        padding: var(--dj-space-4);
+        background-color: var(--dj-surface-alt);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-md);
+    }
+
+    .dj-auth-contact-title {
+        margin: 0 0 var(--dj-space-2);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        color: var(--dj-text-strong);
+    }
+
+    .dj-auth-contact-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .dj-auth-contact-list li {
+        font-size: 14px;
+        line-height: 1.8;
+        color: var(--dj-text);
+        overflow-wrap: anywhere;
+    }
+
+    .dj-auth-contact-list a {
+        color: var(--dj-accent-strong);
+        text-decoration: none;
+    }
+
+    .dj-auth-contact-list a:hover,
+    .dj-auth-contact-list a:focus {
+        color: var(--dj-accent-deep);
+        text-decoration: underline;
+    }
+
+    .dj-auth-back {
+        margin-top: 0;
+    }
+
+    .dj-auth-progress-bar {
+        height: 8px;
+        margin-bottom: var(--dj-space-3);
+        background-color: var(--dj-border);
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .dj-auth-progress-bar > span {
+        display: block;
+        width: 35%;
+        height: 100%;
+        background-color: var(--dj-accent);
+        border-radius: 999px;
+        animation: dj-auth-progress 1.1s ease-in-out infinite;
+    }
+
+    @keyframes dj-auth-progress {
+        0% {
+            margin-inline-start: -35%;
+        }
+
+        100% {
+            margin-inline-start: 100%;
+        }
+    }
+
+    .dj-auth-status {
+        margin: 0;
+        color: var(--dj-text-muted);
+        font-size: 13px;
+        line-height: 1.5;
+        text-align: center;
+    }
+
+    /*
+     * The copyright line is a mixed-direction string (symbol, year, localised
+     * brand). `dir="ltr"` on the element keeps the symbol and year in a stable
+     * order instead of letting the RTL context reorder them; the Arabic
+     * wordmark still renders as its own right-to-left run.
+     */
+    .dj-auth-footer {
+        flex: 0 0 auto;
+        padding: var(--dj-space-4) var(--dj-space-4) var(--dj-space-5);
+        color: var(--dj-text-muted);
+        font-size: 11.5px;
+        line-height: 1.7;
+        text-align: center;
+        unicode-bidi: isolate;
+    }
+
+    .dj-auth-footer a {
+        color: var(--dj-text-muted);
+    }
+
+    .dj-auth-footer a:hover,
+    .dj-auth-footer a:focus {
+        color: var(--dj-accent);
+    }
+
+    /* ---------- Authentication motion & responsive ---------- */
+
+    @media (prefers-reduced-motion: reduce) {
+        .dj-auth-card {
+            animation: none;
+        }
+
+        .dj-auth-submit,
+        .dj-auth-recovery-link,
+        .dj-auth-field input {
+            transition: none;
+        }
+
+        .dj-auth-submit:hover,
+        .dj-auth-submit:active {
+            transform: none;
+        }
+
+        .dj-auth-progress-bar > span {
+            animation: none;
+            width: 100%;
+            opacity: 0.55;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dj-auth-main {
+            padding: var(--dj-space-5) var(--dj-space-4);
+        }
+
+        .dj-auth-card {
+            padding: var(--dj-space-6) var(--dj-space-5);
+            border-radius: 18px;
+        }
+
+        .dj-auth-header {
+            margin-bottom: var(--dj-space-5);
+        }
+    }
+
+    @media (max-width: 400px) {
+        .dj-auth-card {
+            padding: var(--dj-space-5) var(--dj-space-4);
+            border-radius: 16px;
+        }
+
+        /* Keep the switcher clear of the wordmark once the card is narrow. */
+        .dj-lang {
+            top: var(--dj-space-2);
+            inset-inline-end: var(--dj-space-3);
+        }
+
+        .dj-auth-header {
+            margin-top: var(--dj-space-5);
+        }
+
+        .dj-auth-brand .dj-auth-wordmark {
+            font-size: 38px;
+        }
+
+        .dj-auth-title {
+            font-size: 20px;
+        }
+    }
+
+    /* ---------- Authenticated shell: header, navigation, account ---------- */
+
+    .dj-header {
+        position: sticky;
+        top: 0;
+        z-index: 1030;
         background-color: var(--dj-surface);
         border-bottom: 1px solid var(--dj-border);
-        margin-bottom: var(--dj-space-4);
+        box-shadow: var(--dj-shadow);
     }
 
-    .navbar-default .navbar-nav > li > a.menu-icon {
+    .dj-header-inner {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dj-space-3);
+        max-width: 1560px;
+        margin: 0 auto;
+        padding: var(--dj-space-2) var(--dj-space-4);
+    }
+
+    .dj-header .dj-brand {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+        flex: 0 0 auto;
+        line-height: 1.2;
+        text-decoration: none;
+    }
+
+    .dj-header .dj-brand:hover,
+    .dj-header .dj-brand:focus {
+        text-decoration: none;
+    }
+
+    .dj-header .dj-brand-mark {
+        font-size: 21px;
+        font-weight: 800;
+        color: var(--dj-accent-strong);
+        /* Arabic ascenders/dots/descenders need more than the em box. */
+        line-height: 1.3;
+    }
+
+    .dj-header .dj-brand-sub {
+        font-size: 11px;
+        font-weight: 600;
         color: var(--dj-text-muted);
-        border-bottom: 3px solid transparent;
-        transition: color 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
+        line-height: 1.3;
+        white-space: nowrap;
     }
 
-    .navbar-default .navbar-nav > li > a.menu-icon:hover,
-    .navbar-default .navbar-nav > li > a.menu-icon:focus {
-        color: var(--dj-accent);
+    .dj-nav {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .dj-nav-list {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dj-space-1);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .dj-nav-item {
+        position: relative;
+    }
+
+    .dj-nav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 10px;
+        border-radius: var(--dj-radius-sm);
+        color: var(--dj-text-muted);
+        font-size: 13.5px;
+        font-weight: 600;
+        line-height: 1.4;
+        white-space: nowrap;
+        text-decoration: none;
+        transition: color 0.14s ease, background-color 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    .dj-nav-link:hover,
+    .dj-nav-link:focus {
+        color: var(--dj-accent-strong);
         background-color: var(--dj-surface-alt);
+        text-decoration: none;
     }
 
-    .navbar-default .navbar-nav > li.active > a.menu-icon {
-        color: var(--dj-accent);
+    /* Active module: tinted background plus an underline, so the cue is not
+       colour-only. */
+    .dj-nav-link.is-active,
+    .dj-nav-item.is-active > .dj-nav-link {
+        color: var(--dj-accent-strong);
+        background-color: var(--dj-accent-soft);
+        box-shadow: inset 0 -2px 0 var(--dj-accent);
+    }
+
+    .dj-nav-overflow {
+        min-width: 200px;
+        padding: var(--dj-space-1);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius);
+        box-shadow: var(--dj-shadow-raised);
+    }
+
+    .dj-nav-overflow > li > a {
+        display: block;
+        padding: 7px 12px;
+        border-radius: var(--dj-radius-sm);
+        color: var(--dj-text);
+        font-size: 13.5px;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .dj-nav-overflow > li > a:hover,
+    .dj-nav-overflow > li > a:focus {
         background-color: var(--dj-surface-alt);
-        border-bottom-color: var(--dj-accent);
+        color: var(--dj-accent-strong);
+        text-decoration: none;
     }
 
-    .navbar .menu-icon img {
-        opacity: 0.9;
+    .dj-nav-overflow > li.active > a {
+        color: var(--dj-accent-strong);
+        background-color: var(--dj-accent-soft);
+        font-weight: 600;
+    }
+
+    /* Separates the administration surfaces from the module list. */
+    .dj-nav-overflow > .dj-nav-separator {
+        height: 1px;
+        margin: 6px 4px;
+        background-color: var(--dj-border);
+    }
+
+    /* Grouped administration menu: each section carries a quiet heading so the
+     * dropdown scans like a table of contents instead of one long list. */
+    .dj-nav-overflow > .dj-nav-group-heading {
+        padding: 8px 12px 4px;
+        color: var(--dj-text-muted);
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .dj-nav-overflow > .dj-nav-group-heading:not(:first-child) {
+        margin-top: 5px;
+        border-top: 1px solid var(--dj-border);
+    }
+
+    .dj-nav-overflow > li > a .glyphicon {
+        margin-inline-end: 8px;
+        color: var(--dj-text-muted);
+    }
+
+    .dj-nav-overflow > li > a:hover .glyphicon,
+    .dj-nav-overflow > li.active > a .glyphicon {
+        color: var(--dj-accent-strong);
+    }
+
+    /*
+     * Dashboard leads the ribbon and is the only link carrying an icon, so the
+     * way back to the operational overview is never ambiguous.
+     */
+    .dj-nav-link--home {
+        color: var(--dj-text-strong);
+    }
+
+    .dj-nav-link--home .glyphicon {
+        color: var(--dj-accent);
+    }
+
+
+    .dj-header .caret {
+        margin-inline-start: 4px;
+        margin-inline-end: 0;
+    }
+
+    .dj-nav-toggle {
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+        width: 40px;
+        height: 36px;
+        padding: 0 9px;
+        background-color: transparent;
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-sm);
+        cursor: pointer;
+        transition: background-color 0.14s ease, border-color 0.14s ease;
+    }
+
+    .dj-nav-toggle:hover,
+    .dj-nav-toggle:focus {
+        background-color: var(--dj-surface-alt);
+        border-color: var(--dj-border-strong);
+    }
+
+    .dj-nav-toggle-bar {
+        display: block;
+        height: 2px;
+        background-color: var(--dj-text);
+        border-radius: 2px;
+    }
+
+    .dj-header-actions {
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-3);
+        margin-inline-start: auto;
+        flex: 0 0 auto;
+    }
+
+    .dj-clock {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+        color: var(--dj-text-muted);
+        font-size: 12.5px;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .dj-clock .glyphicon {
+        opacity: 0.7;
+    }
+
+    .dj-account-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+        padding: 5px 8px;
+        background-color: transparent;
+        border: 1px solid transparent;
+        border-radius: var(--dj-radius);
+        color: var(--dj-text);
+        font-family: inherit;
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.14s ease, border-color 0.14s ease;
+    }
+
+    .dj-account-toggle:hover,
+    .dj-account-toggle:focus {
+        background-color: var(--dj-surface-alt);
+        border-color: var(--dj-border);
+    }
+
+    .dj-account-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        background-color: var(--dj-accent);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+
+    .dj-account-name {
+        max-width: 160px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .dj-account-menu {
+        min-width: 240px;
+        padding: var(--dj-space-2);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-md);
+        box-shadow: var(--dj-shadow-raised);
+    }
+
+    .dj-account-menu-header {
+        margin-bottom: var(--dj-space-2);
+        padding: var(--dj-space-1) var(--dj-space-3) var(--dj-space-2);
+        border-bottom: 1px solid var(--dj-border);
+    }
+
+    .dj-account-menu-name {
+        display: block;
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--dj-text-strong);
+    }
+
+    .dj-account-lang {
+        padding: 0 var(--dj-space-3) var(--dj-space-2);
+    }
+
+    /* Inline here rather than pinned to the auth-card corner. */
+    .dj-account-menu .dj-lang {
+        position: static;
+        margin: 0;
+    }
+
+    .dj-account-links {
+        margin: 0;
+        padding: var(--dj-space-2) 0 0;
+        border-top: 1px solid var(--dj-border);
+        list-style: none;
+    }
+
+    .dj-account-links > li > a {
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+        padding: var(--dj-space-2) var(--dj-space-3);
+        border-radius: var(--dj-radius-sm);
+        color: var(--dj-text);
+        font-size: 13.5px;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .dj-account-links > li > a:hover,
+    .dj-account-links > li > a:focus {
+        background-color: var(--dj-surface-alt);
+        color: var(--dj-accent-strong);
+        text-decoration: none;
+    }
+
+    .dj-account-links .glyphicon {
+        color: var(--dj-text-muted);
+    }
+
+    /*
+     * Keyboard users get a visible ring on every interactive shell control.
+     * :focus-visible keeps it off for mouse clicks, where the background
+     * change above is already a sufficient affordance.
+     */
+    .dj-header a:focus-visible,
+    .dj-header button:focus-visible {
+        outline: 2px solid var(--dj-accent);
+        outline-offset: 2px;
+    }
+
+    /* Desktop keeps the full row of navigation visible regardless of the
+       collapse plugin's state. */
+    @media (min-width: 1024px) {
+        .dj-nav.collapse {
+            display: block !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+    }
+
+    /* Below the desktop breakpoint the navigation collapses behind a toggle. */
+    @media (max-width: 1023px) {
+        .dj-nav-toggle {
+            display: inline-flex;
+            order: 3;
+        }
+
+        .dj-header-actions {
+            order: 2;
+            gap: var(--dj-space-2);
+        }
+
+        .dj-nav {
+            order: 4;
+            flex-basis: 100%;
+        }
+
+        .dj-nav.collapse.in {
+            flex-basis: 100%;
+        }
+
+        .dj-nav-list {
+            padding-block: var(--dj-space-2);
+        }
+
+        .dj-nav-link {
+            padding: 9px 12px;
+        }
+
+        .dj-clock {
+            display: none;
+        }
+
+        .dj-account-name {
+            display: none;
+        }
+    }
+
+    /* Between the compact desktop width and a comfortable one, tighten the row
+       so the full navigation keeps fitting without wrapping to a second line. */
+    @media (min-width: 1024px) and (max-width: 1279px) {
+        .dj-header-inner {
+            gap: var(--dj-space-2);
+        }
+
+        .dj-nav-link {
+            padding: 7px;
+            font-size: 13px;
+        }
+
+        .dj-clock {
+            display: none;
+        }
+
+        .dj-account-name {
+            max-width: 110px;
+        }
+    }
+
+    @media (max-width: 575px) {
+        .dj-header .dj-brand-sub {
+            display: none;
+        }
+
+        .dj-header-inner {
+            padding-inline: var(--dj-space-3);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .dj-nav-link,
+        .dj-nav-toggle,
+        .dj-account-toggle {
+            transition: none;
+        }
     }
 
     /* ---------- Page titles ---------- */
@@ -275,6 +1437,185 @@
         color: var(--dj-danger);
     }
 
+    /* ---------- Two-column field grid (wide CRUD dialogs) ---------- */
+
+    /*
+     * Upgrades a legacy stack of .form-group rows into a responsive field grid
+     * without touching the fields themselves: ids, names, validation and backend
+     * behaviour are unchanged, only the placement is. Rows marked
+     * .dj-field--full span both columns (comments, consent, long text).
+     */
+    .dj-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--dj-space-3) var(--dj-space-4);
+        align-items: start;
+    }
+
+    .dj-form-grid > .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: var(--dj-space-1);
+        /* Neutralise Bootstrap's negative row margins and clearfix pseudo-elements. */
+        margin: 0;
+        margin-inline: 0;
+    }
+
+    .dj-form-grid > .form-group::before,
+    .dj-form-grid > .form-group::after {
+        display: none;
+        content: none;
+    }
+
+    /* Neutralise the legacy float grid inside each field cell. */
+    .dj-form-grid > .form-group > .control-label,
+    .dj-form-grid > .form-group > [class*="col-"] {
+        float: none;
+        width: auto;
+        max-width: none;
+        margin-bottom: 0;
+        padding: 0;
+        text-align: start;
+    }
+
+    .dj-form-grid > .dj-field--full {
+        grid-column: 1 / -1;
+    }
+
+    /*
+     * A row that carries two controls sharing one caption (e.g. the two tax
+     * fields). The caption spans the row and the two controls sit side by side,
+     * so the row keeps a single grid cell and never breaks the column rhythm.
+     */
+    .dj-form-grid > .form-group.dj-field--split {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--dj-space-1) var(--dj-space-3);
+    }
+
+    .dj-form-grid > .form-group.dj-field--split > .control-label {
+        grid-column: 1 / -1;
+    }
+
+    /* A caption-less checkbox sits on the same line as its neighbour's control. */
+    .dj-form-grid > .dj-field--check {
+        align-self: end;
+    }
+
+    @media (max-width: 991px) {
+        .dj-form-grid {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    /* ---------- Inline checkbox / radio with its own caption ---------- */
+
+    /*
+     * The legacy forms floated a checkbox into a column of its own, far from the
+     * label that describes it. .dj-check keeps the control and its caption on a
+     * single line instead.
+     */
+    .dj-check {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+        margin: 0;
+        font-weight: 400;
+        color: var(--dj-text);
+        cursor: pointer;
+    }
+
+    .dj-check input[type="checkbox"],
+    .dj-check input[type="radio"] {
+        position: static;
+        float: none;
+        margin: 0;
+    }
+
+    .dj-check.required .dj-check-label::after {
+        content: " *";
+        color: var(--dj-danger);
+    }
+
+    /* ---------- Employee permission groups ---------- */
+
+    /*
+     * The permission list keeps its exact DOM contract (#permission_list,
+     * .module-toggle rows, nested <ul> subpermissions), re-skinned as grouped
+     * rows: group titles, module row cards, sub-permission chips.
+     */
+    #permission_list {
+        max-width: 860px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    #permission_list > li {
+        margin: 0;
+        padding: 0;
+    }
+
+    #permission_list > .dj-perm-head {
+        margin: var(--dj-space-4) 0 var(--dj-space-2);
+        padding: 0;
+        color: var(--dj-text-muted);
+        font-size: 12.5px;
+        font-weight: 700;
+        list-style: none;
+    }
+
+    #permission_list > .dj-perm-head:first-child {
+        margin-top: 0;
+    }
+
+    /* The module row: toggle + name + menu placement on one line, description under. */
+    #permission_list > li:not(.dj-perm-head):has(> input.module-toggle) {
+        padding: var(--dj-space-2) var(--dj-space-3);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius);
+        background-color: var(--dj-surface);
+        margin-bottom: var(--dj-space-2);
+    }
+
+    #permission_list > li > .medium {
+        display: inline-block;
+        margin-inline-start: 2px;
+        color: var(--dj-text-strong);
+        font-weight: 600;
+    }
+
+    #permission_list > li > .small {
+        display: block;
+        margin-inline-start: 22px;
+        color: var(--dj-text-muted);
+        font-size: 12px;
+    }
+
+    #permission_list > li > select {
+        float: inline-end;
+    }
+
+    #permission_list > li > ul {
+        margin: var(--dj-space-1) var(--dj-space-3) 0;
+        padding: var(--dj-space-1) 0;
+        list-style: none;
+        border-top: 1px dashed var(--dj-border);
+    }
+
+    #permission_list > li > ul > li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 2px 0;
+    }
+
+    #permission_list > li > ul > li .medium {
+        color: var(--dj-text);
+        font-weight: 400;
+        font-size: 13px;
+    }
+
     /* ---------- Buttons ---------- */
 
     .btn {
@@ -353,24 +1694,354 @@
         border: 1px solid rgba(192, 57, 43, 0.42);
     }
 
-    /* ---------- Dashboard KPIs ---------- */
-
-    #dashboard .panel {
-        height: 100%;
+    /* Quiet helper copy under a meta row (backup hints, empty-state notes). */
+    .dj-hint {
+        margin: 4px 0 0;
+        color: var(--dj-text-muted);
+        font-size: 12px;
+        font-weight: 500;
     }
 
-    #dashboard .panel-body h3 {
-        margin: var(--dj-space-1) 0;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-    }
+    /* ---------- Diagnostics (System Info) ---------- */
 
-    #dashboard .panel-body small {
+    .dj-diag > p {
+        margin: 0 0 var(--dj-space-3);
         color: var(--dj-text-muted);
     }
 
-    #dashboard .page-header {
-        margin-top: 0;
+    .dj-diag .dj-panel {
+        margin-bottom: var(--dj-space-3);
+    }
+
+    .dj-diag-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--dj-space-2);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .dj-diag-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .dj-diag-chip.is-ok {
+        color: var(--dj-success);
+        background-color: rgba(30, 158, 106, 0.14);
+    }
+
+    .dj-diag-chip.is-attention {
+        color: var(--dj-danger);
+        background-color: rgba(192, 57, 43, 0.12);
+    }
+
+    .dj-diag-chip-mark {
+        font-size: 11px;
+    }
+
+    /* ---------- Dashboard ---------- */
+
+    .dj-dashboard {
+        padding-block: 0 var(--dj-space-4);
+    }
+
+    .dj-page-head {
+        margin: 0 0 var(--dj-space-4);
+    }
+
+    .dj-page-title {
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-3);
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--dj-text-strong);
+    }
+
+    .dj-page-title .glyphicon {
+        font-size: 20px;
+        color: var(--dj-accent);
+    }
+
+    /* Orientation-neutral numeric rendering: digits line up and stay isolated
+       from surrounding Arabic text without forcing a direction on currency
+       symbols that legitimately belong to either side of the number. */
+    .dj-num {
+        font-variant-numeric: tabular-nums;
+        unicode-bidi: isolate;
+    }
+
+    .dj-kpi-grid {
+        margin-bottom: var(--dj-space-4);
+    }
+
+    .dj-kpi-grid > [class*="col-"] {
+        margin-bottom: var(--dj-space-4);
+    }
+
+    .dj-kpi {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: var(--dj-space-4) var(--dj-space-4) var(--dj-space-3);
+        background-color: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-inline-start: 4px solid var(--dj-border-strong);
+        border-radius: var(--dj-radius-md);
+        box-shadow: var(--dj-shadow);
+    }
+
+    .dj-kpi--accent {
+        border-inline-start-color: var(--dj-accent);
+    }
+
+    .dj-kpi--warning {
+        border-inline-start-color: var(--dj-warning);
+    }
+
+    .dj-kpi--danger {
+        border-inline-start-color: var(--dj-danger);
+    }
+
+    .dj-kpi-head {
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+        margin-bottom: var(--dj-space-3);
+    }
+
+    .dj-kpi-icon {
+        font-size: 14px;
+        color: var(--dj-text-muted);
+    }
+
+    .dj-kpi--accent .dj-kpi-icon {
+        color: var(--dj-accent);
+    }
+
+    .dj-kpi--warning .dj-kpi-icon {
+        color: var(--dj-warning);
+    }
+
+    .dj-kpi--danger .dj-kpi-icon {
+        color: var(--dj-danger);
+    }
+
+    .dj-kpi-label {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        color: var(--dj-text-muted);
+    }
+
+    .dj-kpi-value {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1.3;
+        color: var(--dj-text-strong);
+    }
+
+    /* Warning/danger values are tinted, but the icon and label carry the
+       meaning too, so the state never depends on colour alone. */
+    .dj-kpi--warning .dj-kpi-value {
+        color: #7a520f;
+    }
+
+    .dj-kpi--danger .dj-kpi-value {
+        color: #8e2b20;
+    }
+
+    .dj-kpi-meta {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--dj-space-2);
+        margin-top: auto;
+        padding-top: var(--dj-space-3);
+        font-size: 12.5px;
+    }
+
+    .dj-kpi-value + .dj-kpi-meta {
+        margin-top: var(--dj-space-3);
+        border-top: 1px solid var(--dj-border);
+    }
+
+    .dj-kpi-meta-key {
+        color: var(--dj-text-muted);
+    }
+
+    .dj-kpi-meta-value {
+        font-weight: 600;
+        color: var(--dj-text);
+    }
+
+    .dj-section {
+        margin-bottom: var(--dj-space-4);
+        padding: var(--dj-space-4);
+        background-color: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-md);
+        box-shadow: var(--dj-shadow);
+    }
+
+    .dj-section-head {
+        margin-bottom: var(--dj-space-4);
+        padding-bottom: var(--dj-space-3);
+        border-bottom: 1px solid var(--dj-border);
+    }
+
+    .dj-section-title {
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--dj-text-strong);
+    }
+
+    .dj-section-title .glyphicon {
+        color: var(--dj-accent);
+    }
+
+    .dj-chart {
+        margin-bottom: var(--dj-space-4);
+    }
+
+    .dj-chart-canvas {
+        height: 240px;
+    }
+
+    .dj-periods {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--dj-space-3);
+    }
+
+    .dj-period {
+        display: flex;
+        flex-direction: column;
+        padding: var(--dj-space-3) var(--dj-space-4);
+        background-color: var(--dj-surface-alt);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius);
+    }
+
+    .dj-period-label {
+        margin: 0 0 var(--dj-space-2);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--dj-text-strong);
+    }
+
+    .dj-period-figure {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dj-space-2);
+        margin: 0;
+    }
+
+    .dj-period-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--dj-text-strong);
+    }
+
+    .dj-period-prior {
+        margin: var(--dj-space-2) 0 0;
+        font-size: 12px;
+        color: var(--dj-text-muted);
+    }
+
+    .dj-period-meta {
+        margin: var(--dj-space-3) 0 0;
+        padding-top: var(--dj-space-2);
+        border-top: 1px solid var(--dj-border);
+        font-size: 12.5px;
+    }
+
+    .dj-period-meta-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--dj-space-2);
+    }
+
+    .dj-period-meta-row + .dj-period-meta-row {
+        margin-top: 4px;
+    }
+
+    .dj-period-meta dt {
+        font-weight: 400;
+        color: var(--dj-text-muted);
+    }
+
+    .dj-period-meta dd {
+        margin: 0;
+        font-weight: 600;
+        color: var(--dj-text);
+    }
+
+    @media (min-width: 768px) and (max-width: 991px) {
+        .dj-periods {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767px) {
+        .dj-periods {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    .dj-delta {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        margin-top: 2px;
+        padding: 1px 7px;
+        border-radius: 10px;
+        font-size: 11.5px;
+        font-weight: 700;
+        unicode-bidi: isolate;
+    }
+
+    .dj-delta--up {
+        color: #0f5c3f;
+        background-color: rgba(30, 158, 106, 0.14);
+    }
+
+    .dj-delta--down {
+        color: #8e2b20;
+        background-color: rgba(192, 57, 43, 0.12);
+    }
+
+    .dj-delta--flat {
+        color: var(--dj-text-muted);
+        background-color: var(--dj-surface-alt);
+    }
+
+    .dj-empty-state {
+        padding: var(--dj-space-7) var(--dj-space-4);
+        text-align: center;
+    }
+
+    .dj-empty-state .dj-page-title {
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--dj-text-muted);
     }
 
     /* ---------- Cashier register ---------- */
@@ -399,6 +2070,11 @@
         background-color: var(--dj-surface-alt);
     }
 
+    #register td {
+        padding: var(--dj-space-2) 6px;
+        vertical-align: middle;
+    }
+
     #register .form-control.input-sm {
         height: 30px;
     }
@@ -409,13 +2085,73 @@
         color: var(--dj-text);
     }
 
+    /* Variant row hierarchy: the duplicated "parent / Colour / Size" suffix is
+     * stripped in the view, so this chip carries the identity on its own line. */
     .dj-cart-variant {
+        display: inline-block;
+        margin-block-start: 3px;
+        padding: 1px 9px;
+        border: 1px solid rgba(15, 118, 110, 0.25);
+        border-radius: 10px;
         color: var(--dj-accent-strong);
-        font-weight: 600;
+        background-color: var(--dj-accent-soft);
+        font-size: 12px;
+        font-weight: 700;
+        direction: ltr;
+        unicode-bidi: isolate;
+    }
+
+    .dj-cart-sku {
+        color: var(--dj-text-muted);
+        font-size: 12px;
+        letter-spacing: 0.2px;
+    }
+
+    .dj-cart-stock {
+        color: var(--dj-warning);
+        font-size: 12px;
+    }
+
+    .dj-cart-desc {
+        color: var(--dj-text-muted);
+        font-size: 12px;
+    }
+
+    /* Money unit: the formatted amount and its symbol stay one isolated LTR
+     * unit so RTL bidi never splits or reorders the currency rendering. */
+    .dj-money {
+        direction: ltr;
+        unicode-bidi: isolate;
+        font-variant-numeric: tabular-nums;
     }
 
     #overall_sale {
         border-top: 3px solid var(--dj-accent);
+    }
+
+    /* The customer field label sits above the typeahead input; the legacy
+     * inline margins (negative top) cramped it against the toolbar. */
+    #customer_label {
+        margin: 0 0 var(--dj-space-2);
+        color: var(--dj-text-muted);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    #select_customer .form-control {
+        margin-bottom: var(--dj-space-2);
+    }
+
+    /* Summary table: quiet rows, one strong final row. */
+    #sale_totals th,
+    #payment_totals th {
+        font-weight: 600;
+        padding: 6px 0;
+    }
+
+    #sale_totals tr:not(:last-child) th,
+    #payment_totals tr:not(:last-child) th {
+        border-bottom: 1px solid var(--dj-border);
     }
 
     .dj-total-row th {
@@ -423,8 +2159,54 @@
         padding-top: var(--dj-space-2);
     }
 
+    /* The amount due is the number the cashier acts on next: scannable but
+     * contained inside its row, never an oversized banner. */
     .dj-amount-due-row th {
         background-color: var(--dj-accent-soft);
+        padding: var(--dj-space-2) var(--dj-space-2);
+        border-radius: var(--dj-radius-sm);
+    }
+
+    .dj-amount-due-row #sale_amount_due,
+    .dj-amount-due-row th[style*="font-size"] {
+        font-weight: 700;
+        color: var(--dj-text-strong);
+        direction: ltr;
+        unicode-bidi: isolate;
+    }
+
+    /* Danger action stays unmistakable; suspend is clearly secondary. */
+    #cancel_sale_button {
+        background-color: var(--dj-danger);
+        border: 1px solid var(--dj-danger);
+        color: #ffffff;
+        font-weight: 600;
+    }
+
+    #suspend_sale_button {
+        color: var(--dj-text-muted);
+    }
+
+    /* Insufficient-stock notice: compact, professional, never dominating. */
+    .dj-register-warning {
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+        margin: 0 0 var(--dj-space-3);
+        padding: var(--dj-space-2) var(--dj-space-3);
+        color: #7a520f;
+        background-color: rgba(183, 121, 31, 0.12);
+        border: 1px solid rgba(183, 121, 31, 0.45);
+        border-inline-start: 4px solid var(--dj-warning);
+        border-radius: var(--dj-radius);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .dj-register-warning .glyphicon {
+        flex: none;
+        font-size: 15px;
+        color: var(--dj-warning);
     }
 
     #sale_totals,
@@ -485,9 +2267,31 @@
         background-color: var(--dj-warning);
     }
 
+    /*
+     * Third-party widget stylesheets ship their own hard-coded font stacks
+     * (jQuery UI tooltip/autocomplete/datepicker via `.ui-widget`, the Chartist
+     * tooltip) which sat outside the themed shell. Re-pointing them at the shared
+     * brand face keeps a stray Arial/Helvetica out of the middle of an Arabic
+     * screen. The `.ltr-inline`/`.dj-ltr` rule below still wins for identifiers.
+     */
+    .ui-widget,
+    .ui-widget input,
+    .ui-widget select,
+    .ui-widget textarea,
+    .ui-widget button,
+    .ui-widget .ui-widget,
+    .ui-tooltip,
+    .chartist-tooltip,
+    .chartist-tooltip .chartist-tooltip-value,
+    .chartist-tooltip .chartist-tooltip-meta {
+        font-family: var(--dj-font);
+    }
+
     /* Values that must never mirror under RTL (SKUs, barcodes, serials, money). */
     .ltr-inline,
     .dj-ltr {
+        /* Keep the base face: identifiers must not pick up the Arabic stack. */
+        font-family: var(--dj-font-base);
         direction: ltr;
         unicode-bidi: isolate;
         display: inline-block;
@@ -524,6 +2328,1710 @@
         /* Keep the cart usable on narrow screens without breaking the columns. */
         #register_wrapper {
             overflow-x: auto;
+        }
+    }
+
+    /* ==================================================================
+     * Shared authenticated workspace
+     *
+     * The legacy screens were laid out for a 1170px container and left most of
+     * a modern viewport empty. This layer gives every operational screen a
+     * common, generous workspace plus reusable toolbars, tables, panels and a
+     * POS summary card, so the individual modules no longer refine themselves.
+     * ================================================================== */
+
+    /* ---------- Workspace container ---------- */
+
+    #dj-main.container {
+        width: 100%;
+        max-width: 1600px;
+        flex: 1 0 auto;
+        padding-inline: var(--dj-space-5);
+        padding-block-start: var(--dj-page-top-gap);
+    }
+
+    @media (max-width: 767px) {
+        #dj-main.container {
+            padding-inline: var(--dj-space-3);
+            padding-block-start: var(--dj-space-4);
+        }
+
+        /*
+         * The legacy scaffolding row inside the workspace re-expands past the
+         * workspace gutter with Bootstrap's negative row margins; on fluid
+         * phone widths that reintroduces a 6px horizontal scroll.
+         */
+        #dj-main .row {
+            margin-inline: 0;
+        }
+    }
+
+    .dj-workspace {
+        padding-block: 0 var(--dj-space-4);
+    }
+
+    /* Simple form pages (SMS, single-entity forms) stay at a readable measure. */
+    .dj-workspace--narrow {
+        max-width: 720px;
+        margin-inline: auto;
+    }
+
+    /* ---------- Page header ---------- */
+
+    .dj-page-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--dj-space-3);
+    }
+
+    .dj-page-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dj-space-2);
+    }
+
+    /* ---------- Page path (breadcrumbs) ---------- */
+
+    /*
+     * Ru'ya page-path, rendered by partial/page_path.php: the deterministic
+     * parent chain for nested pages. Inside the operational .dj-page-head flex
+     * row it claims a full row of its own so it always sits above the title.
+     */
+    .dj-page-head .dj-page-path {
+        flex: 1 0 100%;
+        margin: 0 0 var(--dj-space-1);
+    }
+
+    .dj-page-path ol {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dj-space-2);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--dj-text-muted);
+    }
+
+    .dj-page-path li {
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+    }
+
+    /* U+2039 is bidi-mirrored, so the separator always points back at the
+       parent crumb in both RTL and LTR. */
+    .dj-page-path li + li::before {
+        content: "\2039";
+        color: var(--dj-accent);
+        font-weight: 700;
+    }
+
+    .dj-page-path a {
+        color: var(--dj-text-muted);
+        text-decoration: none;
+        border-bottom: 1px solid transparent;
+        transition: color .15s ease, border-color .15s ease;
+    }
+
+    .dj-page-path a:hover {
+        color: var(--dj-accent);
+        border-bottom-color: currentColor;
+    }
+
+    .dj-page-path a:focus-visible {
+        outline: 2px solid var(--dj-accent);
+        outline-offset: 2px;
+    }
+
+    .dj-page-path [aria-current="page"] {
+        color: var(--dj-text-strong);
+    }
+
+    /* Muted context line under a page title (e.g. "Report Input"). */
+    .dj-page-head .dj-page-subtitle {
+        flex: 1 0 100%;
+        margin: 0;
+        color: var(--dj-text-muted);
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    /* ---------- Secondary page navigation (back / forward) ---------- */
+
+    /*
+     * Rendered by partial/page_nav.php. This is the browser-history
+     * convenience, deliberately separate from the breadcrumb: the breadcrumb
+     * links are canonical routes, these buttons only walk the tab's own
+     * history. They sit at the far end of the page-title row so they never
+     * compete with the title or the primary action.
+     */
+    .dj-page-nav {
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        gap: var(--dj-space-2);
+        margin-inline-start: auto;
+    }
+
+    .dj-page-nav__btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--dj-space-1);
+        height: 28px;
+        padding: 0 var(--dj-space-3);
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--dj-text-muted);
+        background-color: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-sm);
+        transition: color .15s ease, border-color .15s ease, background-color .15s ease;
+    }
+
+    .dj-page-nav__btn:hover:not(:disabled),
+    .dj-page-nav__btn:focus-visible:not(:disabled) {
+        color: var(--dj-accent);
+        border-color: var(--dj-accent);
+        background-color: var(--dj-surface);
+    }
+
+    .dj-page-nav__btn:focus-visible {
+        outline: 2px solid var(--dj-accent);
+        outline-offset: 2px;
+    }
+
+    .dj-page-nav__btn:disabled {
+        color: var(--dj-text-faint);
+        background-color: var(--dj-surface);
+        border-color: var(--dj-border);
+        cursor: default;
+        opacity: .65;
+    }
+
+    .dj-page-nav__btn .glyphicon {
+        font-size: 11px;
+        line-height: 1;
+    }
+
+    .dj-page-nav__label {
+        white-space: nowrap;
+    }
+
+    @media (max-width: 767px) {
+        .dj-page-nav {
+            margin-inline-start: 0;
+        }
+
+        .dj-page-nav__label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+        }
+    }
+
+    /* ---------- Office hub navigation ---------- */
+
+    /*
+     * The office dashboard is a jump page: the four destinations it lists are
+     * the ones the dashboard heading used to promise but never delivered. Each
+     * entry is a real canonical link; none of them is a dead control.
+     */
+    .dj-office-nav {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: var(--dj-space-3);
+        margin-top: var(--dj-space-3);
+    }
+
+    .dj-office-nav__item {
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-3);
+        padding: var(--dj-space-3) var(--dj-space-4);
+        color: var(--dj-text-strong);
+        font-weight: 600;
+        text-decoration: none;
+        background-color: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-md);
+        box-shadow: var(--dj-shadow);
+        transition: border-color .15s ease, color .15s ease;
+    }
+
+    .dj-office-nav__item:hover,
+    .dj-office-nav__item:focus-visible {
+        color: var(--dj-accent);
+        border-color: var(--dj-accent);
+        text-decoration: none;
+    }
+
+    .dj-office-nav__item:focus-visible {
+        outline: 2px solid var(--dj-accent);
+        outline-offset: 2px;
+    }
+
+    .dj-office-nav__item .glyphicon {
+        font-size: 16px;
+        color: var(--dj-accent);
+    }
+
+    /* ---------- Report parameter form ---------- */
+
+    /*
+     * Report input cards replace the legacy floating report form: one compact
+     * card with labels beside fields and the generate action inside the card.
+     * The ids, names and markup contract stay exactly as the report JS expects.
+     */
+    .dj-report-input {
+        max-width: 640px;
+        padding: var(--dj-space-4) var(--dj-space-5);
+        background-color: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-md);
+        box-shadow: var(--dj-shadow);
+    }
+
+    .dj-report-input .form-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dj-space-2) var(--dj-space-4);
+        margin: 0 0 var(--dj-space-4);
+    }
+
+    .dj-report-input .form-group:last-of-type {
+        margin-bottom: 0;
+    }
+
+    .dj-report-input .control-label {
+        flex: 0 0 190px;
+        width: auto;
+        margin: 0;
+        padding: 0;
+        text-align: start;
+        font-weight: 600;
+    }
+
+    /* Neutralise the Bootstrap grid floats inside the compact card. */
+    .dj-report-input .form-group > div {
+        flex: 1 1 220px;
+        max-width: 320px;
+        min-width: 0;
+        width: auto;
+        padding: 0;
+        float: none;
+    }
+
+    .dj-report-input .form-control {
+        width: 100%;
+    }
+
+    .dj-report-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--dj-space-2);
+        margin-top: var(--dj-space-5);
+        padding-top: var(--dj-space-3);
+        border-top: 1px solid var(--dj-border);
+    }
+
+    @media (max-width: 575px) {
+        .dj-page-path ol {
+            font-size: 12px;
+        }
+
+        .dj-report-input {
+            padding: var(--dj-space-4);
+        }
+
+        .dj-report-input .control-label {
+            flex-basis: 100%;
+        }
+    }
+
+    /* ---------- Sectioned operational forms ---------- */
+
+    /*
+     * Multi-section operational forms (e.g. the variant builder) reuse the
+     * compact card language of .dj-report-input: labels beside fields inside a
+     * bordered card, split into neutral section bands. Ids, names and the
+     * markup the page JS hooks stay exactly as before.
+     */
+    .dj-form-panel {
+        max-width: 760px;
+        margin-inline: auto;
+        margin-block-end: var(--dj-space-5);
+        padding: var(--dj-space-4) var(--dj-space-5);
+        background-color: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-md);
+        box-shadow: var(--dj-shadow);
+    }
+
+    .dj-form-section {
+        margin: 0 0 var(--dj-space-5);
+        padding: 0;
+        border: 0;
+        min-width: 0;
+    }
+
+    .dj-form-section:last-of-type {
+        margin-bottom: 0;
+    }
+
+    .dj-form-section-title {
+        margin: 0 0 var(--dj-space-4);
+        padding: 0 0 var(--dj-space-2);
+        border-bottom: 1px solid var(--dj-border);
+        color: var(--dj-accent-deep);
+        font-size: 14.5px;
+        font-weight: 700;
+    }
+
+    .dj-form-panel .form-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dj-space-2) var(--dj-space-4);
+        margin: 0 0 var(--dj-space-4);
+    }
+
+    .dj-form-panel .form-group:last-of-type {
+        margin-bottom: 0;
+    }
+
+    .dj-form-panel .control-label {
+        flex: 0 0 190px;
+        width: auto;
+        margin: 0;
+        padding: 0;
+        text-align: start;
+        font-weight: 600;
+    }
+
+    .dj-form-panel .form-group > div {
+        flex: 1 1 220px;
+        max-width: 320px;
+        min-width: 0;
+        width: auto;
+        padding: 0;
+        float: none;
+    }
+
+    /* Wide cells (textareas) claim the remaining row width. */
+    .dj-form-panel .form-group > .dj-form-cell-wide {
+        flex: 1 0 100%;
+        max-width: 560px;
+    }
+
+    .dj-form-panel .form-control {
+        width: 100%;
+    }
+
+    .dj-form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: var(--dj-space-2);
+        margin-top: var(--dj-space-5);
+        padding-top: var(--dj-space-3);
+        border-top: 1px solid var(--dj-border);
+    }
+
+    @media (max-width: 575px) {
+        .dj-form-panel {
+            padding: var(--dj-space-4);
+        }
+
+        .dj-form-panel .control-label {
+            flex-basis: 100%;
+        }
+
+        .dj-form-panel .form-group > div {
+            max-width: 100%;
+        }
+    }
+
+    /* ---------- Toolbars ---------- */
+
+    /* Legacy pages floated their action buttons inside a fixed 3em strip. */
+    #title_bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: var(--dj-space-2);
+        height: auto;
+        margin-bottom: var(--dj-space-3);
+    }
+
+    #title_bar > .pull-left,
+    #title_bar > .pull-right {
+        float: none !important;
+    }
+
+    #title_bar.btn-toolbar {
+        margin-inline-start: 0;
+    }
+
+    #toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dj-space-2);
+        margin-bottom: var(--dj-space-3);
+        padding: var(--dj-space-2) var(--dj-space-3);
+        background-color: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius);
+        box-shadow: var(--dj-shadow);
+    }
+
+    #toolbar .pull-left,
+    #toolbar .pull-right,
+    #toolbar .form-inline,
+    #toolbar .btn-toolbar {
+        float: none !important;
+        margin: 0;
+    }
+
+    #toolbar .form-inline,
+    #toolbar .btn-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dj-space-2);
+    }
+
+    /* The date range and multi-select filters read as one control group. */
+    #toolbar .bootstrap-select,
+    #toolbar .selectpicker {
+        max-width: 100%;
+    }
+
+    #toolbar #daterangepicker {
+        width: auto;
+        min-width: 190px;
+        background-color: var(--dj-surface-alt);
+    }
+
+    /* ---------- Data tables (bootstrap-table) ---------- */
+
+    #table_holder {
+        margin-bottom: var(--dj-space-4);
+    }
+
+    .bootstrap-table .fixed-table-container {
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius);
+        background-color: var(--dj-surface);
+        box-shadow: var(--dj-shadow);
+    }
+
+    .bootstrap-table .fixed-table-container .table {
+        margin-bottom: 0;
+        border: 0;
+        background-color: transparent;
+    }
+
+    /* The theme paints every cell; replace the grid with row separators. */
+    .bootstrap-table .fixed-table-container .table.table-bordered,
+    .bootstrap-table .fixed-table-container .table.table-bordered > thead > tr > th,
+    .bootstrap-table .fixed-table-container .table.table-bordered > tbody > tr > td,
+    .bootstrap-table .fixed-table-container .table.table-bordered > tfoot > tr > th {
+        border-inline-start: 0;
+        border-inline-end: 0;
+    }
+
+    .bootstrap-table .fixed-table-container .table > thead > tr > th {
+        padding: 10px 12px;
+        background-color: var(--dj-surface-alt);
+        border-bottom: 1px solid var(--dj-border-strong);
+        color: var(--dj-text-strong);
+        font-size: 12.5px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .bootstrap-table .fixed-table-container .table > tbody > tr > td {
+        padding: 9px 12px;
+        border-top: 1px solid var(--dj-border);
+        border-bottom: 0;
+        color: var(--dj-text);
+        vertical-align: middle;
+    }
+
+    .bootstrap-table .fixed-table-container .table.table-striped > tbody > tr:nth-of-type(odd) > td {
+        background-color: #fbfcfd;
+    }
+
+    .bootstrap-table .fixed-table-container .table > tbody > tr:hover > td {
+        background-color: var(--dj-accent-soft);
+    }
+
+    .bootstrap-table .fixed-table-container .table > tbody > tr.selected > td {
+        background-color: rgba(15, 118, 110, 0.16) !important;
+    }
+
+    /* Checkbox column: centred, comfortable target, aligned with the header. */
+    .bootstrap-table .fixed-table-container .table .bs-checkbox {
+        width: 40px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .bootstrap-table .fixed-table-container .table .bs-checkbox input[type="checkbox"] {
+        margin: 0;
+        vertical-align: middle;
+    }
+
+    /* Sortable headers: replace the faint bundled glyphs with a clear affordance. */
+    .bootstrap-table .fixed-table-container .table > thead > tr > th .both,
+    .bootstrap-table .fixed-table-container .table > thead > tr > th .asc,
+    .bootstrap-table .fixed-table-container .table > thead > tr > th .desc {
+        position: relative;
+        padding-inline-end: 20px;
+        background-image: none !important;
+        cursor: pointer;
+    }
+
+    .bootstrap-table .fixed-table-container .table > thead > tr > th .both::after,
+    .bootstrap-table .fixed-table-container .table > thead > tr > th .asc::after,
+    .bootstrap-table .fixed-table-container .table > thead > tr > th .desc::after {
+        position: absolute;
+        inset-inline-end: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 12px;
+        line-height: 1;
+        color: var(--dj-border-strong);
+    }
+
+    .bootstrap-table .fixed-table-container .table > thead > tr > th .both::after {
+        content: "\21C5";
+    }
+
+    .bootstrap-table .fixed-table-container .table > thead > tr > th .asc::after {
+        content: "\2191";
+        color: var(--dj-accent);
+    }
+
+    .bootstrap-table .fixed-table-container .table > thead > tr > th .desc::after {
+        content: "\2193";
+        color: var(--dj-accent);
+    }
+
+    .bootstrap-table .fixed-table-container .table > thead > tr > th:hover {
+        background-color: var(--dj-border);
+    }
+
+    /* Empty state lives inside the table area, never a blank rectangle. */
+    .bootstrap-table .fixed-table-container .table > tbody > tr.no-records-found > td {
+        padding: var(--dj-space-6) var(--dj-space-4);
+        color: var(--dj-text-muted);
+        text-align: center;
+        background-color: var(--dj-surface);
+        font-style: normal;
+    }
+
+    /* ---------- Table toolbar (search + column chooser) ---------- */
+
+    .bootstrap-table .fixed-table-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dj-space-2);
+        margin-bottom: var(--dj-space-3);
+    }
+
+    .bootstrap-table .fixed-table-toolbar::after {
+        display: none;
+    }
+
+    .bootstrap-table .fixed-table-toolbar .search {
+        flex: 1 1 260px;
+        margin: 0;
+    }
+
+    .bootstrap-table .fixed-table-toolbar .search .search-input {
+        height: var(--dj-control-height);
+        border-color: var(--dj-border-strong);
+        border-radius: var(--dj-radius-sm);
+        background-color: var(--dj-surface);
+    }
+
+    .bootstrap-table .fixed-table-toolbar .columns {
+        margin: 0;
+    }
+
+    /* ---------- Pagination ---------- */
+
+    .bootstrap-table .fixed-table-pagination {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--dj-space-2);
+        margin-top: var(--dj-space-3);
+        color: var(--dj-text-muted);
+    }
+
+    .bootstrap-table .fixed-table-pagination .pagination {
+        margin: 0;
+    }
+
+    .bootstrap-table .fixed-table-pagination .pagination > li > a,
+    .bootstrap-table .fixed-table-pagination .pagination > li > span {
+        color: var(--dj-accent-strong);
+        border-color: var(--dj-border);
+        border-radius: var(--dj-radius-sm) !important;
+        margin-inline: 1px;
+    }
+
+    .bootstrap-table .fixed-table-pagination .pagination > .active > a,
+    .bootstrap-table .fixed-table-pagination .pagination > .active > span,
+    .bootstrap-table .fixed-table-pagination .pagination > .active > a:hover,
+    .bootstrap-table .fixed-table-pagination .pagination > .active > span:hover {
+        background-color: var(--dj-accent);
+        border-color: var(--dj-accent);
+        color: #ffffff;
+    }
+
+    .bootstrap-table .fixed-table-pagination .pagination > li > a:hover,
+    .bootstrap-table .fixed-table-pagination .pagination > li > span:hover {
+        background-color: var(--dj-accent-soft);
+        border-color: var(--dj-accent);
+    }
+
+    .bootstrap-table .fixed-table-pagination .page-list .btn {
+        border-color: var(--dj-border-strong);
+    }
+
+    /* ---------- Buttons: one hierarchy across every module ---------- */
+
+    /*
+     * btn-info is the legacy "primary action" colour (New Item, Import CSV).
+     * It is remapped to the Ru'ya accent so primary actions read consistently;
+     * btn-primary already carries the accent for submit/modal actions.
+     */
+    .btn-info {
+        color: #ffffff;
+        background-color: var(--dj-accent);
+        border-color: var(--dj-accent-strong);
+    }
+
+    .btn-info:hover,
+    .btn-info:focus,
+    .btn-info:active,
+    .btn-info.active,
+    .open > .dropdown-toggle.btn-info {
+        color: #ffffff;
+        background-color: var(--dj-accent-strong);
+        border-color: var(--dj-accent-deep);
+    }
+
+    .btn-default {
+        color: var(--dj-text);
+        background-color: var(--dj-surface);
+        border-color: var(--dj-border-strong);
+    }
+
+    .btn-default:hover,
+    .btn-default:focus,
+    .btn-default:active,
+    .btn-default.active,
+    .open > .dropdown-toggle.btn-default {
+        color: var(--dj-accent-strong);
+        background-color: var(--dj-surface-alt);
+        border-color: var(--dj-accent);
+    }
+
+    .btn-success {
+        background-color: var(--dj-success);
+        border-color: #178254;
+    }
+
+    .btn-success:hover,
+    .btn-success:focus,
+    .btn-success:active,
+    .btn-success.active {
+        background-color: #178254;
+        border-color: #126b45;
+    }
+
+    .btn-danger:hover,
+    .btn-danger:focus,
+    .btn-danger:active,
+    .btn-danger.active {
+        background-color: #a53125;
+        border-color: #8e2b20;
+    }
+
+    .btn:disabled,
+    .btn.disabled,
+    .btn[disabled] {
+        opacity: 0.5;
+        box-shadow: none;
+    }
+
+    /* ---------- Content panels ---------- */
+
+    .dj-panel {
+        padding: var(--dj-space-4);
+        background-color: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-md);
+        box-shadow: var(--dj-shadow);
+    }
+
+    .dj-panel + .dj-panel {
+        margin-top: var(--dj-space-4);
+    }
+
+    /*
+     * Key/value list used by administrative status panels (for example the
+     * backup screen). A grid keeps every value on a shared column, so long file
+     * paths stay readable instead of wrapping under their own label.
+     */
+    .dj-meta-list {
+        display: grid;
+        grid-template-columns: minmax(140px, max-content) minmax(0, 1fr);
+        gap: var(--dj-space-2) var(--dj-space-4);
+        margin: 0;
+    }
+
+    .dj-meta-list dt {
+        color: var(--dj-text-muted);
+        font-weight: 600;
+    }
+
+    .dj-meta-list dd {
+        margin: 0;
+        min-width: 0;
+        color: var(--dj-text-strong);
+        overflow-wrap: anywhere;
+    }
+
+    .dj-meta-list code {
+        display: inline-block;
+        padding: 1px 6px;
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-sm);
+        background-color: var(--dj-surface-alt);
+        color: var(--dj-text-strong);
+        font-size: 12.5px;
+        overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 575px) {
+        .dj-meta-list {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .dj-meta-list dd + dt {
+            margin-top: var(--dj-space-2);
+        }
+    }
+
+    /* Collapsible operator details (paths, commands): present but quiet until
+     * asked for, so the human status stays the focal content. */
+    .dj-details {
+        margin-top: var(--dj-space-3);
+        padding: var(--dj-space-2) var(--dj-space-3);
+        background-color: var(--dj-surface-alt);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-sm);
+    }
+
+    .dj-details summary {
+        padding: var(--dj-space-1) 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--dj-text-muted);
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .dj-details summary:hover {
+        color: var(--dj-text);
+    }
+
+    .dj-details[open] summary {
+        margin-bottom: var(--dj-space-3);
+        padding-bottom: var(--dj-space-2);
+        border-bottom: 1px solid var(--dj-border);
+    }
+
+    /* ---------- Forms ---------- */
+
+    .dj-form-panel {
+        padding: var(--dj-space-5);
+        background-color: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-md);
+        box-shadow: var(--dj-shadow);
+    }
+
+    .dj-form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: var(--dj-space-3);
+        margin-top: var(--dj-space-4);
+        padding-top: var(--dj-space-4);
+        border-top: 1px solid var(--dj-border);
+    }
+
+    @media (max-width: 767px) {
+        .dj-form-panel {
+            padding: var(--dj-space-4);
+        }
+    }
+
+    /* Required-field convention: neutral label plus a coloured asterisk. */
+    .form-horizontal .control-label.text-danger {
+        color: var(--dj-text);
+    }
+
+    .form-horizontal .control-label.required::after {
+        content: " *";
+        color: var(--dj-danger);
+        font-weight: 700;
+    }
+
+    #required_fields_message {
+        margin-bottom: var(--dj-space-3);
+        padding: 8px 12px;
+        background-color: var(--dj-surface-alt);
+        border-inline-start: 3px solid var(--dj-accent);
+        border-radius: var(--dj-radius-sm);
+        color: var(--dj-text-muted);
+        font-size: 12.5px;
+        line-height: 1.5;
+    }
+
+    .error_message_box {
+        margin: 0 0 var(--dj-space-3);
+        padding: 0;
+        list-style: none;
+    }
+
+    .error_message_box li {
+        color: var(--dj-danger);
+        font-size: 12.5px;
+        line-height: 1.6;
+    }
+
+    /* Checkboxes that sit directly in a grid column align with the label row. */
+    .form-horizontal .form-group > [class*="col-"] > input[type="checkbox"] {
+        margin-top: 8px;
+    }
+
+    .radio-inline,
+    .checkbox-inline {
+        margin-inline-start: 0;
+        margin-inline-end: var(--dj-space-4);
+    }
+
+    /* ---------- Modals (shared CRUD dialogs) ---------- */
+
+    /*
+     * Bootstrap 3 sizes a dialog to its content and clips whatever is taller than
+     * the viewport. Bound the dialog to the viewport instead and let only the
+     * body scroll, so a tall form never runs off-screen, never scrolls
+     * horizontally, and never touches the application header.
+     */
+    .bootstrap-dialog .modal-dialog {
+        display: flex;
+        flex-direction: column;
+        margin: var(--dj-dialog-gutter) auto;
+        max-height: calc(100vh - (var(--dj-dialog-gutter) * 2));
+    }
+
+    .bootstrap-dialog .modal-content {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        border: 0;
+        /* Ru'ya accent: the dialog belongs to the product, not to the framework. */
+        border-top: 3px solid var(--dj-accent);
+        border-radius: var(--dj-radius-md);
+        box-shadow: var(--dj-shadow-raised);
+        overflow: hidden;
+    }
+
+    /*
+     * Every dialog type BootstrapDialog ships (default/info/primary/success/
+     * warning/danger) is flattened onto one neutral header surface, so a dialog
+     * can never open with the stock Bootstrap blue band. The title and the close
+     * affordance are ordered with flex `order` rather than float, which makes the
+     * close button mirror correctly under RTL.
+     */
+    .bootstrap-dialog .modal-header,
+    .bootstrap-dialog.type-default .modal-header,
+    .bootstrap-dialog.type-info .modal-header,
+    .bootstrap-dialog.type-primary .modal-header,
+    .bootstrap-dialog.type-success .modal-header,
+    .bootstrap-dialog.type-warning .modal-header,
+    .bootstrap-dialog.type-danger .modal-header {
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        gap: var(--dj-space-3);
+        padding: var(--dj-space-3) var(--dj-space-5);
+        background-color: var(--dj-surface);
+        background-image: none;
+        border-bottom: 1px solid var(--dj-border);
+    }
+
+    .bootstrap-dialog .bootstrap-dialog-title,
+    .bootstrap-dialog.type-default .bootstrap-dialog-title,
+    .bootstrap-dialog.type-info .bootstrap-dialog-title,
+    .bootstrap-dialog.type-primary .bootstrap-dialog-title,
+    .bootstrap-dialog.type-success .bootstrap-dialog-title,
+    .bootstrap-dialog.type-warning .bootstrap-dialog-title,
+    .bootstrap-dialog.type-danger .bootstrap-dialog-title {
+        order: 1;
+        flex: 1 1 auto;
+        color: var(--dj-text-strong);
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+
+    .bootstrap-dialog .bootstrap-dialog-close-button {
+        order: 2;
+        flex: 0 0 auto;
+    }
+
+    .bootstrap-dialog .bootstrap-dialog-close-button .close {
+        float: none;
+        margin: 0;
+        padding: 0 4px;
+        color: var(--dj-text-muted);
+        background-color: transparent;
+        border-radius: var(--dj-radius-sm);
+        font-size: 20px;
+        font-weight: 400;
+        line-height: 1;
+        text-shadow: none;
+        opacity: 1;
+    }
+
+    .bootstrap-dialog .bootstrap-dialog-close-button .close:hover,
+    .bootstrap-dialog .bootstrap-dialog-close-button .close:focus {
+        color: var(--dj-danger);
+        opacity: 1;
+    }
+
+    .bootstrap-dialog .modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: var(--dj-space-4) var(--dj-space-5);
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .bootstrap-dialog .modal-footer {
+        display: flex;
+        flex: 0 0 auto;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: var(--dj-space-2);
+        margin-top: 0;
+        padding: var(--dj-space-3) var(--dj-space-5);
+        background-color: var(--dj-surface-alt);
+        border-top: 1px solid var(--dj-border);
+    }
+
+    .bootstrap-dialog .modal-footer .btn {
+        min-width: 104px;
+        margin: 0;
+    }
+
+    /* Compact field spacing inside dialogs (the grid sets its own gap). */
+    .bootstrap-dialog .modal-body .form-group {
+        margin-bottom: var(--dj-space-3);
+    }
+
+    .bootstrap-dialog .modal-body .dj-form-grid > .form-group {
+        margin-bottom: 0;
+    }
+
+    /* The legacy tab strip becomes a compact, modern section header. */
+    .bootstrap-dialog .modal-body .nav-tabs {
+        margin-bottom: var(--dj-space-4);
+        border-bottom: 1px solid var(--dj-border);
+    }
+
+    .bootstrap-dialog .modal-body .nav-tabs > li {
+        margin-bottom: -1px;
+    }
+
+    .bootstrap-dialog .modal-body .nav-tabs > li > a {
+        padding: var(--dj-space-2) var(--dj-space-4);
+        color: var(--dj-text-muted);
+        background-color: transparent;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        font-weight: 600;
+    }
+
+    .bootstrap-dialog .modal-body .nav-tabs > li > a:hover,
+    .bootstrap-dialog .modal-body .nav-tabs > li > a:focus {
+        color: var(--dj-text-strong);
+        background-color: transparent;
+        border-bottom-color: var(--dj-border-strong);
+    }
+
+    .bootstrap-dialog .modal-body .nav-tabs > li.active > a,
+    .bootstrap-dialog .modal-body .nav-tabs > li.active > a:hover,
+    .bootstrap-dialog .modal-body .nav-tabs > li.active > a:focus {
+        color: var(--dj-accent-strong);
+        background-color: transparent;
+        border: 0;
+        border-bottom: 2px solid var(--dj-accent);
+    }
+
+    .bootstrap-dialog .modal-body .tab-content > .tab-pane {
+        padding: 0;
+    }
+
+    /* ---------- Settings (Configuration) page ---------- */
+
+    /*
+     * Settings shell.
+     *
+     * manage.php provides the skeleton: a page header, a sticky navigation rail
+     * (the same .dj-config-tabs list, now stacked) and the tab-content card.
+     * Every POST contract stays inside the per-tab fragments; this layer only
+     * governs the operating canvas, so the legacy floating-in-empty-canvas look
+     * is replaced by one consistent surface with deliberate group headings.
+     */
+    .dj-settings {
+        display: grid;
+        grid-template-columns: 240px minmax(0, 1fr);
+        align-items: start;
+        gap: var(--dj-space-5);
+        max-width: 1240px;
+        margin-inline: auto;
+    }
+
+    .dj-settings-rail {
+        position: sticky;
+        top: var(--dj-page-top-gap);
+        background-color: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius);
+        box-shadow: var(--dj-shadow);
+        padding: var(--dj-space-2);
+    }
+
+    .dj-settings-rail .dj-config-tabs {
+        margin: 0;
+        border-bottom: 0;
+        max-width: none;
+    }
+
+    .dj-settings-rail .dj-config-tabs > li {
+        margin-bottom: 0;
+        float: none;
+    }
+
+    .dj-settings-rail .dj-rail-group {
+        float: none;
+        clear: both;
+    }
+
+    .dj-settings-rail .dj-config-tabs > li > a {
+        display: block;
+        padding: var(--dj-space-2) var(--dj-space-3);
+        color: var(--dj-text);
+        background-color: transparent;
+        border: 0;
+        border-radius: var(--dj-radius-sm);
+        font-weight: 600;
+        font-size: 13px;
+        line-height: 1.4;
+    }
+
+    .dj-settings-rail .dj-config-tabs > li > a:hover,
+    .dj-settings-rail .dj-config-tabs > li > a:focus {
+        color: var(--dj-text-strong);
+        background-color: var(--dj-accent-soft);
+        border: 0;
+    }
+
+    .dj-settings-rail .dj-config-tabs > li.active > a,
+    .dj-settings-rail .dj-config-tabs > li.active > a:hover,
+    .dj-settings-rail .dj-config-tabs > li.active > a:focus {
+        color: var(--dj-accent-strong);
+        background-color: var(--dj-accent-soft);
+        border: 0;
+        box-shadow: inset 3px 0 0 var(--dj-accent);
+    }
+
+    /* [dir=rtl] mirror handled generically: the inset shadow flips fine. */
+
+    .dj-rail-group {
+        margin: var(--dj-space-2) var(--dj-space-2) 2px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: var(--dj-text-muted);
+    }
+
+    .dj-settings-body {
+        min-width: 0;
+    }
+
+    .dj-config-content {
+        background-color: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-md);
+        box-shadow: var(--dj-shadow);
+        padding: var(--dj-space-5);
+    }
+
+    .dj-config-content > .tab-pane {
+        padding: 0;
+    }
+
+    .dj-settings-title {
+        margin: 0 0 var(--dj-space-2);
+        padding-bottom: var(--dj-space-2);
+        border-bottom: 1px solid var(--dj-border);
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--dj-text-strong);
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+    }
+
+    .dj-settings-title .glyphicon {
+        color: var(--dj-accent);
+        font-size: 15px;
+    }
+
+    /* Field groups inside a settings pane (barcode sections etc.). */
+    .dj-settings-group {
+        margin: var(--dj-space-4) 0 0;
+        padding: var(--dj-space-3) var(--dj-space-4) var(--dj-space-4);
+        background-color: var(--dj-surface-alt);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius);
+    }
+
+    .dj-settings-group-title {
+        margin: 0 0 var(--dj-space-3);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--dj-text-strong);
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+    }
+
+    /*
+     * The per-tab sticky Save: fields scroll, the action stays reachable.
+     * Every config fragment names its submit button `submit_<tab>`, so the
+     * attribute prefix catches them all while leaving POST contracts alone.
+     */
+    .dj-config-content form {
+        position: relative;
+    }
+
+    .dj-config-content [id^="submit_"] {
+        position: sticky;
+        bottom: var(--dj-space-3);
+        z-index: 3;
+        float: none;
+        display: inline-block;
+        margin: 0;
+    }
+
+    .dj-save-row {
+        position: sticky;
+        bottom: var(--dj-space-3);
+        z-index: 3;
+    }
+
+    .dj-config-content fieldset {
+        margin: 0 0 var(--dj-space-4);
+        border: 0;
+        padding: 0;
+        width: 100%;
+    }
+
+    .dj-config-content .form-horizontal .form-group {
+        margin-bottom: var(--dj-space-3);
+        display: flex;
+        align-items: center;
+    }
+
+    .dj-config-content .form-horizontal .form-group > label.control-label {
+        flex: 0 0 26%;
+        max-width: 26%;
+        padding: 0 var(--dj-space-3) 0 0;
+        text-align: start;
+        display: block;
+    }
+
+    .dj-config-content .form-horizontal .form-group > div:not([class*="col-0"]) {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .dj-config-content .form-horizontal .form-group > div > textarea,
+    .dj-config-content .form-horizontal .form-group > div .form-control {
+        max-width: 100%;
+    }
+
+    /*
+     * Deliberate field widths: most text-ish controls read best around a
+     * 24-26em measure; long textareas (policies, message templates) span the
+     * whole pane; the radio / checkbox inline rows keep their natural width.
+     */
+    .dj-config-content .form-horizontal .form-group .form-control:not(textarea):not(.bs-tagsinput),
+    .dj-config-content .form-horizontal .form-group .input-group:not(.dj-content-block) {
+        max-width: 420px;
+    }
+
+    /* Long textareas and navigable secondary rows may still span the pane. */
+    .dj-config-content .form-horizontal .form-group.field-paragraph,
+    .dj-config-content .form-horizontal .form-group.dj-row-paragraph {
+        flex-wrap: wrap;
+    }
+
+    .dj-config-content label.control-label {
+        font-weight: 600;
+    }
+
+    .dj-config-content .form-control.input-sm,
+    .dj-config-content select.input-sm {
+        height: var(--dj-control-height);
+    }
+
+    .dj-config-content textarea.form-control {
+        width: 100%;
+        resize: vertical;
+    }
+
+    /* Technical identifiers (Code 39, UPC/EAN/ISBN tags, px, %) stay LTR. */
+    .dj-config-content input[type="number"].form-control,
+    .dj-config-content .bootstrap-tagsinput,
+    .dj-config-content input[type="url"].form-control {
+        direction: ltr;
+        text-align: start;
+    }
+
+    /* Settings sub-tabs (System tab: Info/Email/SMS/Integrations/License). */
+    .dj-config-content .nav-tabs {
+        border-bottom: 1px solid var(--dj-border);
+        margin-top: var(--dj-space-5);
+    }
+
+    .dj-config-content .nav-tabs > li > a {
+        padding: var(--dj-space-2) var(--dj-space-3);
+        color: var(--dj-text-muted);
+        font-weight: 600;
+        border: 0;
+        border-bottom: 2px solid transparent;
+    }
+
+    .dj-config-content .nav-tabs > li.active > a {
+        color: var(--dj-accent-strong);
+        border: 0;
+        border-bottom: 2px solid var(--dj-accent);
+    }
+
+    @media (max-width: 1023px) {
+        /* Collapsed rail: the tabs return to a readable horizontal strip. */
+        .dj-settings {
+            display: block;
+        }
+
+        .dj-settings-rail {
+            position: static;
+        }
+
+        .dj-settings-rail .dj-config-tabs > li {
+            float: inline-start;
+        }
+
+        .dj-rail-group {
+            margin-top: var(--dj-space-3);
+            margin-bottom: var(--dj-space-1);
+        }
+    }
+
+    @media (min-width: 768px) {
+        .modal-dlg .modal-dialog {
+            width: 640px;
+            max-width: calc(100vw - 40px);
+        }
+
+        /* Wide editing forms (customer/supplier, New/Edit Item, bulk edit, CSV import). */
+        .modal-dlg-wide .modal-dialog {
+            width: 980px;
+            max-width: calc(100vw - 40px);
+        }
+    }
+
+    /* ----- New/Edit Item: the shared grid applied to the item fieldset ----- */
+
+    #item_form #attributes {
+        margin-bottom: var(--dj-space-2);
+    }
+
+    #item_form .thumbnail {
+        border-radius: var(--dj-radius-sm);
+        background-color: var(--dj-surface-alt);
+    }
+
+    /* ---------- POS register workspace (Sales + Receivings) ---------- */
+
+    #register_wrapper .panel,
+    #mode_form.panel,
+    #add_item_form.panel {
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius);
+        box-shadow: var(--dj-shadow);
+    }
+
+    #mode_form ul,
+    #add_item_form ul {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dj-space-2);
+    }
+
+    #mode_form ul > li,
+    #add_item_form ul > li {
+        float: none !important;
+        margin: 0;
+    }
+
+    /* Keep the row's own end-aligned actions pinned to the trailing edge.
+       `:not(.pull-right ~ .pull-right)` selects the first end-aligned item so
+       that a run of trailing actions stays grouped together. */
+    #mode_form ul > li.pull-right:not(.pull-right ~ .pull-right),
+    #add_item_form ul > li.pull-right:not(.pull-right ~ .pull-right) {
+        margin-inline-start: auto;
+    }
+
+    #mode_form .control-label,
+    #add_item_form .control-label {
+        margin-bottom: 0;
+        white-space: nowrap;
+    }
+
+    /* Barcode/item search is the strongest interaction point on the screen.
+       Its list item stretches so the search field claims the remaining row. */
+    #add_item_form ul > li:nth-child(2) {
+        flex: 1 1 320px;
+    }
+
+    #add_item_form #item {
+        min-width: 300px;
+        height: 40px;
+        padding-inline: 12px;
+        font-size: 15px;
+        border-color: var(--dj-border-strong);
+    }
+
+    #add_item_form #item:focus {
+        border-color: var(--dj-accent);
+        box-shadow: 0 0 0 3px var(--dj-accent-soft);
+    }
+
+    /* The cart table keeps its compact register density but reads as a table. */
+    #register thead th {
+        background-color: var(--dj-surface-alt);
+        border-bottom: 1px solid var(--dj-border-strong);
+        color: var(--dj-text-strong);
+        font-weight: 700;
+    }
+
+    #register tbody td {
+        border-top: 1px solid var(--dj-border);
+    }
+
+    /* In-cart notices (empty cart, out-of-stock) sit flush inside the cell. */
+    #register .alert {
+        margin-bottom: 0;
+    }
+
+    /* Summary column behaves like a sticky checkout card. The accent top rule
+       comes from the register phase, so re-declare it after the border shorthand. */
+    #overall_sale.panel {
+        border: 1px solid var(--dj-border);
+        border-top: 3px solid var(--dj-accent);
+        border-radius: var(--dj-radius-md);
+        box-shadow: var(--dj-shadow-raised);
+    }
+
+    @media (min-width: 992px) {
+        #overall_sale {
+            position: sticky;
+            top: var(--dj-space-3);
+        }
+    }
+
+    #sale_totals,
+    #payment_totals {
+        border-top: 1px solid var(--dj-border-strong);
+    }
+
+    /* ``#sale_total`` already carries 150% from the view; scale from that. */
+    #sale_total {
+        display: inline-block;
+        font-size: 1.15em;
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: -0.01em;
+        color: var(--dj-text-strong);
+        font-variant-numeric: tabular-nums;
+        unicode-bidi: isolate;
+    }
+
+    #sale_totals th,
+    #sale_totals td,
+    #payment_totals th,
+    #payment_totals td {
+        padding-block: 4px;
+        vertical-align: middle;
+    }
+
+    /* Tendered / due breakdown sits above the checkout actions. */
+    #payment_details {
+        border-top: 1px solid var(--dj-border-strong);
+        text-align: start;
+    }
+
+    #buttons_sale {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: var(--dj-space-2);
+        padding-inline: 0;
+    }
+
+    #buttons_sale .btn {
+        float: none !important;
+        margin: 0;
+    }
+
+    /* ---------- Report hub ---------- */
+
+    .reports-hub {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: var(--dj-space-4);
+        margin-bottom: var(--dj-space-4);
+    }
+
+    .reports-hub .dj-section {
+        margin-bottom: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .reports-hub .dj-section-head {
+        margin-bottom: var(--dj-space-2);
+    }
+
+    .reports-hub .list-group {
+        margin-bottom: 0;
+        overflow: hidden;
+    }
+
+    .reports-hub .list-group-item {
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+        padding: 10px 14px;
+        border: 0;
+        border-bottom: 1px solid var(--dj-border);
+        color: var(--dj-text);
+        font-weight: 500;
+        transition: background-color 0.12s ease, padding-inline-start 0.12s ease;
+    }
+
+    .reports-hub .list-group-item:hover,
+    .reports-hub .list-group-item:focus {
+        color: var(--ruya-primary-hover);
+        background-color: var(--ruya-primary-soft);
+        padding-inline-start: 18px;
+    }
+
+    /* ---------- Report result pages ---------- */
+
+    /*
+     * Report result documents render the legacy "#page_title"/"#page_subtitle"
+     * markers. They are modernised here (appearance only) so every report
+     * family shares the same calm header, table surface and summary strip.
+     */
+    #page_title {
+        margin: 0 0 var(--ruya-space-2);
+        color: var(--ruya-text-strong);
+        font-size: 21px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+    }
+
+    #page_subtitle {
+        margin: 0 0 var(--ruya-space-4);
+        color: var(--ruya-text-muted);
+        font-size: 13px;
+        font-weight: 500;
+        text-align: start;
+    }
+
+    #page_title + #page_subtitle {
+        margin-top: calc(var(--ruya-space-1) * -1);
+    }
+
+    #toolbar {
+        margin: 0 0 var(--ruya-space-4);
+        padding: 0;
+        background: none;
+        border: 0;
+        border-radius: 0;
+    }
+
+    #table_holder {
+        margin: 0;
+        padding-top: var(--ruya-space-2);
+        padding-inline: calc(var(--ruya-space-2) * -1);
+    }
+
+    .summary_row {
+        color: var(--ruya-text);
+        font-weight: 600;
+    }
+
+    #report_summary,
+    #chart_report_summary {
+        margin: var(--ruya-space-4) 0 var(--ruya-space-5);
+        padding: var(--ruya-space-3) var(--ruya-space-5);
+        border: 1px solid var(--ruya-border);
+        border-radius: var(--ruya-radius);
+        background-color: var(--ruya-surface);
+        text-align: end;
+    }
+
+    @media print {
+        #page_title {
+            color: #1f2d3d;
+        }
+
+        #report_summary,
+        #chart_report_summary {
+            border: 1px solid #dfe4ea;
+        }
+    }
+
+    /* ---------- Footer ---------- */
+
+    #footer.dj-footer {
+        flex: 0 0 auto;
+        clear: both;
+        position: static;
+        margin-top: var(--dj-space-5);
+        border-top: 1px solid var(--dj-border);
+        background-color: var(--dj-surface);
+        text-align: start;
+        font-size: 12px;
+        color: var(--dj-text-muted);
+    }
+
+    .dj-footer-inner {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--dj-space-3);
+        width: 100%;
+        max-width: 1600px;
+        margin-inline: auto;
+        padding: var(--dj-space-4) var(--dj-space-5);
+    }
+
+    .dj-footer-brand {
+        font-weight: 700;
+        color: var(--dj-text);
+    }
+
+    .dj-footer-copy {
+        unicode-bidi: isolate;
+    }
+
+    @media (max-width: 767px) {
+        .dj-footer-inner {
+            padding-inline: var(--dj-space-3);
+        }
+    }
+
+    /* ---------- Responsive: stack legacy horizontal grids on small screens ---------- */
+
+    @media (max-width: 640px) {
+        /* Manage-page action rows wrap instead of overflowing. */
+        #title_bar {
+            justify-content: flex-start;
+        }
+
+        #title_bar > .pull-right,
+        #title_bar > .pull-left {
+            flex: 0 0 auto;
+        }
+
+        /* Horizontal form labels become full-width captions above their control. */
+        .bootstrap-dialog .modal-body .form-horizontal > .form-group > .control-label,
+        #item_form .form-group > .control-label {
+            float: none;
+            width: 100%;
+            padding-inline: 0;
+            margin-bottom: 4px;
+            text-align: start;
+        }
+
+        .form-horizontal .form-group > [class*="col-"] {
+            float: none;
+            width: 100%;
+            padding-inline: 0;
+        }
+
+        #add_item_form ul > li:nth-child(2) {
+            flex: 1 1 100%;
+        }
+
+        #add_item_form #item {
+            min-width: 0;
+            width: 100%;
+        }
+
+        #mode_form ul,
+        #add_item_form ul {
+            gap: var(--dj-space-2);
         }
     }
 }

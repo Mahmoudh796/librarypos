@@ -22,7 +22,7 @@
                     <?= form_input([
                         'name'  => 'item_kit_number',
                         'id'    => 'item_kit_number',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-code',
                         'value' => $item_kit_info->item_kit_number
                     ]) ?>
                 </div>
@@ -35,7 +35,7 @@
                 <?= form_input([
                     'name'  => 'name',
                     'id'    => 'name',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => $item_kit_info->name
                 ]) ?>
             </div>
@@ -48,7 +48,7 @@
                     <?= form_input([
                         'name'  => 'item_name',
                         'id'    => 'item_name',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-text',
                         'size'  => '50',
                         'value' => $selected_kit_item
                     ]) ?>
@@ -89,7 +89,7 @@
                         'size'      => '5',
                         'maxlength' => '5',
                         'id'        => 'kit_discount',
-                        'class'     => 'form-control input-sm',
+                        'class'     => 'form-control input-sm dj-input-number',
                         'value'     => $item_kit_info->kit_discount_type === FIXED ? to_currency_no_money($item_kit_info->kit_discount) : to_decimals($item_kit_info->kit_discount)
                     ]) ?>
                 </div>
@@ -163,7 +163,7 @@
                 <?= form_textarea([
                     'name'  => 'description',
                     'id'    => 'description',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => $item_kit_info->description
                 ]) ?>
             </div>
@@ -175,7 +175,7 @@
                 <?= form_input([
                     'name'  => 'item',
                     'id'    => 'item',
-                    'class' => 'form-control input-sm'
+                    'class' => 'form-control input-sm dj-input-text'
                 ]) ?>
             </div>
         </div>

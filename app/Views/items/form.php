@@ -29,7 +29,7 @@
 <ul id="error_message_box" class="error_message_box"></ul>
 
 <?= form_open("items/save/$item_info->item_id", ['id' => 'item_form', 'enctype' => 'multipart/form-data', 'class' => 'form-horizontal']) ?>
-    <fieldset id="item_basic_info">
+    <fieldset id="item_basic_info" class="dj-form-grid">
 
         <div class="form-group form-group-sm">
             <?= form_label(lang('Items.item_number'), 'item_number', ['class' => 'control-label col-xs-3']) ?>
@@ -39,10 +39,11 @@
                     <?= form_input([
                         'name'  => 'item_number',
                         'id'    => 'item_number',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-code',
                         'value' => $item_info->item_number
                     ]) ?>
                 </div>
+                <p class="help-block dj-hint"><?= lang('Items.barcode_help') ?></p>
             </div>
         </div>
 
@@ -52,7 +53,7 @@
                 <?= form_input([
                     'name'  => 'name',
                     'id'    => 'name',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => $item_info->name
                 ]) ?>
             </div>
@@ -65,21 +66,22 @@
                     <span class="input-group-addon input-sm"><span class="glyphicon glyphicon-tag"></span></span>
                     <?php
                     if ($config['category_dropdown']) {
-                        echo form_dropdown('category', $categories, $selected_category, ['class' => 'form-control']);
+                        echo form_dropdown('category', $categories, $selected_category, ['class' => 'selectpicker show-menu-arrow', 'data-live-search' => 'true', 'data-width' => '100%']);
                     } else {
                         echo form_input([
                             'name'  => 'category',
                             'id'    => 'category',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-text',
                             'value' => $item_info->category
                         ]);
                     }
                     ?>
                 </div>
+                <p class="help-block dj-hint"><?= lang('Items.category_help') ?></p>
             </div>
         </div>
 
-        <div id="attributes">
+        <div id="attributes" class="dj-field--full">
             <script type="text/javascript">
                 $('#attributes').load('<?= "items/attributes/$item_info->item_id" ?>');
             </script>
@@ -184,7 +186,7 @@
                     <?= form_input([
                         'name'    => 'cost_price',
                         'id'      => 'cost_price',
-                        'class'   => 'form-control input-sm',
+                        'class'   => 'form-control input-sm dj-input-number',
                         'onClick' => 'this.select();',
                         'value'   => to_currency_no_money($item_info->cost_price)
                     ]) ?>
@@ -205,7 +207,7 @@
                     <?= form_input([
                         'name'    => 'unit_price',
                         'id'      => 'unit_price',
-                        'class'   => 'form-control input-sm',
+                        'class'   => 'form-control input-sm dj-input-number',
                         'onClick' => 'this.select();',
                         'value'   => to_currency_no_money($item_info->unit_price)
                     ]) ?>
@@ -217,13 +219,13 @@
         </div>
 
         <?php if (!$use_destination_based_tax) { ?>
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm dj-field--split">
                 <?= form_label(lang('Items.tax_1'), 'tax_percent_1', ['class' => 'control-label col-xs-3']) ?>
                 <div class="col-xs-4">
                     <?= form_input([
                         'name'  => 'tax_names[]',
                         'id'    => 'tax_name_1',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-text',
                         'value' => $item_tax_info[0]['name'] ?? $config['default_tax_1_name']
                     ]) ?>
                 </div>
@@ -232,7 +234,7 @@
                         <?= form_input([
                             'name'  => 'tax_percents[]',
                             'id'    => 'tax_percent_name_1',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-number',
                             'value' => isset($item_tax_info[0]['percent']) ? to_tax_decimals($item_tax_info[0]['percent']) : to_tax_decimals($default_tax_1_rate)
                         ]) ?>
                         <span class="input-group-addon input-sm"><b>%</b></span>
@@ -240,13 +242,13 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm dj-field--split">
                 <?= form_label(lang('Items.tax_2'), 'tax_percent_2', ['class' => 'control-label col-xs-3']) ?>
                 <div class="col-xs-4">
                     <?= form_input([
                         'name'  => 'tax_names[]',
                         'id'    => 'tax_name_2',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-text',
                         'value' => $item_tax_info[1]['name'] ?? $config['default_tax_2_name']
                     ]) ?>
                 </div>
@@ -254,7 +256,7 @@
                     <div class="input-group input-group-sm">
                         <?= form_input([
                             'name'  => 'tax_percents[]',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-number',
                             'id'    => 'tax_percent_name_2',
                             'value' => isset($item_tax_info[1]['percent']) ? to_tax_decimals($item_tax_info[1]['percent']) : to_tax_decimals($default_tax_2_rate)
                         ]) ?>
@@ -272,7 +274,7 @@
                         <?= form_input([
                             'name'  => 'tax_category',
                             'id'    => 'tax_category',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-text',
                             'size'  => '50',
                             'value' => $tax_category
                         ]) ?>
@@ -290,7 +292,7 @@
                         <?= form_input([
                             'name'  => 'hsn_code',
                             'id'    => 'hsn_code',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-code',
                             'value' => $hsn_code
                         ]) ?>
                     </div>
@@ -305,7 +307,7 @@
                     <?= form_input([
                         'name'    => "quantity_$key",
                         'id'      => "quantity_$key",
-                        'class'   => 'required quantity form-control',
+                        'class'   => 'required quantity form-control dj-input-number',
                         'onClick' => 'this.select();',
                         'value'   => isset($item_info->item_id) ? to_quantity_decimals($location_detail['quantity']) : to_quantity_decimals(0)
                     ]) ?>
@@ -319,7 +321,7 @@
                 <?= form_input([
                     'name'    => 'receiving_quantity',
                     'id'      => 'receiving_quantity',
-                    'class'   => 'required form-control input-sm',
+                    'class'   => 'required form-control input-sm dj-input-number',
                     'onClick' => 'this.select();',
                     'value'   => isset($item_info->item_id) ? to_quantity_decimals($item_info->receiving_quantity) : to_quantity_decimals(0)
                 ]) ?>
@@ -332,26 +334,26 @@
                 <?= form_input([
                     'name'    => 'reorder_level',
                     'id'      => 'reorder_level',
-                    'class'   => 'form-control input-sm',
+                    'class'   => 'form-control input-sm dj-input-number',
                     'onClick' => 'this.select();',
                     'value'   => isset($item_info->item_id) ? to_quantity_decimals($item_info->reorder_level) : to_quantity_decimals(0)
                 ]) ?>
             </div>
         </div>
 
-        <div class="form-group form-group-sm">
+        <div class="form-group form-group-sm dj-field--full">
             <?= form_label(lang('Items.description'), 'description', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-8">
                 <?= form_textarea([
                     'name'  => 'description',
                     'id'    => 'description',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => $item_info->description
                 ]) ?>
             </div>
         </div>
 
-        <div class="form-group form-group-sm">
+        <div class="form-group form-group-sm dj-field--full">
             <?= form_label(lang('Items.image'), 'items_image', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-8">
                 <div class="fileinput <?= $logo_exists ? 'fileinput-exists' : 'fileinput-new' ?>" data-provides="fileinput">
@@ -373,27 +375,31 @@
             </div>
         </div>
 
-        <div class="form-group form-group-sm">
-            <?= form_label(lang('Items.allow_alt_description'), 'allow_alt_description', ['class' => 'control-label col-xs-3']) ?>
-            <div class="col-xs-1">
-                <?= form_checkbox([
-                    'name'    => 'allow_alt_description',
-                    'id'      => 'allow_alt_description',
-                    'value'   => 1,
-                    'checked' => $item_info->allow_alt_description == 1
-                ]) ?>
+        <div class="form-group form-group-sm dj-field--check">
+            <div class="col-xs-12">
+                <label class="dj-check">
+                    <?= form_checkbox([
+                        'name'    => 'allow_alt_description',
+                        'id'      => 'allow_alt_description',
+                        'value'   => 1,
+                        'checked' => $item_info->allow_alt_description == 1
+                    ]) ?>
+                    <span class="dj-check-label"><?= lang('Items.allow_alt_description') ?></span>
+                </label>
             </div>
         </div>
 
-        <div class="form-group form-group-sm">
-            <?= form_label(lang('Items.is_serialized'), 'is_serialized', ['class' => 'control-label col-xs-3']) ?>
-            <div class="col-xs-1">
-                <?= form_checkbox([
-                    'name'    => 'is_serialized',
-                    'id'      => 'is_serialized',
-                    'value'   => 1,
-                    'checked' => $item_info->is_serialized == 1
-                ]) ?>
+        <div class="form-group form-group-sm dj-field--check">
+            <div class="col-xs-12">
+                <label class="dj-check">
+                    <?= form_checkbox([
+                        'name'    => 'is_serialized',
+                        'id'      => 'is_serialized',
+                        'value'   => 1,
+                        'checked' => $item_info->is_serialized == 1
+                    ]) ?>
+                    <span class="dj-check-label"><?= lang('Items.is_serialized') ?></span>
+                </label>
             </div>
         </div>
 
@@ -404,7 +410,7 @@
                     <?= form_input([
                         'name'  => 'qty_per_pack',
                         'id'    => 'qty_per_pack',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-number',
                         'value' => isset($item_info->item_id) ? to_quantity_decimals($item_info->qty_per_pack) : to_quantity_decimals(0)
                     ]) ?>
                 </div>
@@ -415,7 +421,7 @@
                     <?= form_input([
                         'name'  => 'pack_name',
                         'id'    => 'pack_name',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-text',
                         'value' => $item_info->pack_name
                     ]) ?>
                 </div>
@@ -427,7 +433,7 @@
                         <?= form_input([
                             'name'  => 'low_sell_item_name',
                             'id'    => 'low_sell_item_name',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-text',
                             'value' => $selected_low_sell_item
                         ]) ?>
                         <?= form_hidden('low_sell_item_id', $selected_low_sell_item_id) ?>
@@ -436,15 +442,17 @@
             </div>
         <?php } ?>
 
-        <div class="form-group form-group-sm">
-            <?= form_label(lang('Items.is_deleted'), 'is_deleted', ['class' => 'control-label col-xs-3']) ?>
-            <div class="col-xs-1">
-                <?= form_checkbox([
-                    'name'    => 'is_deleted',
-                    'id'      => 'is_deleted',
-                    'value'   => 1,
-                    'checked' => $item_info->deleted == 1
-                ]) ?>
+        <div class="form-group form-group-sm dj-field--check">
+            <div class="col-xs-12">
+                <label class="dj-check">
+                    <?= form_checkbox([
+                        'name'    => 'is_deleted',
+                        'id'      => 'is_deleted',
+                        'value'   => 1,
+                        'checked' => $item_info->deleted == 1
+                    ]) ?>
+                    <span class="dj-check-label"><?= lang('Items.is_deleted') ?></span>
+                </label>
             </div>
         </div>
 

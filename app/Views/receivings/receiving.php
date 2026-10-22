@@ -34,7 +34,15 @@ if (isset($success)) {
 }
 ?>
 
-<div id="register_wrapper">
+<div class="dj-page-head">
+    <h1 class="dj-page-title">
+        <span class="glyphicon glyphicon-import" aria-hidden="true"></span>
+        <?= lang('Module.' . $controller_name) ?>
+    </h1>
+    <?= view('partial/page_nav') ?>
+</div>
+
+<div id="register_wrapper" class="dj-register">
 
     <!-- Top register controls -->
 
@@ -88,11 +96,11 @@ if (isset($success)) {
             </li>
 
             <li class="pull-left">
-                <?= form_input(['name' => 'item', 'id' => 'item', 'class' => 'form-control input-sm', 'size' => '50', 'tabindex' => '1']) ?>
+                <?= form_input(['name' => 'item', 'id' => 'item', 'class' => 'form-control input-sm dj-input-text', 'size' => '50', 'tabindex' => '1']) ?>
             </li>
 
             <li class="pull-right">
-                <button id="new_item_button" class="btn btn-info btn-sm pull-right modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-btn-new="<?= lang('Common.new') ?>" data-href="<?= "items/view" ?>" title="<?= lang('Sales.new_item') ?>">
+                <button id="new_item_button" class="btn btn-info btn-sm pull-right modal-dlg modal-dlg-wide" data-btn-submit="<?= lang('Common.submit') ?>" data-btn-new="<?= lang('Common.new') ?>" data-href="<?= "items/view" ?>" title="<?= lang('Sales.new_item') ?>">
                     <span class="glyphicon glyphicon-tag">&nbsp;</span><?= lang('Sales.new_item') ?>
                 </button>
             </li>
@@ -134,10 +142,38 @@ if (isset($success)) {
 
                     <tr>
                         <td><?= anchor("$controller_name/deleteItem/$line", '<span class="glyphicon glyphicon-trash"></span>') ?></td>
-                        <td><?= esc($item['item_number']) ?></td>
+                        <td><span class="ltr-inline dj-cart-sku"><?= esc($item['item_number']) ?></span></td>
                         <td style="text-align: center;">
-                            <?= esc($item['name'] . ' ' . implode(' ', [$item['attribute_values'], $item['attribute_dtvalues']])) ?><br>
-                            <?= '[' . to_quantity_decimals($item['in_stock']) . ' in ' . esc($item['stock_name']) . ']' ?>
+                            <?php
+                            // Same display hierarchy as the Sales register: the
+                            // stored name keeps its generated "parent / value"
+                            // suffix byte-for-byte; the suffix is stripped for
+                            // display once the attribute values repeat below.
+                            $receiving_variant_name = $item['name'];
+                            $receiving_variant_label = trim(trim((string) $item['attribute_values']) . ' ' . trim((string) $item['attribute_dtvalues']));
+                            $receiving_variant_values = $receiving_variant_label === '' ? [] : preg_split('/\s*,\s*/u', $receiving_variant_label);
+                            do {
+                                $receiving_variant_changed = false;
+                                foreach ($receiving_variant_values as $receiving_variant_value) {
+                                    $receiving_variant_suffix = ' / ' . trim($receiving_variant_value);
+                                    if (str_ends_with($receiving_variant_name, $receiving_variant_suffix)) {
+                                        $receiving_variant_name = rtrim(substr($receiving_variant_name, 0, -strlen($receiving_variant_suffix)));
+                                        $receiving_variant_changed = true;
+                                    }
+                                }
+                            } while ($receiving_variant_changed);
+                            $receiving_variant_label = $receiving_variant_values === [] ? '' : implode(' / ', $receiving_variant_values);
+                            $receiving_stock_status = lang('Sales.available_stock', [to_quantity_decimals($item['in_stock'])]);
+                            if (isset($stock_locations) && count($stock_locations) > 1) {
+                                $receiving_stock_status .= ' · ' . (string) $item['stock_name'];
+                            }
+                            ?>
+                            <span class="dj-cart-item-name"><?= esc($receiving_variant_name) ?></span>
+                            <?php if ($receiving_variant_label !== '') { ?>
+                                <br><span class="dj-cart-variant"><?= esc($receiving_variant_label) ?></span>
+                            <?php } ?>
+                            <br>
+                            <span class="dj-cart-stock"><?= esc($receiving_stock_status) ?></span>
                             <?= form_hidden('location', (string)$item['item_location']) ?>
                         </td>
 
@@ -145,20 +181,20 @@ if (isset($success)) {
                             <td>
                                 <?= form_input([
                                     'name'    => 'price',
-                                    'class'   => 'form-control input-sm',
+                                    'class'   => 'form-control input-sm dj-input-number',
                                     'value'   => to_currency_no_money($item['price']),
                                     'onClick' => 'this.select();'
                                 ]) ?>
                             </td>
                         <?php } else { ?>
                             <td>
-                                <?= $item['price'] ?>
+                                <span class="dj-money" dir="ltr"><?= esc(to_currency_no_money($item['price'])) ?></span>
                                 <?= form_hidden('price', to_currency_no_money($item['price'])) ?>
                             </td>
                         <?php } ?>
 
                         <td>
-                            <?= form_input(['name' => 'quantity', 'class' => 'form-control input-sm', 'value' => to_quantity_decimals($item['quantity']), 'onClick' => 'this.select();']) ?>
+                            <?= form_input(['name' => 'quantity', 'class' => 'form-control input-sm dj-input-number', 'value' => to_quantity_decimals($item['quantity']), 'onClick' => 'this.select();']) ?>
                         </td>
                         <td>
                             <?= form_dropdown(
@@ -172,7 +208,7 @@ if (isset($success)) {
                         <?php if ($items_module_allowed && $mode != 'requisition') { ?>
                             <td>
                                 <div class="input-group">
-                                    <?= form_input(['name' => 'discount', 'class' => 'form-control input-sm', 'value' => $item['discount_type'] ? to_currency_no_money($item['discount']) : to_decimals($item['discount']), 'onClick' => 'this.select();']) ?>
+                                    <?= form_input(['name' => 'discount', 'class' => 'form-control input-sm dj-input-number', 'value' => $item['discount_type'] ? to_currency_no_money($item['discount']) : to_decimals($item['discount']), 'onClick' => 'this.select();']) ?>
                                     <span class="input-group-btn">
                                         <?= form_checkbox([
                                             'id'           => 'discount_toggle',
@@ -194,7 +230,9 @@ if (isset($success)) {
                             <?= form_hidden('discount', (string)$item['discount']) ?>
                         <?php } ?>
                         <td>
-                            <?= to_currency(($item['discount_type'] == PERCENT) ? $item['price'] * $item['quantity'] * $item['receiving_quantity'] - $item['price'] * $item['quantity'] * $item['receiving_quantity'] * $item['discount'] / 100 : $item['price'] * $item['quantity'] * $item['receiving_quantity'] - $item['discount']) ?>
+                            <?= to_money_unit((string) (($item['discount_type'] == PERCENT)
+                                ? $item['price'] * $item['quantity'] * $item['receiving_quantity'] - $item['price'] * $item['quantity'] * $item['receiving_quantity'] * $item['discount'] / 100
+                                : $item['price'] * $item['quantity'] * $item['receiving_quantity'] - $item['discount'])) ?>
                         </td>
                         <td>
                             <a href="javascript:$('#<?= esc("cart_$line", 'js') ?>').submit();" title=<?= lang(ucfirst($controller_name) . '.update') ?>>
@@ -212,12 +250,12 @@ if (isset($success)) {
                             if ($item['allow_alt_description'] == 1) {    // TODO: ===?
                                 echo form_input([
                                     'name'  => 'description',
-                                    'class' => 'form-control input-sm',
+                                    'class' => 'form-control input-sm dj-input-text',
                                     'value' => $item['description']
                                 ]);
                                 } else {
                                     if ($item['description'] != '') {    // TODO: !==?
-                                        echo esc($item['description']);
+                                        echo '<span class="dj-cart-desc">' . esc($item['description']) . '</span>';
                                         echo form_hidden('description', $item['description']);
                                     } else {
                                         echo '<i>' . lang('Sales.no_description') . '</i>';
@@ -291,11 +329,11 @@ if (isset($success)) {
                 <?= form_input([
                     'name'  => 'supplier',
                     'id'    => 'supplier',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => lang(ucfirst($controller_name) . '.start_typing_supplier_name')
                 ]) ?>
 
-                <button id="new_supplier_button" class="btn btn-info btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "suppliers/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new_supplier') ?>">
+                <button id="new_supplier_button" class="btn btn-info btn-sm modal-dlg modal-dlg-wide" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "suppliers/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new_supplier') ?>">
                     <span class="glyphicon glyphicon-user">&nbsp;</span><?= lang(ucfirst($controller_name) . '.new_supplier') ?>
                 </button>
 
@@ -305,17 +343,17 @@ if (isset($success)) {
 
         <?php } ?>
 
-        <table class="sales_table_100" id="sale_totals">
-            <tr>
-                <?php if ($mode != 'requisition') { ?>
-                    <th style="width: 55%;"><?= lang('Sales.total') ?></th>
-                    <th style="width: 45%; text-align: right;"><?= to_currency($total) ?></th>
-                <?php } else { ?>
-                    <th style="width: 55%;"></th>
-                    <th style="width: 45%; text-align: right;"></th>
-                <?php } ?>
-            </tr>
-        </table>
+                <table class="sales_table_100" id="sale_totals">
+                    <tr class="dj-total-row">
+                        <?php if ($mode != 'requisition') { ?>
+                            <th style="width: 55%;"><?= lang('Sales.total') ?></th>
+                            <th style="width: 45%; text-align: right;"><?= to_money_unit($total) ?></th>
+                        <?php } else { ?>
+                            <th style="width: 55%;"></th>
+                            <th style="width: 45%; text-align: right;"></th>
+                        <?php } ?>
+                    </tr>
+                </table>
 
         <?php if (count($cart) > 0) { ?>
             <div id="finish_sale">
@@ -328,7 +366,7 @@ if (isset($success)) {
                         <?= form_textarea([
                             'name'  => 'comment',
                             'id'    => 'comment',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-text',
                             'value' => $comment,
                             'rows'  => '4'
                         ]) ?>
@@ -352,7 +390,7 @@ if (isset($success)) {
                         <?= form_textarea([
                             'name'  => 'comment',
                             'id'    => 'comment',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-text',
                             'value' => $comment,
                             'rows'  => '4'
                         ]) ?>
@@ -377,7 +415,7 @@ if (isset($success)) {
                                             <?= form_input([
                                                 'name'  => 'recv_reference',
                                                 'id'    => 'recv_reference',
-                                                'class' => 'form-control input-sm',
+                                                'class' => 'form-control input-sm dj-input-code',
                                                 'value' => $reference,
                                                 'size'  => 5
                                             ]) ?>
@@ -406,7 +444,7 @@ if (isset($success)) {
                                         <?= form_input([
                                             'name'  => 'amount_tendered',
                                             'value' => '',
-                                            'class' => 'form-control input-sm',
+                                            'class' => 'form-control input-sm dj-input-number',
                                             'size'  => '5'
                                         ]) ?>
                                     </td>

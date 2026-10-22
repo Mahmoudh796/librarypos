@@ -1,10 +1,21 @@
 <?php
 use Config\OSPOS;
 
-$config = config(OSPOS::class)->settings; ?>
+$config = config(OSPOS::class)->settings;
+$languageCode = current_language_code(); ?>
 
-const pickerconfig = function(config) {
-    return $.extend({
+<?php /*
+ * The picker options are built explicitly. Extending the widget defaults with
+ * the whole settings array leaked unrelated keys into the options and, because
+ * the settings carry the language *name* rather than its code, it silently
+ * replaced the locale with a value the widget does not know — the calendar
+ * then fell back to its English month and day names.
+ *
+ * A function declaration (rather than a const) keeps the partial safe to
+ * include more than once on the same document.
+ */ ?>
+function pickerconfig(config) {
+    return {
         format: "<?= $this->data["format"] ?? dateformat_bootstrap($config['dateformat']) . ' ' . dateformat_bootstrap($config['timeformat'])?>",
         <?php
         $t = $config['timeformat'];
@@ -21,11 +32,15 @@ const pickerconfig = function(config) {
         todayBtn: true,
         todayHighlight: true,
         bootcssVer: 3,
-        language: "<?= current_language_code() ?>"
-    }, <?php echo isset($config) ?>);
-};
+        language: "<?= $languageCode ?>"
+    };
+}
 
-$.fn.datetimepicker.dates['<?= $config['language'] ?>'] = {
+/*
+ * The widget looks its strings up by locale code, so the calendar has to be
+ * registered under the very code the widget is configured with.
+ */
+$.fn.datetimepicker.dates['<?= $languageCode ?>'] = {
     days: [
         "<?= lang('Calendar.sunday') ?>",
         "<?= lang('Calendar.monday') ?>",
@@ -89,7 +104,13 @@ $.fn.datetimepicker.dates['<?= $config['language'] ?>'] = {
     <?php } else { ?>
         meridiem: [],
     <?php } ?>
-    weekStart: <?= lang('Datepicker.weekstart') ?>
+    weekStart: <?= lang('Datepicker.weekstart') ?>,
+    /*
+     * The widget mirrors itself when the locale declares it right-to-left,
+     * which moves the calendar navigation and the time column to the reading
+     * direction of the document.
+     */
+    rtl: <?= dj_is_rtl() ? 'true' : 'false' ?>
 };
 
 $(".datetime").datetimepicker(pickerconfig());

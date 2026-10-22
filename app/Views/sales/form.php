@@ -31,7 +31,7 @@
         <div class="form-group form-group-sm">
             <?= form_label(lang('Sales.date'), 'date', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-8">
-                <?= form_input(['name' => 'date', 'value' => to_datetime(strtotime($sale_info['sale_time'])), 'class' => 'datetime form-control input-sm']) ?>
+                <?= form_input(['name' => 'date', 'value' => to_datetime(strtotime($sale_info['sale_time'])), 'class' => 'datetime form-control input-sm dj-input-date']) ?>
             </div>
         </div>
 
@@ -40,10 +40,10 @@
                 <?= form_label(lang('Sales.invoice_number'), 'invoice_number', ['class' => 'control-label col-xs-3']) ?>
                 <div class="col-xs-8">
                     <?php if (!empty($sale_info["invoice_number"]) && isset($sale_info['customer_id']) && !empty($sale_info['email'])): ?>
-                        <?= form_input(['name' => 'invoice_number', 'size' => 10, 'value' => $sale_info['invoice_number'], 'id' => 'invoice_number', 'class' => 'form-control input-sm']) ?>
+                        <?= form_input(['name' => 'invoice_number', 'size' => 10, 'value' => $sale_info['invoice_number'], 'id' => 'invoice_number', 'class' => 'form-control input-sm dj-input-code']) ?>
                         <a id="send_invoice" href="javascript:void(0);"><?= lang('Sales.send_invoice') ?></a>
                     <?php else: ?>
-                        <?= form_input(['name' => 'invoice_number', 'value' => $sale_info['invoice_number'], 'id' => 'invoice_number', 'class' => 'form-control input-sm']) ?>
+                        <?= form_input(['name' => 'invoice_number', 'value' => $sale_info['invoice_number'], 'id' => 'invoice_number', 'class' => 'form-control input-sm dj-input-code']) ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -53,14 +53,14 @@
             <div class="form-group form-group-sm">
                 <?= form_label(lang('Sales.payment'), 'payment_new', ['class' => 'control-label col-xs-3']) ?>
                 <div class="col-xs-4">
-                    <?= form_dropdown('payment_type_new', $new_payment_options, $payment_type_new, ['id' => 'payment_types_new', 'class' => 'form-control']) ?>
+                    <?= form_dropdown('payment_type_new', $new_payment_options, $payment_type_new, ['id' => 'payment_types_new', 'class' => 'form-control dj-input-text']) ?>
                 </div>
                 <div class="col-xs-4">
                     <div class="input-group input-group-sm">
                         <?php if (!is_right_side_currency_symbol()): ?>
                             <span class="input-group-addon input-sm"><b><?= esc($config['currency_symbol']) ?></b></span>
                         <?php endif; ?>
-                        <?= form_input(['name' => 'payment_amount_new', 'value' => $payment_amount_new, 'id' => 'payment_amount_new', 'class' => 'form-control input-sm']) // TODO: potentially we need to add type to be float/decimal/numeric to reduce improper data entry ?>
+                        <?= form_input(['name' => 'payment_amount_new', 'value' => $payment_amount_new, 'id' => 'payment_amount_new', 'class' => 'form-control input-sm dj-input-number']) // TODO: potentially we need to add type to be float/decimal/numeric to reduce improper data entry ?>
                         <?php if (is_right_side_currency_symbol()): ?>
                             <span class="input-group-addon input-sm"><b><?= esc($config['currency_symbol']) ?></b></span>
                         <?php endif; ?>
@@ -70,7 +70,7 @@
             <div class="form-group form-group-sm reference-code-input-new" style="display:none;">
                 <?= form_label(lang('Sales.reference_code'), 'reference_code_new', ['class' => 'control-label col-xs-3']) ?>
                 <div class="col-xs-8">
-                    <?= form_input(['name' => 'reference_code_new', 'id' => 'reference_code_new', 'value' => '', 'class' => 'form-control input-sm', 'disabled' => true]) ?>
+                    <?= form_input(['name' => 'reference_code_new', 'id' => 'reference_code_new', 'value' => '', 'class' => 'form-control input-sm dj-input-code', 'disabled' => true]) ?>
                 </div>
             </div>
         <?php } ?>
@@ -86,9 +86,9 @@
                     <?= form_hidden("payment_id_$i", $row->payment_id) ?>
                     <?= form_hidden("reference_code_$i", $row->reference_code ?? '') ?>
                     <?php if (!empty(strstr($row->payment_type, lang('Sales.giftcard')))): ?>
-                        <?= form_input(['name' => "payment_type_$i", 'value' => $row->payment_type, 'id' => "payment_type_$i", 'class' => 'form-control input-sm', 'readonly' => 'true']) ?>
+                        <?= form_input(['name' => "payment_type_$i", 'value' => $row->payment_type, 'id' => "payment_type_$i", 'class' => 'form-control input-sm dj-input-text', 'readonly' => 'true']) ?>
                     <?php else: ?>
-                        <?= form_dropdown("payment_type_$i", $payment_options, $row->payment_type, ['id' => "payment_types_$i", 'class' => 'form-control']) ?>
+                        <?= form_dropdown("payment_type_$i", $payment_options, $row->payment_type, ['id' => "payment_types_$i", 'class' => 'form-control dj-input-text']) ?>
                     <?php endif; ?>
                 </div>
                 <div class="col-xs-4">
@@ -96,7 +96,7 @@
                         <?php if (!is_right_side_currency_symbol()): ?>
                             <span class="input-group-addon input-sm"><b><?= esc($config['currency_symbol']) ?></b></span>
                         <?php endif; ?>
-                        <?= form_input(['name' => "payment_amount_$i", 'value' => to_currency_no_money($row->payment_amount), 'id' => "payment_amount_$i", 'class' => 'form-control input-sm', 'readonly' => 'true'])    // TODO: add type attribute ?>
+                        <?= form_input(['name' => "payment_amount_$i", 'value' => to_currency_no_money($row->payment_amount), 'id' => "payment_amount_$i", 'class' => 'form-control input-sm dj-input-number', 'readonly' => 'true'])    // TODO: add type attribute ?>
                         <?php if (is_right_side_currency_symbol()): ?>
                             <span class="input-group-addon input-sm"><b><?= esc($config['currency_symbol']) ?></b></span>
                         <?php endif; ?>
@@ -109,9 +109,9 @@
                 <div class="col-xs-4">
                     <?php // No editing of Gift Card payments as it's a complex change ?>
                     <?php if (!empty(strstr($row->payment_type, lang('Sales.giftcard')))): ?>
-                        <?= form_input(['name' => "refund_type_$i", 'value' => lang('Sales.cash'), 'id' => "refund_type_$i", 'class' => 'form-control input-sm', 'readonly' => 'true']) ?>
+                        <?= form_input(['name' => "refund_type_$i", 'value' => lang('Sales.cash'), 'id' => "refund_type_$i", 'class' => 'form-control input-sm dj-input-text', 'readonly' => 'true']) ?>
                     <?php else: ?>
-                        <?= form_dropdown("refund_type_$i", $payment_options, lang('Sales.cash'), ['id' => "refund_types_$i", 'class' => 'form-control']) ?>
+                        <?= form_dropdown("refund_type_$i", $payment_options, lang('Sales.cash'), ['id' => "refund_types_$i", 'class' => 'form-control dj-input-text']) ?>
                     <?php endif; ?>
                 </div>
                 <div class="col-xs-4">
@@ -119,7 +119,7 @@
                         <?php if (!is_right_side_currency_symbol()): ?>
                             <span class="input-group-addon input-sm"><b><?= esc($config['currency_symbol']) ?></b></span>
                         <?php endif; ?>
-                        <?= form_input(['name' => "refund_amount_$i", 'value' => to_currency_no_money($row->cash_refund), 'id' => "refund_amount_$i", 'class' => 'form-control input-sm', 'readonly' => 'true']) ?>
+                        <?= form_input(['name' => "refund_amount_$i", 'value' => to_currency_no_money($row->cash_refund), 'id' => "refund_amount_$i", 'class' => 'form-control input-sm dj-input-number', 'readonly' => 'true']) ?>
                         <?php if (is_right_side_currency_symbol()): ?>
                             <span class="input-group-addon input-sm"><b><?= esc($config['currency_symbol']) ?></b></span>
                         <?php endif; ?>
@@ -135,7 +135,7 @@
         <div class="form-group form-group-sm">
             <?= form_label(lang('Sales.customer'), 'customer', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-8">
-                <?= form_input(['name' => 'customer_name', 'value' => $selected_customer_name, 'id' => 'customer_name', 'class' => 'form-control input-sm']) ?>
+                <?= form_input(['name' => 'customer_name', 'value' => $selected_customer_name, 'id' => 'customer_name', 'class' => 'form-control input-sm dj-input-text']) ?>
                 <?= form_hidden('customer_id', $selected_customer_id ?? '') ?>
             </div>
         </div>
@@ -143,7 +143,7 @@
         <div class="form-group form-group-sm">
             <?= form_label(lang('Sales.employee'), 'employee', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-8">
-                <?= form_input(['name' => 'employee_name', 'value' => $selected_employee_name, 'id' => 'employee_name', 'class' => 'form-control input-sm']) ?>
+                <?= form_input(['name' => 'employee_name', 'value' => $selected_employee_name, 'id' => 'employee_name', 'class' => 'form-control input-sm dj-input-text']) ?>
                 <?= form_hidden('employee_id', $selected_employee_id) ?>
             </div>
         </div>
@@ -151,7 +151,7 @@
         <div class="form-group form-group-sm">
             <?= form_label(lang('Sales.comment'), 'comment', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-8">
-                <?= form_textarea(['name' => 'comment', 'value' => $sale_info['comment'], 'id' => 'comment', 'class' => 'form-control input-sm']) ?>
+                <?= form_textarea(['name' => 'comment', 'value' => $sale_info['comment'], 'id' => 'comment', 'class' => 'form-control input-sm dj-input-text']) ?>
             </div>
         </div>
 

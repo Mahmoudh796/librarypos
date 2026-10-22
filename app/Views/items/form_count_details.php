@@ -20,7 +20,7 @@ use App\Models\Inventory;
                     <?= form_input([
                         'name'     => 'item_number',
                         'id'       => 'item_number',
-                        'class'    => 'form-control input-sm',
+                        'class'    => 'form-control input-sm dj-input-code',
                         'disabled' => '',
                         'value'    => $item_info->item_number
                     ]) ?>
@@ -34,7 +34,7 @@ use App\Models\Inventory;
                 <?= form_input([
                     'name'     => 'name',
                     'id'       => 'name',
-                    'class'    => 'form-control input-sm',
+                    'class'    => 'form-control input-sm dj-input-text',
                     'disabled' => '',
                     'value'    => $item_info->name
                 ]) ?>
@@ -49,7 +49,7 @@ use App\Models\Inventory;
                     <?= form_input([
                         'name'     => 'category',
                         'id'       => 'category',
-                        'class'    => 'form-control input-sm',
+                        'class'    => 'form-control input-sm dj-input-text',
                         'disabled' => '',
                         'value'    => $item_info->category
                     ]) ?>
@@ -70,7 +70,7 @@ use App\Models\Inventory;
                 <?= form_input([
                     'name'     => 'quantity',
                     'id'       => 'quantity',
-                    'class'    => 'form-control input-sm',
+                    'class'    => 'form-control input-sm dj-input-number',
                     'disabled' => '',
                     'value'    => to_quantity_decimals(current($item_quantities))
                 ]) ?>

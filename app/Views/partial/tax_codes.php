@@ -22,7 +22,7 @@ foreach ($tax_codes as $tax_code => $tax_code_data) {
             <?php $form_data = [
                 'name'        => 'tax_code[]',
                 'id'          => "tax_code_$i",
-                'class'       => 'valid_chars text-uppercase form-control input-sm',
+                'class'       => 'valid_chars text-uppercase form-control input-sm dj-input-code',
                 'placeholder' => lang('Taxes.code'),
                 'value'       => $tax_code
             ];
@@ -32,7 +32,7 @@ foreach ($tax_codes as $tax_code => $tax_code_data) {
         <div class="col-xs-2">
             <?php $form_data = [
                 'name'        => 'tax_code_name[]',
-                'class'       => 'valid_chars form-control input-sm',
+                'class'       => 'valid_chars form-control input-sm dj-input-text',
                 'placeholder' => lang('Taxes.name'),
                 'value'       => $tax_code_name
             ];
@@ -42,7 +42,7 @@ foreach ($tax_codes as $tax_code => $tax_code_data) {
         <div class="col-xs-2">
             <?php $form_data = [
                 'name'        => 'city[]',
-                'class'       => 'valid_chars form-control input-sm',
+                'class'       => 'valid_chars form-control input-sm dj-input-text',
                 'placeholder' => lang('Taxes.city'),
                 'value'       => $city
             ];
@@ -52,7 +52,7 @@ foreach ($tax_codes as $tax_code => $tax_code_data) {
         <div class="col-xs-2">
             <?php $form_data = [
                 'name'        => 'state[]',
-                'class'       => 'valid_chars form-control input-sm',
+                'class'       => 'valid_chars form-control input-sm dj-input-text',
                 'placeholder' => lang('Taxes.state'),
                 'value'       => $state
             ];

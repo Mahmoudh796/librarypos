@@ -51,7 +51,7 @@ if (isset($error)) {
 }
 
 if (!empty($warning)) {
-    echo '<div class="alert alert-dismissible alert-warning">' . esc($warning) . '</div>';
+    echo '<div class="dj-register-warning" role="alert"><span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span><span>' . esc($warning) . '</span></div>';
 }
 
 if (isset($success)) {
@@ -60,6 +60,14 @@ if (isset($success)) {
 
 helper('url');
 ?>
+
+<div class="dj-page-head">
+    <h1 class="dj-page-title">
+        <span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span>
+        <?= lang('Module.' . $controller_name) ?>
+    </h1>
+    <?= view('partial/page_nav') ?>
+</div>
 
 <?php if ($mode == 'return') : ?>
     <div class="dj-return-banner" role="status">
@@ -132,11 +140,11 @@ helper('url');
                     <label for="item" class="control-label"><?= lang(ucfirst($controller_name) . '.find_or_scan_item_or_receipt') ?></label>
                 </li>
                 <li class="pull-left">
-                    <?= form_input(['name' => 'item', 'id' => 'item', 'class' => 'form-control input-sm', 'size' => '50', 'tabindex' => ++$tabindex]) ?>
+                    <?= form_input(['name' => 'item', 'id' => 'item', 'class' => 'form-control input-sm dj-input-text', 'size' => '50', 'tabindex' => ++$tabindex]) ?>
                     <span class="ui-helper-hidden-accessible" role="status"></span>
                 </li>
                 <li class="pull-right">
-                    <button id="new_item_button" class="btn btn-info btn-sm pull-right modal-dlg" data-btn-new="<?= lang('Common.new') ?>" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "items/view" ?>" title="<?= lang(ucfirst($controller_name) . ".new_item") ?>">
+                    <button id="new_item_button" class="btn btn-info btn-sm pull-right modal-dlg modal-dlg-wide" data-btn-new="<?= lang('Common.new') ?>" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "items/view" ?>" title="<?= lang(ucfirst($controller_name) . ".new_item") ?>">
                         <span class="glyphicon glyphicon-tag">&nbsp;</span><?= lang(ucfirst($controller_name) . ".new_item") ?>
                     </button>
                 </li>
@@ -185,32 +193,52 @@ helper('url');
                                 ?>
                             </td>
                             <?php if ($item['item_type'] == ITEM_TEMP) { ?>
-                                <td><?= form_input(['name' => 'item_number', 'id' => 'item_number', 'class' => 'form-control input-sm', 'value' => $item['item_number'], 'tabindex' => ++$tabindex]) ?></td>
+                                <td><?= form_input(['name' => 'item_number', 'id' => 'item_number', 'class' => 'form-control input-sm dj-input-code', 'value' => $item['item_number'], 'tabindex' => ++$tabindex]) ?></td>
                                 <td style="text-align: center;">
-                                    <?= form_input(['name' => 'name', 'id' => 'name', 'class' => 'form-control input-sm', 'value' => $item['name'], 'tabindex' => ++$tabindex]) ?>
+                                    <?= form_input(['name' => 'name', 'id' => 'name', 'class' => 'form-control input-sm dj-input-text', 'value' => $item['name'], 'tabindex' => ++$tabindex]) ?>
                                 </td>
-                            <?php } else { ?>
-                                <td><span class="ltr-inline"><?= esc($item['item_number']) ?></span></td>
-                                <td style="text-align: center;">
-                                    <span class="dj-cart-item-name"><?= esc($item['name']) ?></span>
-                                    <?php
-                                    $attribute_label = trim(implode(' ', [$item['attribute_values'], $item['attribute_dtvalues']]));
-                                    if ($attribute_label !== '') {
-                                        echo ' <span class="dj-cart-variant">' . esc($attribute_label) . '</span>';
+                            <?php } else {
+                                // The stored item name keeps its generated "parent / value"
+                                // suffix byte-for-byte; the suffix is stripped for display
+                                // only when the attribute values repeat it underneath.
+                                $variant_name = $item['name'];
+                                $variant_label = trim(trim((string) $item['attribute_values']) . ' ' . trim((string) $item['attribute_dtvalues']));
+                                $variant_values = $variant_label === '' ? [] : preg_split('/\s*,\s*/u', $variant_label);
+                                do {
+                                    $changed = false;
+                                    foreach ($variant_values as $variant_value) {
+                                        $variant_suffix = ' / ' . trim($variant_value);
+                                        if (str_ends_with($variant_name, $variant_suffix)) {
+                                            $variant_name = rtrim(substr($variant_name, 0, -strlen($variant_suffix)));
+                                            $changed = true;
+                                        }
                                     }
-                                    ?>
+                                } while ($changed);
+                                $variant_label = $variant_values === [] ? '' : implode(' / ', $variant_values);
+                                $stock_status = lang('Sales.available_stock', [to_quantity_decimals($item['in_stock'])]);
+                                if (count($stock_locations) > 1) {
+                                    $stock_status .= ' · ' . (string) $item['stock_name'];
+                                }
+                                ?>
+                                <td><span class="ltr-inline dj-cart-sku"><?= esc($item['item_number']) ?></span></td>
+                                <td style="text-align: center;">
+                                    <span class="dj-cart-item-name"><?= esc($variant_name) ?></span>
+                                    <?php if ($variant_label !== '') { ?>
+                                        <br><span class="dj-cart-variant"><?= esc($variant_label) ?></span>
+                                    <?php } ?>
                                     <br>
-                                    <?php if ($item['stock_type'] == '0'): echo '[' . to_quantity_decimals($item['in_stock']) . ' in ' . esc($item['stock_name']) . ']';
-                                    endif; ?>
+                                    <?php if ($item['stock_type'] == '0'): ?>
+                                        <span class="dj-cart-stock"><?= esc($stock_status) ?></span>
+                                    <?php endif; ?>
                                 </td>
                             <?php } ?>
 
                             <td>
                                 <?php
                                 if ($items_module_allowed && $change_price) {
-                                    echo form_input(['name' => 'price', 'class' => 'form-control input-sm', 'value' => to_currency_no_money($item['price']), 'tabindex' => ++$tabindex, 'onClick' => 'this.select();']);
+                                    echo form_input(['name' => 'price', 'class' => 'form-control input-sm dj-input-number', 'value' => to_currency_no_money($item['price']), 'tabindex' => ++$tabindex, 'onClick' => 'this.select();']);
                                 } else {
-                                    echo to_currency($item['price']);
+                                    echo to_money_unit($item['price']);
                                     echo form_hidden('price', to_currency_no_money($item['price']));
                                 }
                                 ?>
@@ -222,14 +250,14 @@ helper('url');
                                     echo to_quantity_decimals($item['quantity']);
                                     echo form_hidden('quantity', $item['quantity']);
                                 } else {
-                                    echo form_input(['name' => 'quantity', 'class' => 'form-control input-sm', 'value' => to_quantity_decimals($item['quantity']), 'tabindex' => ++$tabindex, 'onClick' => 'this.select();']);
+                                    echo form_input(['name' => 'quantity', 'class' => 'form-control input-sm dj-input-number', 'value' => to_quantity_decimals($item['quantity']), 'tabindex' => ++$tabindex, 'onClick' => 'this.select();']);
                                 }
                                 ?>
                             </td>
 
                             <td>
                                 <div class="input-group">
-                                    <?= form_input(['name' => 'discount', 'class' => 'form-control input-sm', 'value' => $item['discount_type'] ? to_currency_no_money($item['discount']) : to_decimals($item['discount']), 'tabindex' => ++$tabindex, 'onClick' => 'this.select();']) ?>
+                                    <?= form_input(['name' => 'discount', 'class' => 'form-control input-sm dj-input-number', 'value' => $item['discount_type'] ? to_currency_no_money($item['discount']) : to_decimals($item['discount']), 'tabindex' => ++$tabindex, 'onClick' => 'this.select();']) ?>
                                     <span class="input-group-btn">
                                         <?= form_checkbox(['id' => 'discount_toggle', 'name' => 'discount_toggle', 'value' => 1, 'data-toggle' => "toggle", 'data-size' => 'small', 'data-onstyle' => 'success', 'data-on' => '<b>' . $config['currency_symbol'] . '</b>', 'data-off' => '<b>%</b>', 'data-line' => $line, 'checked' => $item['discount_type'] == 1]) ?>
                                     </span>
@@ -239,9 +267,9 @@ helper('url');
                             <td>
                                 <?php
                                 if ($item['item_type'] == ITEM_AMOUNT_ENTRY) {    // TODO: === ?
-                                    echo form_input(['name' => 'discounted_total', 'class' => 'form-control input-sm', 'value' => to_currency_no_money($item['discounted_total']), 'tabindex' => ++$tabindex, 'onClick' => 'this.select();']);
+                                    echo form_input(['name' => 'discounted_total', 'class' => 'form-control input-sm dj-input-number', 'value' => to_currency_no_money($item['discounted_total']), 'tabindex' => ++$tabindex, 'onClick' => 'this.select();']);
                                 } else {
-                                    echo to_currency($item['discounted_total']);
+                                    echo to_money_unit($item['discounted_total']);
                                 }
                                 ?>
                             </td>
@@ -256,7 +284,7 @@ helper('url');
                             <?php if ($item['item_type'] == ITEM_TEMP) { ?>
                                 <td><?= form_input(['type' => 'hidden', 'name' => 'item_id', 'value' => $item['item_id']]) ?></td>
                                 <td style="text-align: center;" colspan="6">
-                                    <?= form_input(['name' => 'item_description', 'id' => 'item_description', 'class' => 'form-control input-sm', 'value' => $item['description'], 'tabindex' => ++$tabindex]) ?>
+                                    <?= form_input(['name' => 'item_description', 'id' => 'item_description', 'class' => 'form-control input-sm dj-input-text', 'value' => $item['description'], 'tabindex' => ++$tabindex]) ?>
                                 </td>
                                 <td> </td>
                             <?php } else { ?>
@@ -268,10 +296,10 @@ helper('url');
                                 <td colspan="2" style="text-align: left;">
                                     <?php
                                     if ($item['allow_alt_description']) {
-                                        echo form_input(['name' => 'description', 'class' => 'form-control input-sm', 'value' => $item['description'], 'onClick' => 'this.select();']);
+                                        echo form_input(['name' => 'description', 'class' => 'form-control input-sm dj-input-text', 'value' => $item['description'], 'onClick' => 'this.select();']);
                                     } else {
                                         if ($item['description'] != '') {
-                                            echo esc($item['description']);
+                                            echo '<span class="dj-cart-desc">' . esc($item['description']) . '</span>';
                                             echo form_hidden('description', $item['description']);
                                         } else {
                                             echo lang(ucfirst($controller_name) . '.no_description');
@@ -291,7 +319,7 @@ helper('url');
                                 <td colspan="4" style="text-align: left;">
                                     <?php
                                     if ($item['is_serialized']) {
-                                        echo form_input(['name' => 'serialnumber', 'class' => 'form-control input-sm', 'value' => $item['serialnumber'], 'onClick' => 'this.select();']);
+                                        echo form_input(['name' => 'serialnumber', 'class' => 'form-control input-sm dj-input-code', 'value' => $item['serialnumber'], 'onClick' => 'this.select();']);
                                     } else {
                                         echo form_hidden('serialnumber', '');
                                     }
@@ -317,7 +345,7 @@ helper('url');
                 <table class="sales_table_100">
                     <tr>
                         <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.customer') ?></th>
-                        <th style="width: 45%; text-align: right;"><?= anchor("customers/view/$customer_id", esc($customer), ['class' => 'modal-dlg', 'data-btn-submit' => lang('Common.submit'), 'title' => lang('Customers.update')]) ?></th>
+                        <th style="width: 45%; text-align: right;"><?= anchor("customers/view/$customer_id", esc($customer), ['class' => 'modal-dlg modal-dlg-wide', 'data-btn-submit' => lang('Common.submit'), 'title' => lang('Customers.update')]) ?></th>
                     </tr>
                     <?php if (!empty($customer_email)) { ?>
                         <tr>
@@ -339,7 +367,7 @@ helper('url');
                     <?php } ?>
                     <tr>
                         <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.customer_discount') ?></th>
-                        <th style="width: 45%; text-align: right;"><?= ($customer_discount_type == FIXED) ? to_currency($customer_discount) : $customer_discount . '%' ?></th>
+                        <th style="width: 45%; text-align: right;"><?= ($customer_discount_type == FIXED) ? to_money_unit($customer_discount) : $customer_discount . '%' ?></th>
                     </tr>
                     <?php if ($config['customer_reward_enable']): ?>
                         <?php if (!empty($customer_rewards)) { ?>
@@ -355,7 +383,7 @@ helper('url');
                     <?php endif; ?>
                     <tr>
                         <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.customer_total') ?></th>
-                        <th style="width: 45%; text-align: right;"><?= to_currency($customer_total) ?></th>
+                        <th style="width: 45%; text-align: right;"><?= to_money_unit($customer_total) ?></th>
                     </tr>
                     <?php if (!empty($mailchimp_info)) { ?>
                         <tr>
@@ -373,12 +401,12 @@ helper('url');
                 ?>
             <?php } else { ?>
                 <div class="form-group" id="select_customer">
-                    <label id="customer_label" for="customer" class="control-label" style="margin-bottom: 1em; margin-top: -1em;">
+                    <label id="customer_label" for="customer" class="control-label">
                         <?= lang(ucfirst($controller_name) . '.select_customer') . esc(" $customer_required") ?>
                     </label>
-                    <?= form_input(['name' => 'customer', 'id' => 'customer', 'class' => 'form-control input-sm', 'value' => lang(ucfirst($controller_name) . '.start_typing_customer_name')]) ?>
+                    <?= form_input(['name' => 'customer', 'id' => 'customer', 'class' => 'form-control input-sm dj-input-text', 'value' => lang(ucfirst($controller_name) . '.start_typing_customer_name')]) ?>
 
-                    <button class="btn btn-info btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "customers/view" ?>" title="<?= lang(ucfirst($controller_name) . ".new_customer") ?>">
+                    <button class="btn btn-info btn-sm modal-dlg modal-dlg-wide" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "customers/view" ?>" title="<?= lang(ucfirst($controller_name) . ".new_customer") ?>">
                         <span class="glyphicon glyphicon-user">&nbsp;</span><?= lang(ucfirst($controller_name) . ".new_customer") ?>
                     </button>
                     <button class="btn btn-default btn-sm modal-dlg" id="show_keyboard_help" data-href="<?= esc("$controller_name/salesKeyboardHelp") ?>" title="<?= lang(ucfirst($controller_name) . '.key_title') ?>">
@@ -395,17 +423,17 @@ helper('url');
             </tr>
             <tr>
                 <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.sub_total') ?></th>
-                <th style="width: 45%; text-align: right;"><?= to_currency($subtotal) ?></th>
+                <th style="width: 45%; text-align: right;"><?= to_money_unit($subtotal) ?></th>
             </tr>
             <?php foreach ($taxes as $tax_group_index => $tax) { ?>
                 <tr>
                     <th style="width: 55%;"><?= (float)$tax['tax_rate'] . '% ' . esc($tax['tax_group']) ?></th>
-                    <th style="width: 45%; text-align: right;"><?= to_currency_tax($tax['sale_tax_amount']) ?></th>
+                    <th style="width: 45%; text-align: right;"><?= to_money_unit($tax['sale_tax_amount'], 'to_currency_tax') ?></th>
                 </tr>
             <?php } ?>
             <tr class="dj-total-row">
                 <th style="width: 55%; font-size: 150%"><?= lang(ucfirst($controller_name) . '.total') ?></th>
-                <th style="width: 45%; font-size: 150%; text-align: right;"><span id="sale_total"><?= to_currency($total) ?></span></th>
+                <th style="width: 45%; font-size: 150%; text-align: right;"><span id="sale_total"><?= to_money_unit($total) ?></span></th>
             </tr>
         </table>
 
@@ -413,11 +441,11 @@ helper('url');
             <table class="sales_table_100" id="payment_totals">
                 <tr>
                     <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.payments_total') ?></th>
-                    <th style="width: 45%; text-align: right;"><?= to_currency($payments_total) ?></th>
+                    <th style="width: 45%; text-align: right;"><?= to_money_unit($payments_total) ?></th>
                 </tr>
                 <tr class="dj-amount-due-row">
                     <th style="width: 55%; font-size: 120%"><?= lang(ucfirst($controller_name) . '.amount_due') ?></th>
-                    <th style="width: 45%; font-size: 120%; text-align: right;"><span id="sale_amount_due"><?= to_currency($amount_due) ?></span></th>
+                    <th style="width: 45%; font-size: 120%; text-align: right;"><span id="sale_amount_due"><?= to_money_unit($amount_due) ?></span></th>
                 </tr>
             </table>
 
@@ -438,7 +466,7 @@ helper('url');
                                     <?= form_input([
                                         'name' => 'amount_tendered',
                                         'id' => 'amount_tendered',
-                                        'class' => 'form-control input-sm disabled',
+                                        'class' => 'form-control input-sm disabled dj-input-number',
                                         'disabled' => 'disabled',
                                         'value' => '0',
                                         'size' => '5',
@@ -500,8 +528,8 @@ helper('url');
                             <tr>
                                 <td><span id="amount_tendered_label"><?= lang(ucfirst($controller_name) . '.amount_tendered') ?></span></td>
                                 <td>
-                                    <?= form_input(['name' => 'amount_tendered', 'id' => 'amount_tendered', 'class' => 'form-control input-sm non-giftcard-input', 'value' => to_currency_no_money($amount_due), 'size' => '5', 'tabindex' => ++$tabindex, 'onClick' => 'this.select();']) ?>
-                                    <?= form_input(['name' => 'amount_tendered', 'id' => 'amount_tendered', 'class' => 'form-control input-sm giftcard-input', 'disabled' => true, 'value' => to_currency_no_money($amount_due), 'size' => '5', 'tabindex' => ++$tabindex]) ?>
+                                    <?= form_input(['name' => 'amount_tendered', 'id' => 'amount_tendered', 'class' => 'form-control input-sm non-giftcard-input dj-input-number', 'value' => to_currency_no_money($amount_due), 'size' => '5', 'tabindex' => ++$tabindex, 'onClick' => 'this.select();']) ?>
+                                    <?= form_input(['name' => 'amount_tendered', 'id' => 'amount_tendered', 'class' => 'form-control input-sm giftcard-input dj-input-number', 'disabled' => true, 'value' => to_currency_no_money($amount_due), 'size' => '5', 'tabindex' => ++$tabindex]) ?>
                                 </td>
                             </tr>
                             <tr class="reference-code-input reference-code-input-hidden">
@@ -542,7 +570,7 @@ helper('url');
                                 <tr>
                                     <td><?= anchor("$controller_name/deletePayment/". esc(base64url_encode($payment_id), 'url'), '<span class="glyphicon glyphicon-trash"></span>') ?></td>
                                     <td><?= $payment['payment_type'] ?></td>
-                                    <td style="text-align: right;"><?= to_currency($payment['payment_amount']) ?></td>
+                                    <td style="text-align: right;"><?= to_money_unit($payment['payment_amount']) ?></td>
                                 </tr>
                             <?php } ?>
                         </tbody>
@@ -567,7 +595,7 @@ helper('url');
                         <div class="form-group form-group-sm">
                             <div class="col-xs-12">
                                 <?= form_label(lang('Common.comments'), 'comments', ['class' => 'control-label', 'id' => 'comment_label', 'for' => 'comment']) ?>
-                                <?= form_textarea(['name' => 'comment', 'id' => 'comment', 'class' => 'form-control input-sm', 'value' => $comment, 'rows' => '2']) ?>
+                                <?= form_textarea(['name' => 'comment', 'id' => 'comment', 'class' => 'form-control input-sm dj-input-text', 'value' => $comment, 'rows' => '2']) ?>
                             </div>
                         </div>
                     </div>
@@ -610,7 +638,7 @@ helper('url');
                                 <div class="col-xs-6">
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-addon input-sm">#</span>
-                                        <?= form_input(['name' => 'sales_invoice_number', 'id' => 'sales_invoice_number', 'class' => 'form-control input-sm', 'value' => $invoice_number]) ?>
+                                        <?= form_input(['name' => 'sales_invoice_number', 'id' => 'sales_invoice_number', 'class' => 'form-control input-sm dj-input-code', 'value' => $invoice_number]) ?>
                                     </div>
                                 </div>
                             </div>
@@ -895,8 +923,8 @@ helper('url');
         const needsReferenceCode = referenceCodePaymentTypes.indexOf(paymentType) !== -1;
 
         if (isGiftCard) {
-            $("#sale_total").html("<?= to_currency($total) ?>");
-            $("#sale_amount_due").html("<?= to_currency($amount_due) ?>");
+            $("#sale_total").html('<?= to_money_unit($total) ?>');
+            $("#sale_amount_due").html('<?= to_money_unit($amount_due) ?>');
             $("#amount_tendered_label").html("<?= lang(ucfirst($controller_name) . '.giftcard_number') ?>");
             $("#amount_tendered:enabled").val('').focus();
             $(".giftcard-input").attr('disabled', false);
@@ -904,16 +932,16 @@ helper('url');
             $(".giftcard-input:enabled").val('').focus();
             $(".reference-code-input").hide();
         } else if (isCash && cash_mode == '1') {
-            $("#sale_total").html("<?= to_currency($non_cash_total) ?>");
-            $("#sale_amount_due").html("<?= to_currency($cash_amount_due) ?>");
+            $("#sale_total").html('<?= to_money_unit($non_cash_total) ?>');
+            $("#sale_amount_due").html('<?= to_money_unit($cash_amount_due) ?>');
             $("#amount_tendered_label").html("<?= lang(ucfirst($controller_name) . '.amount_tendered') ?>");
             $("#amount_tendered:enabled").val("<?= to_currency_no_money($cash_amount_due) ?>");
             $(".giftcard-input").attr('disabled', true);
             $(".non-giftcard-input").attr('disabled', false);
             $(".reference-code-input").hide();
         } else {
-            $("#sale_total").html("<?= to_currency($non_cash_total) ?>");
-            $("#sale_amount_due").html("<?= to_currency($amount_due) ?>");
+            $("#sale_total").html('<?= to_money_unit($non_cash_total) ?>');
+            $("#sale_amount_due").html('<?= to_money_unit($amount_due) ?>');
             $("#amount_tendered_label").html("<?= lang(ucfirst($controller_name) . '.amount_tendered') ?>");
             $("#amount_tendered:enabled").val("<?= to_currency_no_money($amount_due) ?>");
             $(".giftcard-input").attr('disabled', true);

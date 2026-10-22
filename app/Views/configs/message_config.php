@@ -22,7 +22,7 @@
                         <?= form_input([
                             'name'  => 'msg_uid',
                             'id'    => 'msg_uid',
-                            'class' => 'form-control input-sm required',
+                            'class' => 'form-control input-sm required dj-input-code',
                             'value' => $config['msg_uid']
                         ]) ?>
                     </div>
@@ -39,7 +39,7 @@
                         <input type="password"
                                name="msg_pwd"
                                id="msg_pwd"
-                               class="form-control input-sm"
+                               class="form-control input-sm dj-input-secret"
                                placeholder="<?= !empty($msg_pwd_set) ? lang('Config.msg_pwd_set') : esc(lang('Config.msg_pwd')) ?>"
                                autocomplete="off">
                     </div>
@@ -56,7 +56,7 @@
                         <?= form_input([
                             'name'  => 'msg_src',
                             'id'    => 'msg_src',
-                            'class' => 'form-control input-sm required',
+                            'class' => 'form-control input-sm required dj-input-code',
                             'value' => $config['msg_src'] == null ? $config['company'] : $config['msg_src']
                         ]) ?>
                     </div>
@@ -69,7 +69,7 @@
                     <?= form_textarea([
                         'name'        => 'msg_msg',
                         'id'          => 'msg_msg',
-                        'class'       => 'form-control input-sm',
+                        'class'       => 'form-control input-sm dj-input-text',
                         'value'       => $config['msg_msg'],
                         'style'       => 'resize: vertical',
                         'placeholder' => lang('Config.msg_msg_placeholder')

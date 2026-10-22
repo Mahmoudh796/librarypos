@@ -20,7 +20,7 @@
                             <?= form_input([
                                 'name'     => 'username',
                                 'id'       => 'username',
-                                'class'    => 'form-control input-sm',
+                                'class'    => 'form-control input-sm dj-input-code',
                                 'value'    => $person_info->username,
                                 'readonly' => 'true'
                             ]) ?>
@@ -38,7 +38,7 @@
                             <?= form_password([
                                 'name'  => 'current_password',
                                 'id'    => 'current_password',
-                                'class' => 'form-control input-sm'
+                                'class' => 'form-control input-sm dj-input-secret'
                             ]) ?>
                         </div>
                     </div>
@@ -52,7 +52,7 @@
                             <?= form_password([
                                 'name'  => 'password',
                                 'id'    => 'password',
-                                'class' => 'form-control input-sm'
+                                'class' => 'form-control input-sm dj-input-secret'
                             ]) ?>
                         </div>
                     </div>
@@ -66,7 +66,7 @@
                             <?= form_password([
                                 'name'  => 'repeat_password',
                                 'id'    => 'repeat_password',
-                                'class' => 'form-control input-sm'
+                                'class' => 'form-control input-sm dj-input-secret'
                             ]) ?>
                         </div>
                     </div>

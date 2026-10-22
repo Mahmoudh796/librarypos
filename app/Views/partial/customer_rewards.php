@@ -20,7 +20,7 @@ foreach ($customer_rewards as $reward_key => $reward_category) {
             <?php $form_data = [
                 'name'  => 'customer_reward_' . $customer_reward_id,
                 'id'    => 'customer_reward_' . $customer_reward_id,
-                'class' => 'customer_reward valid_chars form-control input-sm required',
+                'class' => 'customer_reward valid_chars form-control input-sm required dj-input-number',
                 'value' => $customer_reward_name
             ];
             $reward_category['deleted'] && $form_data['disabled'] = 'disabled';
@@ -31,7 +31,7 @@ foreach ($customer_rewards as $reward_key => $reward_category) {
             <?php $form_data = [
                 'name'  => 'reward_points_' . $customer_reward_id,
                 'id'    => 'reward_points_' . $customer_reward_id,
-                'class' => 'customer_reward valid_chars form-control input-sm required',
+                'class' => 'customer_reward valid_chars form-control input-sm required dj-input-number',
                 'value' => $customer_points_percent
             ];
             $reward_category['deleted'] && $form_data['disabled'] = 'disabled';

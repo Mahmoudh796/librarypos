@@ -14,7 +14,7 @@
             'name'     => 'definition_name',
             'options'  => esc($definition_names),
             'selected' => -1,
-            'class'    => 'form-control',
+            'class'    => 'form-control dj-input-text',
             'id'       => 'definition_name'
         ]) ?>
     </div>
@@ -36,7 +36,7 @@
                         echo form_input([
                             'name'               => "attribute_links[$definition_id]",
                             'value'              => to_date($value),
-                            'class'              => 'form-control input-sm datetime',
+                            'class'              => 'form-control input-sm datetime dj-input-date',
                             'data-definition-id' => $definition_id,
                             'readonly'           => 'true'
                         ]);
@@ -47,7 +47,7 @@
                             'name'               => "attribute_links[$definition_id]",
                             'options'            => esc($definition_value['values']),
                             'selected'           => $selected_value,
-                            'class'              => 'form-control',
+                            'class'              => 'form-control dj-input-text',
                             'data-definition-id' => $definition_id
                         ]);
                         break;
@@ -56,7 +56,7 @@
                         echo form_input([
                             'name'               => "attribute_links[$definition_id]",
                             'value'              => $value,
-                            'class'              => 'form-control valid_chars',
+                            'class'              => 'form-control valid_chars dj-input-text',
                             'data-definition-id' => $definition_id
                         ]);
                         break;
@@ -65,7 +65,7 @@
                         echo form_input([
                             'name'               => "attribute_links[$definition_id]",
                             'value'              => to_decimals((float)$value),
-                            'class'              => 'form-control valid_chars',
+                            'class'              => 'form-control valid_chars dj-input-number',
                             'data-definition-id' => $definition_id
                         ]);
                         break;

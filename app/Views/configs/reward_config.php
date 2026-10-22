@@ -8,6 +8,7 @@
 <?= form_open('config/saveRewards/', ['id' => 'reward_config_form', 'class' => 'form-horizontal']) ?>
     <div id="config_wrapper">
         <fieldset id="config_info">
+<h3 class="dj-settings-title"><span class="glyphicon glyphicon-gift" aria-hidden="true"></span><?= lang('Config.reward_configuration') ?></h3>
 
             <div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
             <ul id="reward_error_message_box" class="error_message_box"></ul>

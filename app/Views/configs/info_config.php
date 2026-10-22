@@ -9,6 +9,7 @@
 <?= form_open('config/saveInfo/', ['id' => 'info_config_form', 'enctype' => 'multipart/form-data', 'class' => 'form-horizontal']) ?>
     <div id="config_wrapper">
         <fieldset id="config_info">
+<h3 class="dj-settings-title"><span class="glyphicon glyphicon-home" aria-hidden="true"></span><?= lang('Config.info_configuration') ?></h3>
 
             <div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
             <ul id="info_error_message_box" class="error_message_box"></ul>
@@ -23,7 +24,7 @@
                         <?= form_input([
                             'name'  => 'company',
                             'id'    => 'company',
-                            'class' => 'form-control input-sm required',
+                            'class' => 'form-control input-sm required dj-input-text',
                             'value' => $config['company']
                         ]) ?>
                     </div>
@@ -56,7 +57,7 @@
                     <?= form_textarea([
                         'name'  => 'address',
                         'id'    => 'address',
-                        'class' => 'form-control input-sm required',
+                        'class' => 'form-control input-sm required dj-input-text',
                         'style'    => 'resize: vertical',
                         'value' => $config['address']
                     ]) ?>
@@ -73,7 +74,7 @@
                         <?= form_input([
                             'name'  => 'website',
                             'id'    => 'website',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-code',
                             'value' => $config['website']
                         ]) ?>
                     </div>
@@ -91,7 +92,7 @@
                             'name'  => 'email',
                             'id'    => 'email',
                             'type'  => 'email',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-email',
                             'value' => $config['email']
                         ]) ?>
                     </div>
@@ -109,7 +110,7 @@
                             'type'  => 'tel',
                             'name'  => 'phone',
                             'id'    => 'phone',
-                            'class' => 'form-control input-sm required',
+                            'class' => 'form-control input-sm required dj-input-phone',
                             'value' => $config['phone']
                         ]) ?>
                     </div>
@@ -127,7 +128,7 @@
                             'type'  => 'tel',
                             'name'  => 'fax',
                             'id'    => 'fax',
-                            'class' => 'form-control input-sm',
+                            'class' => 'form-control input-sm dj-input-phone',
                             'value' => $config['fax']
                         ]) ?>
                     </div>
@@ -140,7 +141,7 @@
                     <?= form_textarea([
                         'name'  => 'return_policy',
                         'id'    => 'return_policy',
-                        'class' => 'form-control input-sm required',
+                        'class' => 'form-control input-sm required dj-input-text',
                         'style'    => 'resize: vertical',
                         'value' => $config['return_policy']
                     ]) ?>

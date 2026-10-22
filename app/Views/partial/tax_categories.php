@@ -20,7 +20,7 @@ foreach ($tax_categories as $key => $category) {
             <?php $form_data = [
                 'name'        => 'tax_category[]',
                 'id'          => "tax_category_$i",
-                'class'       => 'valid_chars form-control input-sm',
+                'class'       => 'valid_chars form-control input-sm dj-input-text',
                 'placeholder' => lang('Taxes.tax_category_name'),
                 'value'       => $tax_category
             ];
@@ -30,7 +30,7 @@ foreach ($tax_categories as $key => $category) {
         <div class="col-xs-2">
             <?php $form_data = [
                 'name'        => 'tax_group_sequence[]',
-                'class'       => 'valid_chars form-control input-sm',
+                'class'       => 'valid_chars form-control input-sm dj-input-number',
                 'placeholder' => lang('Taxes.sequence'),
                 'value'       => $tax_group_sequence
             ];

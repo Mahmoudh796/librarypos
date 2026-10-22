@@ -6,9 +6,164 @@
  * @var array $config
  */
 
+use App\Models\Module;
 use Config\Services;
 
 $request = Services::request();
+
+/*
+ * Navigation is split into an operations ribbon and an administration menu so
+ * the header stays legible without hiding anything. The list is already
+ * permission-filtered by Secure_Controller, so this only decides which band an
+ * authorized module sits in — visibility is unchanged, and a module the
+ * employee is not granted can never be promoted into either band.
+ */
+$activeSegment = (string)$request->getUri()->getSegment(1);
+
+/*
+ * The day-to-day modules, in the order an operator reaches for them. This is an
+ * explicit order rather than the modules table sort so the ribbon reads as a
+ * workflow: Dashboard -> sell -> receive -> catalogue -> people -> reports.
+ */
+$primaryModuleOrder = [
+    'home',
+    'sales',
+    'receivings',
+    'items',
+    'item_kits',
+    'customers',
+    'suppliers',
+    'reports',
+];
+
+/*
+ * Administration and low-frequency modules. Anything granted but not named here
+ * is appended afterwards, so an unknown or newly added module stays reachable
+ * instead of silently disappearing from the header.
+ */
+$adminModuleOrder = [
+    'employees',
+    'giftcards',
+    'messages',
+    'taxes',
+    'attributes',
+    'expenses',
+    'expenses_categories',
+    'cashups',
+    'config',
+    'office',
+];
+
+$allowedModuleById = [];
+foreach ($allowed_modules ?? [] as $allowedModule) {
+    $allowedModuleById[$allowedModule->module_id] = $allowedModule;
+}
+
+/*
+ * A grant carries the menu group it was created in and Secure_Controller only
+ * publishes the group the current session is on, so whole destinations —
+ * Dashboard, Employees, Settings, Taxes — vanished from the header depending on
+ * which page you arrived from, while the operations modules vanished the moment
+ * you opened an office page. The header therefore reads both groups of the
+ * employee's own grants and works from that single list. The rows are still
+ * filtered per person and per permission, so this only decides where an
+ * authorised module appears, never whether it is reachable; nothing is removed
+ * and no grant is broadened.
+ */
+$djModuleModel = model(Module::class);
+$djPersonId    = (int) ($user_info->person_id ?? 0);
+
+$djGrantGroups = [
+    $djModuleModel->get_allowed_home_modules($djPersonId)->getResult(),
+    $djModuleModel->get_allowed_office_modules($djPersonId)->getResult(),
+];
+
+foreach ($djGrantGroups as $djGrantGroup) {
+    foreach ($djGrantGroup as $djGrantedModule) {
+        if (! isset($allowedModuleById[$djGrantedModule->module_id])) {
+            $allowedModuleById[$djGrantedModule->module_id] = $djGrantedModule;
+        }
+    }
+}
+
+$primaryModules = [];
+foreach ($primaryModuleOrder as $moduleId) {
+    if (isset($allowedModuleById[$moduleId])) {
+        $primaryModules[] = $allowedModuleById[$moduleId];
+        unset($allowedModuleById[$moduleId]);
+    }
+}
+
+$adminModules = [];
+foreach ($adminModuleOrder as $moduleId) {
+    if (isset($allowedModuleById[$moduleId])) {
+        $adminModules[] = $allowedModuleById[$moduleId];
+        unset($allowedModuleById[$moduleId]);
+    }
+}
+
+foreach ($allowedModuleById as $remainingModule) {
+    $adminModules[] = $remainingModule;
+}
+
+/*
+ * The administration menu is presented as grouped sections so it scans like a
+ * table of contents instead of one long list. Every granted module still
+ * appears exactly once: an ID not listed in the plan falls into the final
+ * "System" group, so unknown and newly added modules stay reachable.
+ */
+$djAdminGroupPlan = [
+    'team'    => ['employees'],
+    'finance' => ['taxes', 'expenses', 'expenses_categories', 'cashups', 'giftcards'],
+    'comms'   => ['messages'],
+    'system'  => ['attributes', 'config', 'office'],
+];
+
+$djAdminModuleById = [];
+foreach ($adminModules as $adminModule) {
+    $djAdminModuleById[$adminModule->module_id] = $adminModule;
+}
+
+$djAdminGroups = [];
+$djAdminGroupedIds = [];
+foreach ($djAdminGroupPlan as $groupId => $groupModuleIds) {
+    $modulesInGroup = [];
+    foreach ($groupModuleIds as $moduleId) {
+        if (isset($djAdminModuleById[$moduleId])) {
+            $modulesInGroup[] = $djAdminModuleById[$moduleId];
+            $djAdminGroupedIds[] = $moduleId;
+        }
+    }
+    if ($modulesInGroup !== []) {
+        $djAdminGroups[$groupId] = $modulesInGroup;
+    }
+}
+
+$djAdminUngrouped = [];
+foreach ($adminModules as $adminModule) {
+    if (!in_array($adminModule->module_id, $djAdminGroupedIds, true)) {
+        $djAdminUngrouped[] = $adminModule;
+    }
+}
+if ($djAdminUngrouped !== []) {
+    $djAdminGroups['system'] = array_merge($djAdminGroups['system'] ?? [], $djAdminUngrouped);
+}
+
+$adminIsActive = false;
+foreach ($adminModules as $adminModule) {
+    if ($adminModule->module_id === $activeSegment) {
+        $adminIsActive = true;
+        break;
+    }
+}
+
+/*
+ * The database backup page is not a grantable module of its own; it is an
+ * administration surface, so it shares the `config` grant and is only offered
+ * when that grant is present.
+ */
+$canAdminister = in_array('config', array_column($adminModules, 'module_id'), true);
+$backupIsActive = $activeSegment === 'backups';
 ?>
 
 <!doctype html>
@@ -16,6 +171,7 @@ $request = Services::request();
 
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <base href="<?= base_url() ?>">
     <title><?= esc($config['company']) . ' | ' . esc(lang('Common.software_short')) ?></title>
     <meta name="robots" content="noindex, nofollow">
@@ -25,11 +181,67 @@ $request = Services::request();
 
     <?php if (ENVIRONMENT == 'development' || get_cookie('debug') == 'true' || $request->getGet('debug') == 'true') : ?>
         <!-- inject:debug:css -->
+        <link rel="stylesheet" href="resources/css/jquery-ui-fe010342cb.css">
+        <link rel="stylesheet" href="resources/css/bootstrap-dialog-1716ef6e7c.css">
+        <link rel="stylesheet" href="resources/css/jasny-bootstrap-40bf85f3ed.css">
+        <link rel="stylesheet" href="resources/css/bootstrap-datetimepicker-66374fba71.css">
+        <link rel="stylesheet" href="resources/css/bootstrap-select-66d5473b84.css">
+        <link rel="stylesheet" href="resources/css/bootstrap-table-ed9d1a3360.css">
+        <link rel="stylesheet" href="resources/css/bootstrap-table-sticky-header-07d65e7533.css">
+        <link rel="stylesheet" href="resources/css/daterangepicker-85523b7dfe.css">
+        <link rel="stylesheet" href="resources/css/chartist-c19aedb81a.css">
+        <link rel="stylesheet" href="resources/css/chartist-plugin-tooltip-2e0ec92e60.css">
+        <link rel="stylesheet" href="resources/css/bootstrap-tagsinput-5a6d46a06c.css">
+        <link rel="stylesheet" href="resources/css/bootstrap-toggle-e12db6c1f3.css">
+        <link rel="stylesheet" href="resources/css/bootstrap-292fc0ad3b.autocomplete.css">
+        <link rel="stylesheet" href="resources/css/invoice-1eae5e39b9.css">
+        <link rel="stylesheet" href="resources/css/ospos_print-2ba645b044.css">
+        <link rel="stylesheet" href="resources/css/ospos-40ea746d31.css">
+        <link rel="stylesheet" href="resources/css/popupbox-7b616030b0.css">
+        <link rel="stylesheet" href="resources/css/receipt-a171207d8e.css">
+        <link rel="stylesheet" href="resources/css/register-32d6791f29.css">
+        <link rel="stylesheet" href="resources/css/reports-407b727797.css">
         <!-- endinject -->
         <!-- inject:debug:js -->
+        <script src="resources/js/jquery-12e87d2f3a.js"></script>
+        <script src="resources/js/jquery-4fa896f615.form.js"></script>
+        <script src="resources/js/jquery-a0350e8820.validate.js"></script>
+        <script src="resources/js/jquery-ui-cbc65ff85e.js"></script>
+        <script src="resources/js/bootstrap-894d79839f.js"></script>
+        <script src="resources/js/bootstrap-dialog-27123abb65.js"></script>
+        <script src="resources/js/jasny-bootstrap-7c6d7b8adf.js"></script>
+        <script src="resources/js/bootstrap-datetimepicker-25e39b7ef8.js"></script>
+        <script src="resources/js/bootstrap-select-b01896a67b.js"></script>
+        <script src="resources/js/bootstrap-table-bdb06552ea.js"></script>
+        <script src="resources/js/bootstrap-table-export-6389dc2aa5.js"></script>
+        <script src="resources/js/bootstrap-table-mobile-fc655b68ab.js"></script>
+        <script src="resources/js/bootstrap-table-sticky-header-cb4d83d172.js"></script>
+        <script src="resources/js/moment-ad3346f890.min.js"></script>
+        <script src="resources/js/daterangepicker-048c56a690.js"></script>
+        <script src="resources/js/es6-promise-855125e6f5.js"></script>
+        <script src="resources/js/FileSaver-e73b1946e8.js"></script>
+        <script src="resources/js/html2canvas-e1d3a8d7cd.js"></script>
+        <script src="resources/js/jspdf-bbbebb610c.umd.js"></script>
+        <script src="resources/js/purify-d54e267e45.js"></script>
+        <script src="resources/js/jspdf-92d87e47e8.plugin.autotable.js"></script>
+        <script src="resources/js/xlsx-6b3130af1c.full.min.js"></script>
+        <script src="resources/js/tableExport-3d506dfa61.min.js"></script>
+        <script src="resources/js/chartist-8a7ecb4445.js"></script>
+        <script src="resources/js/chartist-plugin-pointlabels-0a1ab6aa4e.js"></script>
+        <script src="resources/js/chartist-plugin-tooltip-116cb48831.js"></script>
+        <script src="resources/js/chartist-plugin-axistitle-80a1198058.js"></script>
+        <script src="resources/js/chartist-plugin-barlabels-4165273742.js"></script>
+        <script src="resources/js/bootstrap-notify-376bc6eb87.js"></script>
+        <script src="resources/js/bootstrap-tagsinput-855a7c7670.js"></script>
+        <script src="resources/js/bootstrap-toggle-1c7a19a049.js"></script>
+        <script src="resources/js/clipboard-908af414ab.js"></script>
+        <script src="resources/js/imgpreview-62e42c15a0.full.jquery.js"></script>
+        <script src="resources/js/manage_tables-d407fc802d.js"></script>
+        <script src="resources/js/nominatim-becb3f84b2.autocomplete.js"></script>
         <!-- endinject -->
     <?php else : ?>
         <!--inject:prod:css -->
+        <link rel="stylesheet" href="resources/opensourcepos-8d27f4a995.min.css">
         <!-- endinject -->
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->
@@ -37,14 +249,27 @@ $request = Services::request();
             <link rel="stylesheet" href="<?= 'css/' . esc($config['theme']) . '.css' ?>">
         <?php } ?>
         <!-- inject:prod:js -->
+        <script src="resources/jquery-2c872dbe60.min.js"></script>
+        <script src="resources/opensourcepos-ed50d739b8.min.js"></script>
         <!-- endinject -->
     <?php endif; ?>
 
-    <!-- Dahrouj theme loads after the bundled application stylesheets so it wins the cascade. -->
-    <link rel="stylesheet" href="css/dahrouj.css">
-    <link rel="stylesheet" href="css/rtl.css">
+    <!-- Theme overrides load after the bundled application stylesheets so they win the cascade. -->
+    <?php
+    /*
+     * The build fingerprints the bundled stylesheets but not these two hand-written
+     * layers, so version them by modification time to avoid stale CSS after a deploy.
+     */
+    $dj_theme_version = static function (string $file): string {
+        return defined('FCPATH') && is_file(FCPATH . $file) ? '?v=' . filemtime(FCPATH . $file) : '';
+    };
+    ?>
+    <link rel="stylesheet" href="css/dahrouj.css<?= $dj_theme_version('css/dahrouj.css') ?>">
+    <link rel="stylesheet" href="css/direction.css<?= $dj_theme_version('css/direction.css') ?>">
+    <link rel="stylesheet" href="css/rtl.css<?= $dj_theme_version('css/rtl.css') ?>">
 
     <?= view('partial/header_js') ?>
+    <script src="js/nav_history.js"></script>
     <?= view('partial/lang_lines') ?>
 
     <style>
@@ -55,57 +280,110 @@ $request = Services::request();
 </head>
 
 <body>
+    <?php
+    $employeeDisplayName = trim((string)$user_info->first_name . ' ' . (string)$user_info->last_name);
+    $employeeInitials    = mb_strtoupper(mb_substr((string)$user_info->first_name, 0, 1) . mb_substr((string)$user_info->last_name, 0, 1));
+    ?>
     <div class="wrapper">
-        <div class="topbar">
-            <div class="container">
-                <div class="navbar-left dj-clock">
-                    <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
-                    <div id="liveclock"><?= date($config['dateformat'] . ' ' . $config['timeformat']) ?></div>
-                </div>
+        <header class="dj-header">
+            <div class="dj-header-inner">
+                <a class="dj-brand" href="<?= site_url() ?>" title="<?= esc($config['company'], 'attr') ?>">
+                    <span class="dj-brand-mark" lang="<?= esc(current_language_code(), 'attr') ?>" dir="<?= esc(get_text_direction(), 'attr') ?>"><?= esc(lang('Common.software_short')) ?></span>
+                    <span class="dj-brand-sub"><?= esc(lang('Common.software_descriptor')) ?></span>
+                </a>
 
-                <div class="navbar-right dj-account" style="margin: 0;">
-                    <?= anchor("home/changePassword/$user_info->person_id", "$user_info->first_name $user_info->last_name", ['class' => 'modal-dlg', 'data-btn-submit' => lang('Common.submit'), 'title' => lang('Employees.change_password')]) ?>
-                    <span class="dj-sep">&nbsp;|&nbsp;</span>
-                    <?= anchor('home/logout', lang('Login.logout')) ?>
-                </div>
+                <button type="button" class="dj-nav-toggle collapsed" data-toggle="collapse" data-target="#dj-primary-nav" aria-expanded="false" aria-controls="dj-primary-nav" aria-label="<?= esc(lang('Bootstrap_tables.toggle'), 'attr') ?>">
+                    <span class="dj-nav-toggle-bar"></span>
+                    <span class="dj-nav-toggle-bar"></span>
+                    <span class="dj-nav-toggle-bar"></span>
+                </button>
 
-                <div class="navbar-center" style="text-align: center;">
-                    <strong><?= esc($config['company']) ?></strong>
-                </div>
-            </div>
-        </div>
-
-        <div class="navbar navbar-default" role="navigation">
-            <div class="container">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-
-                    <a class="navbar-brand hidden-sm dj-brand" href="<?= site_url() ?>" title="<?= esc($config['company']) ?>">
-                        <span class="dj-brand-ar" lang="ar" dir="rtl">دحروج</span>
-                        <span class="dj-brand-en">Dahrouj</span>
-                    </a>
-                </div>
-
-                <div class="navbar-collapse collapse">
-                    <ul class="nav navbar-nav navbar-right">
-                        <?php foreach ($allowed_modules as $module): ?>
-                            <?php $isActive = $module->module_id == $request->getUri()->getSegment(1); ?>
-                            <li class="<?= $isActive ? 'active' : '' ?> dj-nav-item">
-                                <a href="<?= base_url($module->module_id) ?>" title="<?= lang("Module.$module->module_id") ?>" class="menu-icon"<?= $isActive ? ' aria-current="page"' : '' ?>>
-                                    <img src="<?= base_url("images/menubar/$module->module_id.svg") ?>" style="border: none;" alt=""><br>
-                                    <?= lang('Module.' . $module->module_id) ?>
+                <nav class="dj-nav collapse" id="dj-primary-nav">
+                    <ul class="dj-nav-list">
+                        <?php foreach ($primaryModules as $module): ?>
+                            <?php $isActiveModule = $module->module_id === $activeSegment; ?>
+                            <?php $isDashboard = $module->module_id === 'home'; ?>
+                            <li class="dj-nav-item">
+                                <a class="dj-nav-link<?= $isActiveModule ? ' is-active' : '' ?><?= $isDashboard ? ' dj-nav-link--home' : '' ?>" href="<?= base_url($module->module_id) ?>" title="<?= esc($isDashboard ? lang('Common.dashboard') : lang('Module.' . $module->module_id), 'attr') ?>"<?= $isActiveModule ? ' aria-current="page"' : '' ?>>
+                                    <?php if ($isDashboard): ?>
+                                        <span class="glyphicon glyphicon-dashboard" aria-hidden="true"></span>
+                                    <?php endif; ?>
+                                    <?= $isDashboard ? lang('Common.dashboard') : lang('Module.' . $module->module_id) ?>
                                 </a>
                             </li>
                         <?php endforeach; ?>
+
+                        <?php if (!empty($adminModules) || $canAdminister): ?>
+                            <li class="dj-nav-item dropdown dj-nav-admin<?= ($adminIsActive || $backupIsActive) ? ' is-active' : '' ?>">
+                                <a class="dj-nav-link dropdown-toggle" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" title="<?= esc(lang('Common.admin'), 'attr') ?>">
+                                    <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+                                    <span class="dj-nav-label"><?= lang('Common.admin') ?></span><span class="caret" aria-hidden="true"></span>
+                                </a>
+                                <ul class="dropdown-menu dj-nav-overflow">
+                                    <?php foreach ($djAdminGroups as $adminGroupId => $adminGroupModules): ?>
+                                        <li class="dj-nav-group-heading" role="presentation"><?= esc(lang('Common.admin_group_' . $adminGroupId)) ?></li>
+                                        <?php foreach ($adminGroupModules as $adminModule): ?>
+                                            <?php $isActiveModule = $adminModule->module_id === $activeSegment; ?>
+                                            <li<?= $isActiveModule ? ' class="active"' : '' ?>>
+                                                <a href="<?= base_url($adminModule->module_id) ?>"<?= $isActiveModule ? ' aria-current="page"' : '' ?>>
+                                                    <?= lang('Module.' . $adminModule->module_id) ?>
+                                                </a>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    <?php endforeach; ?>
+
+                                    <?php if ($canAdminister): ?>
+                                        <li class="dj-nav-separator" role="presentation"></li>
+                                        <li<?= $backupIsActive ? ' class="active"' : '' ?>>
+                                            <a href="<?= base_url('backups') ?>"<?= $backupIsActive ? ' aria-current="page"' : '' ?>>
+                                                <span class="glyphicon glyphicon-hdd" aria-hidden="true"></span><?= lang('Common.backup') ?>
+                                            </a>
+                                        </li>
+                                    <?php endif; ?>
+                                </ul>
+                            </li>
+                        <?php endif; ?>
                     </ul>
+                </nav>
+
+
+                <div class="dj-header-actions">
+                    <div class="dj-clock">
+                        <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                        <span id="liveclock"><?= date($config['dateformat'] . ' ' . $config['timeformat']) ?></span>
+                    </div>
+
+                    <div class="dropdown dj-account">
+                        <button type="button" class="dj-account-toggle dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="dj-account-avatar" aria-hidden="true"><?= esc($employeeInitials) ?></span>
+                            <span class="dj-account-name"><?= esc($employeeDisplayName) ?></span>
+                            <span class="caret" aria-hidden="true"></span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right dj-account-menu">
+                            <div class="dj-account-menu-header">
+                                <span class="dj-account-menu-name"><?= esc($employeeDisplayName) ?></span>
+                            </div>
+
+                            <div class="dj-account-lang">
+                                <?= view('partial/language_switcher', [
+                                    'activeLocale' => current_language_code(),
+                                    'redirectPath' => ltrim($request->getUri()->getPath(), '/'),
+                                ]) ?>
+                            </div>
+
+                            <ul class="dj-account-links">
+                                <li>
+                                    <?= anchor("home/changePassword/$user_info->person_id", '<span class="glyphicon glyphicon-lock" aria-hidden="true"></span>' . lang('Employees.change_password'), ['class' => 'modal-dlg', 'data-btn-submit' => lang('Common.submit'), 'title' => lang('Employees.change_password')]) ?>
+                                </li>
+                                <li>
+                                    <?= anchor('home/logout', '<span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>' . lang('Login.logout')) ?>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <div class="container">
+        <main id="dj-main" class="container">
             <div class="row">

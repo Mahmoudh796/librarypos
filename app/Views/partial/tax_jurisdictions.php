@@ -25,7 +25,7 @@ foreach ($tax_jurisdictions as $tax_jurisdiction => $jurisdiction) {
             <?php $form_data = [
                 'name'        => 'jurisdiction_name[]',
                 'id'          => "jurisdiction_name_$i",
-                'class'       => 'valid_chars form-control input-sm',
+                'class'       => 'valid_chars form-control input-sm dj-input-text',
                 'placeholder' => lang('Taxes.jurisdiction_name'),
                 'value'       => $jurisdiction_name
             ];
@@ -36,7 +36,7 @@ foreach ($tax_jurisdictions as $tax_jurisdiction => $jurisdiction) {
         <div class="col-xs-1">
             <?php $form_data = [
                 'name'        => 'tax_group[]',
-                'class'       => 'valid_chars form-control input-sm',
+                'class'       => 'valid_chars form-control input-sm dj-input-code',
                 'placeholder' => lang('Taxes.tax_group'),
                 'value'       => $tax_group
             ];
@@ -45,13 +45,13 @@ foreach ($tax_jurisdictions as $tax_jurisdiction => $jurisdiction) {
         </div>
 
         <div class="col-xs-2">
-            <?= form_dropdown('tax_type[]' . $i, $tax_types, $tax_type, ['class' => 'form-control'])    ?>
+            <?= form_dropdown('tax_type[]' . $i, $tax_types, $tax_type, ['class' => 'form-control dj-input-text']) ?>
         </div>
 
         <div class="col-xs-2">
             <?php $form_data = [
                 'name'        => 'reporting_authority[]',
-                'class'       => 'valid_chars form-control input-sm',
+                'class'       => 'valid_chars form-control input-sm dj-input-code',
                 'placeholder' => lang('Taxes.reporting_authority'),
                 'value'       => $reporting_authority
             ];
@@ -62,7 +62,7 @@ foreach ($tax_jurisdictions as $tax_jurisdiction => $jurisdiction) {
         <div class="col-xs-1">
             <?php $form_data = [
                 'name'        => 'tax_group_sequence[]',
-                'class'       => 'valid_chars form-control input-sm',
+                'class'       => 'valid_chars form-control input-sm dj-input-number',
                 'placeholder' => lang('Taxes.sequence'),
                 'value'       => $tax_group_sequence
             ];
@@ -73,7 +73,7 @@ foreach ($tax_jurisdictions as $tax_jurisdiction => $jurisdiction) {
         <div class="col-xs-1">
             <?php $form_data = [
                 'name'        => 'cascade_sequence[]',
-                'class'       => 'valid_chars form-control input-sm',
+                'class'       => 'valid_chars form-control input-sm dj-input-number',
                 'placeholder' => lang('Taxes.cascade_sequence'),
                 'value'       => $cascade_sequence
             ];

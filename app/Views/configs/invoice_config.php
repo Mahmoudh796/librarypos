@@ -9,6 +9,7 @@
 <?= form_open('config/saveInvoice/', ['id' => 'invoice_config_form', 'class' => 'form-horizontal']) ?>
     <div id="config_wrapper">
         <fieldset id="config_info">
+<h3 class="dj-settings-title"><span class="glyphicon glyphicon-file" aria-hidden="true"></span><?= lang('Config.invoice_configuration') ?></h3>
 
             <div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
             <ul id="invoice_error_message_box" class="error_message_box"></ul>
@@ -43,7 +44,7 @@
                     <?= form_input([
                         'name'  => 'recv_invoice_format',
                         'id'    => 'recv_invoice_format',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-code',
                         'value' => $config['recv_invoice_format']
                     ]) ?>
                 </div>
@@ -55,7 +56,7 @@
                     <?= form_textarea([
                         'name'  => 'invoice_default_comments',
                         'id'    => 'invoice_default_comments',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-text',
                         'style' => 'resize: vertical',
                         'value' => $config['invoice_default_comments']
                     ]) ?>
@@ -68,7 +69,7 @@
                     <?= form_textarea([
                         'name'  => 'invoice_email_message',
                         'id'    => 'invoice_email_message',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-text',
                         'style' => 'resize: vertical',
                         'value' => $config['invoice_email_message']
                     ]) ?>
@@ -93,7 +94,7 @@
                     <?= form_input([
                         'name'  => 'sales_invoice_format',
                         'id'    => 'sales_invoice_format',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-code',
                         'value' => $config['sales_invoice_format']
                     ]) ?>
                 </div>
@@ -106,7 +107,7 @@
                         'type'  => 'number',
                         'name'  => 'last_used_invoice_number',
                         'id'    => 'last_used_invoice_number',
-                        'class' => 'form-control input-sm required',
+                        'class' => 'form-control input-sm required dj-input-code',
                         'value' => $config['last_used_invoice_number']
                     ]) ?>
                 </div>
@@ -118,7 +119,7 @@
                     <?= form_input([
                         'name'  => 'sales_quote_format',
                         'id'    => 'sales_quote_format',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-code',
                         'value' => $config['sales_quote_format']
                     ]) ?>
                 </div>
@@ -131,7 +132,7 @@
                         'type'  => 'number',
                         'name'  => 'last_used_quote_number',
                         'id'    => 'last_used_quote_number',
-                        'class' => 'form-control input-sm required',
+                        'class' => 'form-control input-sm required dj-input-code',
                         'value' => $config['last_used_quote_number']
                     ]) ?>
                 </div>
@@ -143,7 +144,7 @@
                     <?= form_textarea([
                         'name'  => 'quote_default_comments',
                         'id'    => 'quote_default_comments',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-text',
                         'style' => 'resize: vertical',
                         'value' => $config['quote_default_comments']
                     ]) ?>
@@ -168,7 +169,7 @@
                     <?= form_input([
                         'name'  => 'work_order_format',
                         'id'    => 'work_order_format',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-code',
                         'value' => $config['work_order_format']
                     ]) ?>
                 </div>
@@ -181,7 +182,7 @@
                         'type'  => 'number',
                         'name'  => 'last_used_work_order_number',
                         'id'    => 'last_used_work_order_number',
-                        'class' => 'form-control input-sm required',
+                        'class' => 'form-control input-sm required dj-input-code',
                         'value' => $config['last_used_work_order_number']
                     ]) ?>
                 </div>

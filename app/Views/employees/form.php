@@ -42,7 +42,7 @@
                             <?= form_input([
                                 'name'  => 'username',
                                 'id'    => 'username',
-                                'class' => 'form-control input-sm',
+                                'class' => 'form-control input-sm dj-input-code',
                                 'value' => $person_info->username
                             ]) ?>
                         </div>
@@ -59,7 +59,7 @@
                             <?= form_password([
                                 'name'  => 'password',
                                 'id'    => 'password',
-                                'class' => 'form-control input-sm'
+                                'class' => 'form-control input-sm dj-input-secret'
                             ]) ?>
                         </div>
                     </div>
@@ -73,7 +73,7 @@
                             <?= form_password([
                                 'name'  => 'repeat_password',
                                 'id'    => 'repeat_password',
-                                'class' => 'form-control input-sm'
+                                'class' => 'form-control input-sm dj-input-secret'
                             ]) ?>
                         </div>
                     </div>
@@ -112,9 +112,60 @@
             <fieldset>
                 <p><?= lang('Employees.permission_desc') ?></p>
 
-                <ul id="permission_list">
-                    <?= form_hidden('module_validation', '1', 'class="module"') ?>
-                    <?php foreach ($all_modules as $module) { ?>
+                <?php
+                /*
+                 * The permission list keeps every server-side field name and
+                 * value exactly as before: grant_<module_id>, menu_group_<id>,
+                 * grant_<permission_id> and the validation hooks
+                 * (#permission_list, .module-toggle, .module). The module rows
+                 * are only grouped visually — group titles are list items with
+                 * no form controls, so the existing validators and toggles keep
+                 * operating on the same structure.
+                 */
+                $permGroupPlan = [
+                    'pos'        => ['sales'],
+                    'operations' => ['receivings', 'cashups'],
+                    'catalog'    => ['items', 'item_kits', 'attributes'],
+                    'people'     => ['customers', 'suppliers'],
+                    'reporting'  => ['reports'],
+                    'finance'    => ['expenses', 'expenses_categories', 'giftcards', 'taxes'],
+                    'comms'      => ['messages'],
+                    'admin'      => ['employees', 'home', 'config', 'office'],
+                ];
+
+                $permModulesById = [];
+                foreach ($all_modules as $permModule) {
+                    $permModulesById[$permModule->module_id] = $permModule;
+                }
+
+                $permissionGroups = [];
+                $permGroupedIds = [];
+                foreach ($permGroupPlan as $permGroupId => $permModuleIds) {
+                    $modulesInGroup = [];
+                    foreach ($permModuleIds as $permModuleId) {
+                        if (isset($permModulesById[$permModuleId])) {
+                            $modulesInGroup[] = $permModulesById[$permModuleId];
+                            $permGroupedIds[] = $permModuleId;
+                        }
+                    }
+                    if ($modulesInGroup !== []) {
+                        $permissionGroups[$permGroupId] = $modulesInGroup;
+                    }
+                }
+
+                // Safety net: an unknown or newly added module stays reachable.
+                $permUngrouped = [];
+                foreach ($all_modules as $permModule) {
+                    if (!in_array($permModule->module_id, $permGroupedIds, true)) {
+                        $permUngrouped[] = $permModule;
+                    }
+                }
+                if ($permUngrouped !== []) {
+                    $permissionGroups['admin'] = array_merge($permissionGroups['admin'] ?? [], $permUngrouped);
+                }
+
+                $renderPermModule = static function ($module, array $allSubpermissions): void {
+                    ?>
                         <li>
                             <?= form_checkbox("grant_$module->module_id", $module->module_id, $module->grant == 1, 'class="module-toggle"') ?>
                             <?= form_dropdown(
@@ -130,12 +181,14 @@
                             <span class="medium"><?= lang("Module.$module->module_id") ?>:</span>
                             <span class="small"><?= lang("Module.$module->module_id" . '_desc') ?></span>
                             <?php
-                            foreach ($all_subpermissions as $permission) {
+                            foreach ($allSubpermissions as $permission) {
                                 $exploded_permission = explode('_', $permission->permission_id, 2);
                                 if ($permission->module_id == $module->module_id) {
-                                    $lang_key = $module->module_id . '.' . $exploded_permission[1];
-                                    $lang_line = lang(ucfirst($lang_key));
-                                    $lang_line = (lang(ucfirst($lang_key)) == $lang_line) ? ucwords(str_replace("_", " ", $exploded_permission[1])) : $lang_line;
+                                    $lang_key = ucfirst($module->module_id) . '.' . $exploded_permission[1];
+                                    $lang_line = lang($lang_key);
+                                    // lang() returns the key itself when untranslated;
+                                    // degrade to a humanized permission suffix instead.
+                                    $lang_line = ($lang_line === $lang_key) ? ucwords(str_replace('_', ' ', $exploded_permission[1])) : $lang_line;
                                     if (!empty($lang_line)) {
                             ?>
                                         <ul>
@@ -151,6 +204,17 @@
                             }
                             ?>
                         </li>
+                    <?php
+                };
+                ?>
+
+                <ul id="permission_list">
+                    <?= form_hidden('module_validation', '1', 'class="module"') ?>
+                    <?php foreach ($permissionGroups as $permGroupId => $permGroupModules) { ?>
+                        <li role="presentation" class="dj-perm-head"><?= esc(lang('Employees.perm_group_' . $permGroupId)) ?></li>
+                        <?php foreach ($permGroupModules as $permModule) { ?>
+                            <?php $renderPermModule($permModule, $all_subpermissions) ?>
+                        <?php } ?>
                     <?php } ?>
                 </ul>
             </fieldset>

@@ -45,7 +45,7 @@
                 <?= form_input([
                     'name'  => 'tax_rate',
                     'id'    => 'tax_rate',
-                    'class' => 'form-control input-sm text-uppercase',
+                    'class' => 'form-control input-sm text-uppercase dj-input-number',
                     'value' => $tax_rate
                 ]) ?>
                 <span class="input-group-addon input-sm">%</span>

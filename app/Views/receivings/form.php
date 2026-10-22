@@ -27,7 +27,7 @@
                     'name'     => 'date',
                     'value'    => to_datetime(strtotime($receiving_info['receiving_time'])),
                     'id'       => 'datetime',
-                    'class'    => 'datetime form-control input-sm',
+                    'class'    => 'datetime form-control input-sm dj-input-date',
                     'readonly' => 'readonly'
                 ]) ?>
             </div>
@@ -36,7 +36,7 @@
         <div class="form-group form-group-sm">
             <?= form_label(lang('Receivings.supplier'), 'supplier', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-8">
-                <?= form_input(['name' => 'supplier_name', 'value' => $selected_supplier_name, 'id' => 'supplier_name', 'class' => 'form-control input-sm']) ?>
+                <?= form_input(['name' => 'supplier_name', 'value' => $selected_supplier_name, 'id' => 'supplier_name', 'class' => 'form-control input-sm dj-input-text']) ?>
                 <?= form_hidden('supplier_id', $selected_supplier_id ?? '') ?>
             </div>
         </div>
@@ -44,7 +44,7 @@
         <div class="form-group form-group-sm">
             <?= form_label(lang('Receivings.reference'), 'reference', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-8">
-                <?= form_input(['name' => 'reference', 'value' => $receiving_info['reference'], 'id' => 'reference', 'class' => 'form-control input-sm']) ?>
+                <?= form_input(['name' => 'reference', 'value' => $receiving_info['reference'], 'id' => 'reference', 'class' => 'form-control input-sm dj-input-code']) ?>
             </div>
         </div>
 
@@ -55,7 +55,7 @@
                     <?= form_dropdown('employee_id', $employees, $receiving_info['employee_id'], 'id="employee_id" class="form-control"') ?>
                 <?php else: ?>
                     <?= form_hidden('employee_id', $receiving_info['employee_id']) ?>
-                    <?= form_input(['name' => 'employee_name', 'value' => $employees[$receiving_info['employee_id']] ?? '', 'class' => 'form-control input-sm', 'readonly' => 'readonly']) ?>
+                    <?= form_input(['name' => 'employee_name', 'value' => $employees[$receiving_info['employee_id']] ?? '', 'class' => 'form-control input-sm dj-input-text', 'readonly' => 'readonly']) ?>
                 <?php endif; ?>
             </div>
         </div>
@@ -63,7 +63,7 @@
         <div class="form-group form-group-sm">
             <?= form_label(lang('Receivings.comments'), 'comment', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-8">
-                <?= form_textarea(['name' => 'comment', 'value' => $receiving_info['comment'], 'id' => 'comment', 'class' => 'form-control input-sm']) ?>
+                <?= form_textarea(['name' => 'comment', 'value' => $receiving_info['comment'], 'id' => 'comment', 'class' => 'form-control input-sm dj-input-text']) ?>
             </div>
         </div>
 
@@ -74,7 +74,7 @@
     $(document).ready(function() {
         <?= view('partial/datepicker_locale') ?>
 
-        $('#datetime').datetimepicker(pickerconfig);
+        $('#datetime').datetimepicker(pickerconfig());
 
         const fill_value = function(event, ui) {
             event.preventDefault();

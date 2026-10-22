@@ -18,7 +18,7 @@
                         <?= form_textarea([
                             'name'     => 'license',
                             'id'       => 'license_' . $counter++,    // TODO: String Interpolation
-                            'class'    => 'form-control font-monospace',
+                            'class'    => 'form-control font-monospace dj-input-code',
                             'style'    => 'resize: vertical',
                             'rows'     => '14',
                             'readonly' => '',

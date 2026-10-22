@@ -26,6 +26,7 @@ $shortcutLabels = [
 <?= form_open('config/saveShortcuts', ['id' => 'shortcuts_config_form', 'class' => 'form-horizontal']) ?>
     <div id="config_wrapper">
         <fieldset id="config_info">
+<h3 class="dj-settings-title"><span class="glyphicon glyphicon-hand-up" aria-hidden="true"></span><?= lang('Config.shortcuts_configuration') ?></h3>
 
             <div id="required_fields_message"><?= esc(lang('Common.fields_required_message')) ?></div>
             <ul id="shortcuts_error_message_box" class="error_message_box"></ul>

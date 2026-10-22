@@ -27,7 +27,7 @@
                     <span class="input-group-addon input-sm"><span class="glyphicon glyphicon-calendar"></span></span>
                     <?= form_input([
                         'name'     => 'date',
-                        'class'    => 'form-control input-sm datetime',
+                        'class'    => 'form-control input-sm datetime dj-input-date',
                         'value'    => to_datetime(strtotime($expenses_info->date)),
                         'readonly' => 'readonly'
                     ]) ?>
@@ -41,7 +41,7 @@
                 <?= form_input([
                     'name'  => 'supplier_name',
                     'id'    => 'supplier_name',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => lang('Expenses.start_typing_supplier_name')
                 ]);
                 echo form_input([
@@ -63,7 +63,7 @@
                 <?= form_input([
                     'name'  => 'supplier_tax_code',
                     'id'    => 'supplier_tax_code',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => $expenses_info->supplier_tax_code
                 ]) ?>
             </div>
@@ -79,7 +79,7 @@
                     <?= form_input([
                         'name'  => 'amount',
                         'id'    => 'amount',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-number',
                         'value' => to_currency_no_money($expenses_info->amount)
                     ]) ?>
                     <?php if (is_right_side_currency_symbol()): ?>
@@ -99,7 +99,7 @@
                     <?= form_input([
                         'name'  => 'tax_amount',
                         'id'    => 'tax_amount',
-                        'class' => 'form-control input-sm',
+                        'class' => 'form-control input-sm dj-input-number',
                         'value' => to_currency_no_money($expenses_info->tax_amount)
                     ]) ?>
                     <?php if (is_right_side_currency_symbol()): ?>
@@ -130,7 +130,7 @@
                     <?= form_dropdown('employee_id', $employees, $expenses_info->employee_id, 'id="employee_id" class="form-control"') ?>
                 <?php else: ?>
                     <?= form_hidden('employee_id', $expenses_info->employee_id) ?>
-                    <?= form_input(['name' => 'employee_name', 'value' => $employees[$expenses_info->employee_id] ?? '', 'class' => 'form-control', 'readonly' => 'readonly']) ?>
+                    <?= form_input(['name' => 'employee_name', 'value' => $employees[$expenses_info->employee_id] ?? '', 'class' => 'form-control dj-input-text', 'readonly' => 'readonly']) ?>
                 <?php endif; ?>
             </div>
         </div>
@@ -141,7 +141,7 @@
                 <?= form_textarea([
                     'name'  => 'description',
                     'id'    => 'description',
-                    'class' => 'form-control input-sm',
+                    'class' => 'form-control input-sm dj-input-text',
                     'value' => $expenses_info->description
                 ]) ?>
             </div>
