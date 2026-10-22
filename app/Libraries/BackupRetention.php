@@ -101,6 +101,45 @@ final class BackupRetention
     }
 
     /**
+     * Lists the completed backups in a directory, newest first.
+     *
+     * Read-only companion to {@see prune()}: it applies the same strict naming
+     * rule and the same scope (direct children, regular files only), so a
+     * directory listing can only ever surface genuine application backups.
+     *
+     * @return list<array{name: string, path: string, size: int, modified: int}>
+     */
+    public function listBackups(string $directory): array
+    {
+        if (! is_dir($directory)) {
+            return [];
+        }
+
+        $resolved = realpath($directory);
+
+        if ($resolved === false) {
+            return [];
+        }
+
+        $candidates = $this->candidates($resolved);
+
+        usort($candidates, static fn (array $a, array $b): int => [$b['timestamp'], $b['nonce']] <=> [$a['timestamp'], $a['nonce']]);
+
+        $backups = [];
+
+        foreach ($candidates as $candidate) {
+            $backups[] = [
+                'name'     => basename($candidate['path']),
+                'path'     => $candidate['path'],
+                'size'     => (int) @filesize($candidate['path']),
+                'modified' => (int) @filemtime($candidate['path']),
+            ];
+        }
+
+        return $backups;
+    }
+
+    /**
      * @return list<array{path: string, timestamp: string, nonce: string}>
      */
     private function candidates(string $resolvedDir): array

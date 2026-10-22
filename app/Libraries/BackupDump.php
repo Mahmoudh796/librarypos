@@ -50,7 +50,11 @@ final class BackupDump
         $this->config        = $config;
         $this->dbConfig      = $dbConfig;
         $this->environment   = $environment;
-        $this->processRunner = $processRunner ?? $this->defaultProcessRunner(...);
+        if ($processRunner === null) {
+            $this->processRunner = $this->defaultProcessRunner();
+        } else {
+            $this->processRunner = $processRunner;
+        }
     }
 
     /**
@@ -127,6 +131,38 @@ final class BackupDump
     private function backupConfig(): Backup
     {
         return $this->config ?? config(Backup::class);
+    }
+
+    /**
+     * Resolves the dump executable for reporting purposes.
+     *
+     * Read-only companion to {@see resolveDumpExecutable()} used by the
+     * administration screen: it answers "is a dump tool available?" without
+     * throwing, so a missing binary can be shown as a configuration problem
+     * instead of a failed page.
+     */
+    public function findDumpExecutable(): ?string
+    {
+        try {
+            return $this->resolveDumpExecutable($this->backupConfig()->dumpExecutable);
+        } catch (RuntimeException) {
+            return null;
+        }
+    }
+
+    /**
+     * The directory completed dumps are written to (created on demand).
+     *
+     * Returns null when the directory cannot be resolved or created, so the
+     * administration screen can report the problem instead of failing.
+     */
+    public function findBackupDirectory(): ?string
+    {
+        try {
+            return $this->dumpDirectory($this->backupConfig()->backupDir);
+        } catch (RuntimeException) {
+            return null;
+        }
     }
 
     /**
