@@ -11,8 +11,16 @@
     dialog_support.init("a.modal-dlg");
 </script>
 
+<?php $reportPath = get_report_path_info(); ?>
 
-<div id="page_title"><?= lang('Reports.report_input') ?></div>
+<div class="dj-page-head">
+    <?= view('partial/page_path', ['crumbs' => $reportPath['crumbs']]) ?>
+    <h1 class="dj-page-title">
+        <span class="glyphicon glyphicon-filter" aria-hidden="true"></span><?= esc($reportPath['crumbs'][1]['label']) ?>
+    </h1>
+    <p class="dj-page-subtitle"><?= lang('Reports.report_input') ?></p>
+    <?= view('partial/page_nav') ?>
+</div>
 
 <?php
 if (isset($error)) {
@@ -20,71 +28,75 @@ if (isset($error)) {
 }
 ?>
 
-<?= form_open('#', ['id' => 'item_form', 'enctype' => 'multipart/form-data', 'class' => 'form-horizontal']) ?>
+<section class="dj-report-input">
+    <?= form_open('#', ['id' => 'item_form', 'enctype' => 'multipart/form-data', 'class' => 'form-horizontal']) ?>
 
-    <div class="form-group form-group-sm">
-        <?= form_label(lang('Reports.date_range'), 'report_date_range_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
-        <div class="col-xs-3">
-            <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm', 'id' => 'daterangepicker']) ?>
-        </div>
-    </div>
-
-    <?php if (!empty($mode)) { ?>
         <div class="form-group form-group-sm">
-            <?php if ($mode == 'sale') { ?>
-                <?= form_label(lang('Reports.sale_type'), 'reports_sale_type_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
-                <div id="report_sale_type" class="col-xs-3">
-                    <?= form_dropdown('sale_type', $sale_type_options, 'complete', ['id' => 'input_type', 'class' => 'form-control']) ?>
-                </div>
-            <?php } elseif ($mode == 'receiving') { ?>
-                <?= form_label(lang('Reports.receiving_type'), 'reports_receiving_type_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
-                <div id="report_receiving_type" class="col-xs-3">
-                    <?= form_dropdown(
-                        'receiving_type',
-                        [
-                            'all'          => lang('Reports.all'),
-                            'receiving'    => lang('Reports.receivings'),
-                            'returns'      => lang('Reports.returns'),
-                            'requisitions' => lang('Reports.requisitions')
-                        ],
-                        'all',
-                        ['id' => 'input_type', 'class' => 'form-control']
-                    ) ?>
-                </div>
-            <?php } ?>
-        </div>
-    <?php } ?>
-
-    <?php if (isset($discount_type_options)) { ?>
-        <div class="form-group form-group-sm">
-            <?= form_label(lang('Reports.discount_type'), 'reports_discount_type_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
-            <div id="report_discount_type" class="col-xs-3">
-                <?= form_dropdown('discount_type', $discount_type_options, $config['default_sales_discount_type'], ['id' => 'discount_type_id', 'class' => 'form-control']) ?>
+            <?= form_label(lang('Reports.date_range'), 'report_date_range_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
+            <div class="col-xs-3">
+                <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm dj-input-date', 'id' => 'daterangepicker']) ?>
             </div>
         </div>
-    <?php } ?>
 
-    <?php if (!empty($stock_locations) && count($stock_locations) > 2) { ?>
-        <div class="form-group form-group-sm">
-            <?= form_label(lang('Reports.stock_location'), 'reports_stock_location_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
-            <div id="report_stock_location" class="col-xs-3">
-                <?= form_dropdown('stock_location', $stock_locations, 'all', ['id' => 'location_id', 'class' => 'form-control']) ?>
+        <?php if (!empty($mode)) { ?>
+            <div class="form-group form-group-sm">
+                <?php if ($mode == 'sale') { ?>
+                    <?= form_label(lang('Reports.sale_type'), 'reports_sale_type_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
+                    <div id="report_sale_type" class="col-xs-3">
+                        <?= form_dropdown('sale_type', $sale_type_options, 'complete', ['id' => 'input_type', 'class' => 'form-control']) ?>
+                    </div>
+                <?php } elseif ($mode == 'receiving') { ?>
+                    <?= form_label(lang('Reports.receiving_type'), 'reports_receiving_type_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
+                    <div id="report_receiving_type" class="col-xs-3">
+                        <?= form_dropdown(
+                            'receiving_type',
+                            [
+                                'all'          => lang('Reports.all'),
+                                'receiving'   => lang('Reports.receivings'),
+                                'returns'      => lang('Reports.returns'),
+                                'requisitions' => lang('Reports.requisitions')
+                            ],
+                            'all',
+                            ['id' => 'input_type', 'class' => 'form-control']
+                        ) ?>
+                    </div>
+                <?php } ?>
             </div>
+        <?php } ?>
+
+        <?php if (isset($discount_type_options)) { ?>
+            <div class="form-group form-group-sm">
+                <?= form_label(lang('Reports.discount_type'), 'reports_discount_type_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
+                <div id="report_discount_type" class="col-xs-3">
+                    <?= form_dropdown('discount_type', $discount_type_options, $config['default_sales_discount_type'], ['id' => 'discount_type_id', 'class' => 'form-control']) ?>
+                </div>
+            </div>
+        <?php } ?>
+
+        <?php if (!empty($stock_locations) && count($stock_locations) > 2) { ?>
+            <div class="form-group form-group-sm">
+                <?= form_label(lang('Reports.stock_location'), 'reports_stock_location_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
+                <div id="report_stock_location" class="col-xs-3">
+                    <?= form_dropdown('stock_location', $stock_locations, 'all', ['id' => 'location_id', 'class' => 'form-control']) ?>
+                </div>
+            </div>
+        <?php } ?>
+
+        <div class="dj-report-actions">
+            <?php
+            echo form_button(
+                [
+                    'name'    => 'generate_report',
+                    'id'      => 'generate_report',
+                    'content' => lang('Common.submit'),
+                    'class'   => 'btn btn-primary btn-sm'
+                ]
+            );
+            ?>
         </div>
-    <?php } ?>
 
-    <?php
-    echo form_button(
-        [
-            'name'    => 'generate_report',
-            'id'      => 'generate_report',
-            'content' => lang('Common.submit'),
-            'class'   => 'btn btn-primary btn-sm'
-        ]
-    );
-    ?>
-
-<?= form_close() ?>
+    <?= form_close() ?>
+</section>
 
 <?= view('partial/footer') ?>
 

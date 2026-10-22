@@ -72,6 +72,14 @@
 
 <?= view('partial/print_receipt', ['print_after_sale' => false, 'selected_printer' => 'takings_printer']) ?>
 
+<div class="dj-page-head">
+    <?= view('partial/page_path', ['crumbs' => [['module' => 'sales'], ['label' => lang('Sales.sales_history')]]]) ?>
+    <?= view('partial/page_nav') ?>
+    <h1 class="dj-page-title">
+        <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span><?= lang('Sales.sales_history') ?>
+    </h1>
+</div>
+
 <div id="title_bar" class="print_hide btn-toolbar">
     <button onclick="printdoc()" class="btn btn-info btn-sm pull-right">
         <span class="glyphicon glyphicon-print">&nbsp;</span><?= lang('Common.print') ?>
@@ -85,7 +93,7 @@
             <span class="glyphicon glyphicon-trash">&nbsp;</span><?= lang('Common.delete') ?>
         </button>
 
-        <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm', 'id' => 'daterangepicker']) ?>
+        <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm dj-input-date', 'id' => 'daterangepicker']) ?>
         <?= form_multiselect('filters[]', $filters, $selected_filters, [
             'id'                        => 'filters',
             'data-none-selected-text'   => lang('Common.none_selected_text'),

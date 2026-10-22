@@ -21,6 +21,14 @@
     });
 </script>
 
+<div class="dj-page-head">
+    <?= view('partial/page_path', ['crumbs' => [['module' => 'attributes']]]) ?>
+    <h1 class="dj-page-title">
+        <span class="glyphicon glyphicon-tags" aria-hidden="true"></span><?= lang('Module.attributes') ?>
+    </h1>
+    <?= view('partial/page_nav') ?>
+</div>
+
 <div id="title_bar" class="btn-toolbar print_hide">
     <button class="btn btn-info btn-sm pull-right modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= esc("$controller_name/view") ?>" title="<?= lang(ucfirst($controller_name) . ".new") ?>">
         <span class="glyphicon glyphicon-star">&nbsp;</span><?= lang(ucfirst($controller_name) . ".new") ?>

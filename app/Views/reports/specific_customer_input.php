@@ -13,7 +13,16 @@
     dialog_support.init("a.modal-dlg");
 </script>
 
-<div id="page_title"><?= lang('Reports.report_input') ?></div>
+<?php $reportPath = get_report_path_info(); ?>
+
+<div class="dj-page-head">
+    <?= view('partial/page_path', ['crumbs' => $reportPath['crumbs']]) ?>
+    <h1 class="dj-page-title">
+        <span class="glyphicon glyphicon-filter" aria-hidden="true"></span><?= esc($reportPath['crumbs'][1]['label']) ?>
+    </h1>
+    <p class="dj-page-subtitle"><?= lang('Reports.report_input') ?></p>
+    <?= view('partial/page_nav') ?>
+</div>
 
 <?php
 if (isset($error)) {
@@ -21,12 +30,13 @@ if (isset($error)) {
 }
 ?>
 
-<?= form_open('#', ['id' => 'item_form', 'enctype' => 'multipart/form-data', 'class' => 'form-horizontal']) ?>
+<section class="dj-report-input">
+    <?= form_open('#', ['id' => 'item_form', 'enctype' => 'multipart/form-data', 'class' => 'form-horizontal']) ?>
 
     <div class="form-group form-group-sm">
         <?= form_label(lang('Reports.date_range'), 'report_date_range_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
         <div class="col-xs-3">
-            <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm', 'id' => 'daterangepicker']) ?>
+            <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm dj-input-date', 'id' => 'daterangepicker']) ?>
         </div>
     </div>
 
@@ -51,15 +61,18 @@ if (isset($error)) {
         </div>
     </div>
 
-    <?php
-    echo form_button([
-        'name'    => 'generate_report',
-        'id'      => 'generate_report',
-        'content' => lang('Common.submit'),
-        'class'   => 'btn btn-primary btn-sm'
-    ]);    ?>
+    <div class="dj-report-actions">
+        <?php
+        echo form_button([
+            'name'    => 'generate_report',
+            'id'      => 'generate_report',
+            'content' => lang('Common.submit'),
+            'class'   => 'btn btn-primary btn-sm'
+        ]);    ?>
+    </div>
 
-<?= form_close() ?>
+    <?= form_close() ?>
+</section>
 
 <?= view('partial/footer') ?>
 

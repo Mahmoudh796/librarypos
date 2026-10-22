@@ -27,79 +27,81 @@ if (isset($error)) {
 }
 ?>
 
-<div class="row">
-    <div class="col-md-4">
-        <div class="panel panel-primary">
-            <div class="panel-heading">
-                <h3 class="panel-title"><span class="glyphicon glyphicon-stats">&nbsp;</span><?= lang('Reports.graphical_reports') ?></h3>
+<div class="dj-page-head">
+    <h1 class="dj-page-title">
+        <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
+        <?= lang('Module.reports') ?>
+    </h1>
+    <?= view('partial/page_nav') ?>
+</div>
+
+<div class="reports-hub">
+    <section class="dj-section" aria-labelledby="dj-reports-graphical">
+        <div class="dj-section-head">
+            <h2 class="dj-section-title" id="dj-reports-graphical"><span class="glyphicon glyphicon-stats" aria-hidden="true"></span><?= lang('Reports.graphical_reports') ?></h2>
+        </div>
+        <div class="list-group">
+            <?php foreach ($permission_ids as $permission_id) {
+                if (can_show_report($permission_id, ['inventory', 'receiving'])) {
+                    $link = get_report_link($permission_id, 'graphical_summary');
+            ?>
+                    <a class="list-group-item" href="<?= $link['path'] ?>"><?= esc($link['label']) ?></a>
+            <?php
+                }
+            }
+            ?>
+        </div>
+    </section>
+
+    <section class="dj-section" aria-labelledby="dj-reports-summary">
+        <div class="dj-section-head">
+            <h2 class="dj-section-title" id="dj-reports-summary"><span class="glyphicon glyphicon-list" aria-hidden="true"></span><?= lang('Reports.summary_reports') ?></h2>
+        </div>
+        <div class="list-group">
+            <?php foreach ($permission_ids as $permission_id) {
+                if (can_show_report($permission_id, ['inventory', 'receiving'])) {
+                    $link = get_report_link($permission_id, 'summary');
+            ?>
+                    <a class="list-group-item" href="<?= $link['path'] ?>"><?= esc($link['label']) ?></a>
+            <?php
+                }
+            }
+            ?>
+        </div>
+    </section>
+
+    <section class="dj-section" aria-labelledby="dj-reports-detailed">
+        <div class="dj-section-head">
+            <h2 class="dj-section-title" id="dj-reports-detailed"><span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span><?= lang('Reports.detailed_reports') ?></h2>
+        </div>
+        <div class="list-group">
+            <?php foreach ($detailed_reports as $report_name => $prefix) {
+                if (in_array($report_name, $permission_ids, true)) {
+                    $link = get_report_link($report_name, $prefix);
+            ?>
+                    <a class="list-group-item" href="<?= $link['path'] ?>"><?= esc($link['label']) ?></a>
+            <?php
+                }
+            }
+            ?>
+        </div>
+    </section>
+
+    <?php if (in_array('reports_inventory', $permission_ids, true)) { ?>
+        <section class="dj-section" aria-labelledby="dj-reports-inventory">
+            <div class="dj-section-head">
+                <h2 class="dj-section-title" id="dj-reports-inventory"><span class="glyphicon glyphicon-book" aria-hidden="true"></span><?= lang('Reports.inventory_reports') ?></h2>
             </div>
             <div class="list-group">
-                <?php foreach ($permission_ids as $permission_id) {
-                    if (can_show_report($permission_id, ['inventory', 'receiving'])) {
-                        $link = get_report_link($permission_id, 'graphical_summary');
-                ?>
-                        <a class="list-group-item" href="<?= $link['path'] ?>"><?= esc($link['label']) ?></a>
                 <?php
-                    }
-                }
+                $inventory_low_report = get_report_link('reports_inventory_low');
+                $inventory_summary_report = get_report_link('reports_inventory_summary');
                 ?>
+                <a class="list-group-item" href="<?= $inventory_low_report['path'] ?>"><?= esc($inventory_low_report['label']) ?></a>
+                <a class="list-group-item" href="<?= $inventory_summary_report['path'] ?>"><?= esc($inventory_summary_report['label']) ?></a>
             </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="panel panel-primary">
-            <div class="panel-heading">
-                <h3 class="panel-title"><span class="glyphicon glyphicon-list">&nbsp;</span><?= lang('Reports.summary_reports') ?></h3>
-            </div>
-            <div class="list-group">
-                <?php foreach ($permission_ids as $permission_id) {
-                    if (can_show_report($permission_id, ['inventory', 'receiving'])) {
-                        $link = get_report_link($permission_id, 'summary');
-                ?>
-                        <a class="list-group-item" href="<?= $link['path'] ?>"><?= esc($link['label']) ?></a>
-                <?php
-                    }
-                }
-                ?>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="panel panel-primary">
-            <div class="panel-heading">
-                <h3 class="panel-title"><span class="glyphicon glyphicon-list-alt">&nbsp;</span><?= lang('Reports.detailed_reports') ?></h3>
-            </div>
-            <div class="list-group">
-                <?php foreach ($detailed_reports as $report_name => $prefix) {
-                    if (in_array($report_name, $permission_ids, true)) {
-                        $link = get_report_link($report_name, $prefix);
-                ?>
-                        <a class="list-group-item" href="<?= $link['path'] ?>"><?= esc($link['label']) ?></a>
-                <?php
-                    }
-                }
-                ?>
-            </div>
-        </div>
-
-        <?php if (in_array('reports_inventory', $permission_ids, true)) { ?>
-            <div class="panel panel-primary">
-                <div class="panel-heading">
-                    <h3 class="panel-title"><span class="glyphicon glyphicon-book">&nbsp;</span><?= lang('Reports.inventory_reports') ?></h3>
-                </div>
-                <div class="list-group">
-                    <?php
-                    $inventory_low_report = get_report_link('reports_inventory_low');
-                    $inventory_summary_report = get_report_link('reports_inventory_summary');
-                    ?>
-                    <a class="list-group-item" href="<?= $inventory_low_report['path'] ?>"><?= esc($inventory_low_report['label']) ?></a>
-                    <a class="list-group-item" href="<?= $inventory_summary_report['path'] ?>"><?= esc($inventory_summary_report['label']) ?></a>
-                </div>
-            </div>
-        <?php } ?>
-    </div>
+        </section>
+    <?php } ?>
 </div>
 
 <?= view('partial/footer') ?>

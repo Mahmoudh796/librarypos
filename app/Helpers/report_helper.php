@@ -119,3 +119,49 @@ function can_show_report(string $permission_id, array $restrict_views = []): boo
 
     return true;
 }
+
+/**
+ * Deterministic Ru'ya page-path info for the current report route.
+ *
+ * The report routes are hand-routed as reports/<segment>[/date segments...],
+ * so the report identity is derivable from the URI segment alone — the HTTP
+ * referrer is never trusted. The results:
+ *  - crumbs: [Module.reports module crumb] ‹ [Reports.<name> leaf]
+ *  - input_path: the exact route that renders this report's parameter form,
+ *    which doubles as the "edit inputs" destination on result pages.
+ *
+ * @return array{crumbs: array, input_path: string}
+ */
+function get_report_path_info(): array
+{
+    $segments = service('uri')->getSegments();
+    $segment = $segments[1] ?? '';
+
+    $name = $segment;
+    foreach (['graphical_summary', 'summary', 'specific', 'detailed'] as $prefix) {
+        if (str_starts_with($segment, $prefix . '_')) {
+            $name = substr($segment, strlen($prefix) + 1);
+            break;
+        }
+    }
+
+    // Inventory reports keep the full name as their label key (inventory_low,
+    // inventory_summary); the rest strip the route family prefix.
+    $langKey = 'Reports.' . $name;
+    $label = (string) lang($langKey);
+    if ($label === $langKey && $name !== $segment) {
+        $langKey = 'Reports.' . $segment;
+        $label = (string) lang($langKey);
+    }
+    if ($label === $langKey) {
+        $label = $segment;
+    }
+
+    return [
+        'crumbs' => [
+            ['module' => 'reports'],
+            ['label' => $label],
+        ],
+        'input_path' => site_url('reports/' . $segment),
+    ];
+}

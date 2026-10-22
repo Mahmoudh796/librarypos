@@ -66,9 +66,11 @@ class Secure_Controller extends BaseController
         }
 
         $this->global_view_data += [
-            'user_info'       => $logged_in_employee_info,
-            'controller_name' => $module_id,
-            'config'          => $config
+            'user_info'          => $logged_in_employee_info,
+            'controller_name'    => $module_id,
+            'config'             => $config,
+            // Every module-group grant, for permission-safe breadcrumbs
+            'allowed_module_ids' => $this->module->get_allowed_module_ids($logged_in_employee_info->person_id),
         ];
         view('viewData', $this->global_view_data);
     }

@@ -128,6 +128,24 @@ class Module extends Model
     }
 
     /**
+     * Module ids the employee holds an explicit module-level grant for,
+     * across all menu groups (used for permission-safe breadcrumb links).
+     *
+     * @param int $person_id
+     * @return string[]
+     */
+    public function get_allowed_module_ids(int $person_id): array
+    {
+        $builder = $this->db->table('modules');
+        $builder->select('modules.module_id');
+        $builder->join('permissions', 'permissions.permission_id = modules.module_id');
+        $builder->join('grants', 'permissions.permission_id = grants.permission_id');
+        $builder->where('grants.person_id', $person_id);
+
+        return array_column($builder->get()->getResultArray(), 'module_id');
+    }
+
+    /**
      * This method is used to set the show the office navigation icon on the home page
      * which happens when the sort value is greater than zero
      */

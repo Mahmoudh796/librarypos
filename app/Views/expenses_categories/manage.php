@@ -27,7 +27,15 @@
     });
 </script>
 
-<div id="title_bar" class="btn-toolbar">
+<div class="dj-page-head">
+    <?= view('partial/page_path', ['crumbs' => [['module' => 'people'], ['component' => 'people', 'module' => 'expenses_categories']]]) ?>
+    <h1 class="dj-page-title">
+        <span class="glyphicon glyphicon-tags" aria-hidden="true"></span><?= lang('Module.expenses_categories') ?>
+    </h1>
+    <?= view('partial/page_nav') ?>
+</div>
+
+
     <button class="btn btn-info btn-sm pull-right modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= esc("$controller_name/view") ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
         <span class="glyphicon glyphicon-list">&nbsp;</span><?= lang(ucfirst($controller_name) . '.new') ?>
     </button>

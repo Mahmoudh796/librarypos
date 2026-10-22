@@ -10,7 +10,15 @@
     dialog_support.init("a.modal-dlg");
 </script>
 
-<ul class="nav nav-tabs" data-tabs="tabs">
+<div class="dj-page-head">
+    <?= view('partial/page_path', ['crumbs' => [['module' => 'config'], ['module' => 'taxes']]]) ?>
+    <h1 class="dj-page-title">
+        <span class="glyphicon glyphicon-tags" aria-hidden="true"></span><?= lang('Module.taxes') ?>
+    </h1>
+    <?= view('partial/page_nav') ?>
+</div>
+
+
     <li class="active" role="presentation">
         <a data-toggle="tab" href="#tax_codes_tab" title="<?= lang(ucfirst($controller_name) . '.tax_codes_configuration') ?>">
             <?= lang(ucfirst($controller_name) . '.tax_codes') ?>

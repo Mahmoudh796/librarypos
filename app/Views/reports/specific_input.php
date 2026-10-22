@@ -13,7 +13,16 @@
     dialog_support.init("a.modal-dlg");
 </script>
 
-<div id="page_title"><?= lang('Reports.report_input') ?></div>
+<?php $reportPath = get_report_path_info(); ?>
+
+<div class="dj-page-head">
+    <?= view('partial/page_path', ['crumbs' => $reportPath['crumbs']]) ?>
+    <h1 class="dj-page-title">
+        <span class="glyphicon glyphicon-filter" aria-hidden="true"></span><?= esc($reportPath['crumbs'][1]['label']) ?>
+    </h1>
+    <p class="dj-page-subtitle"><?= lang('Reports.report_input') ?></p>
+    <?= view('partial/page_nav') ?>
+</div>
 
 <?php
 if (isset($error)) {
@@ -21,60 +30,64 @@ if (isset($error)) {
 }
 ?>
 
-<?= form_open('#', ['id' => 'item_form', 'enctype' => 'multipart/form-data', 'class' => 'form-horizontal']) ?>
+<section class="dj-report-input">
+    <?= form_open('#', ['id' => 'item_form', 'enctype' => 'multipart/form-data', 'class' => 'form-horizontal']) ?>
 
-    <div class="form-group form-group-sm">
-        <?= form_label(lang('Reports.date_range'), 'report_date_range_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
-        <div class="col-xs-3">
-            <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm', 'id' => 'daterangepicker']) ?>
-        </div>
-    </div>
-
-    <?php if (isset($discount_type_options)) { ?>
         <div class="form-group form-group-sm">
-            <?= form_label(lang('Reports.discount_type'), 'reports_discount_type_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
-            <div id="report_discount_type" class="col-xs-3">
-                <?= form_dropdown('discount_type', $discount_type_options, $config['default_sales_discount_type'], ['id' => 'discount_type_id', 'class' => 'form-control']) ?>
+            <?= form_label(lang('Reports.date_range'), 'report_date_range_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
+            <div class="col-xs-3">
+                <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm dj-input-date', 'id' => 'daterangepicker']) ?>
             </div>
-        </div>
-    <?php } ?>
-
-    <div class="form-group form-group-sm" id="report_specific_input_data">
-        <?= form_label($specific_input_name, 'specific_input_name_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
-        <div class="col-xs-3 discount_percent">
-            <?= form_dropdown('specific_input_data', $specific_input_data, '', 'id="specific_input_data" class="form-control"') ?>
         </div>
 
         <?php if (isset($discount_type_options)) { ?>
-            <div class="col-xs-3 discount_fixed">
-                <?= form_input([
-                    'name'  => 'discount_fixed',
-                    'id'    => 'discount_fixed',
-                    'class' => 'form-control input-sm required',
-                    'type'  => 'number',
-                    'min'   => 0,
-                    'value' => $config['default_sales_discount']
-                ]) ?>
+            <div class="form-group form-group-sm">
+                <?= form_label(lang('Reports.discount_type'), 'reports_discount_type_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
+                <div id="report_discount_type" class="col-xs-3">
+                    <?= form_dropdown('discount_type', $discount_type_options, $config['default_sales_discount_type'], ['id' => 'discount_type_id', 'class' => 'form-control']) ?>
+                </div>
             </div>
         <?php } ?>
-    </div>
 
-    <div class="form-group form-group-sm">
-        <?= form_label(lang('Reports.sale_type'), 'reports_sale_type_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
-        <div id="report_sale_type" class="col-xs-3">
-            <?= form_dropdown('sale_type', $sale_type_options, 'complete', 'id="input_type" class="form-control"') ?>
+        <div class="form-group form-group-sm" id="report_specific_input_data">
+            <?= form_label($specific_input_name, 'specific_input_name_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
+            <div class="col-xs-3 discount_percent">
+                <?= form_dropdown('specific_input_data', $specific_input_data, '', 'id="specific_input_data" class="form-control"') ?>
+            </div>
+
+            <?php if (isset($discount_type_options)) { ?>
+                <div class="col-xs-3 discount_fixed">
+                    <?= form_input([
+                        'name'  => 'discount_fixed',
+                        'id'    => 'discount_fixed',
+                        'class' => 'form-control input-sm required dj-input-number',
+                        'type'  => 'number',
+                        'min'   => 0,
+                        'value' => $config['default_sales_discount']
+                    ]) ?>
+                </div>
+            <?php } ?>
         </div>
-    </div>
 
-    <?php
-    echo form_button([
-        'name'    => 'generate_report',
-        'id'      => 'generate_report',
-        'content' => lang('Common.submit'),
-        'class'   => 'btn btn-primary btn-sm'
-    ]) ?>
+        <div class="form-group form-group-sm">
+            <?= form_label(lang('Reports.sale_type'), 'reports_sale_type_label', ['class' => 'control-label col-xs-2 text-danger required']) ?>
+            <div id="report_sale_type" class="col-xs-3">
+                <?= form_dropdown('sale_type', $sale_type_options, 'complete', 'id="input_type" class="form-control"') ?>
+            </div>
+        </div>
 
-<?= form_close() ?>
+        <div class="dj-report-actions">
+            <?php
+            echo form_button([
+                'name'    => 'generate_report',
+                'id'      => 'generate_report',
+                'content' => lang('Common.submit'),
+                'class'   => 'btn btn-primary btn-sm'
+            ]) ?>
+        </div>
+
+    <?= form_close() ?>
+</section>
 
 <?= view('partial/footer') ?>
 

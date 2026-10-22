@@ -20,7 +20,7 @@ use App\Models\Employee;
     $(document).ready(function() {
         $('#generate_barcodes').click(function() {
             window.open(
-                'index.php/items/generateBarcodes/' + table_support.selected_ids().join(':'),
+                '<?= base_url('items/generateBarcodes/') ?>' + table_support.selected_ids().join(':'),
                 '_blank'
             );
         });
@@ -76,16 +76,24 @@ use App\Models\Employee;
 
 <?= view('partial/table_filter_persistence', ['additional_params' => ['stock_location']]) ?>
 
+<div class="dj-page-head">
+    <h1 class="dj-page-title">
+        <span class="glyphicon glyphicon-tag" aria-hidden="true"></span>
+        <?= lang('Module.' . $controller_name) ?>
+    </h1>
+    <?= view('partial/page_nav') ?>
+</div>
+
 <div id="title_bar" class="btn-toolbar print_hide">
     <button class="btn btn-info btn-sm pull-right modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/csvImport" ?>" title="<?= lang('Items.import_items_csv') ?>">
         <span class="glyphicon glyphicon-import">&nbsp;</span><?= lang('Common.import_csv') ?>
     </button>
 
-    <button class="btn btn-info btn-sm pull-right modal-dlg" data-btn-new="<?= lang('Common.new') ?>" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
+    <button class="btn btn-info btn-sm pull-right modal-dlg modal-dlg-wide" data-btn-new="<?= lang('Common.new') ?>" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
         <span class="glyphicon glyphicon-tag">&nbsp;</span><?= lang(ucfirst($controller_name) . '.new') ?>
     </button>
 
-    <a class="btn btn-info btn-sm pull-right" href="<?= esc(base_url("$controller_name/variants"), 'url') ?>" title="<?= lang('Items.create_variants') ?>">
+    <a class="btn btn-info btn-sm pull-right" href="<?= esc(base_url("$controller_name/variants")) ?>" title="<?= lang('Items.create_variants') ?>">
         <span class="glyphicon glyphicon-th-large">&nbsp;</span><?= lang('Items.create_variants') ?>
     </a>
 </div>
@@ -95,13 +103,13 @@ use App\Models\Employee;
         <button id="delete" class="btn btn-default btn-sm print_hide">
             <span class="glyphicon glyphicon-trash">&nbsp;</span><?= lang('Common.delete') ?>
         </button>
-        <button id="bulk_edit" class="btn btn-default btn-sm modal-dlg print_hide" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "items/bulkEdit" ?>" title="<?= lang('Items.edit_multiple_items') ?>">
+        <button id="bulk_edit" class="btn btn-default btn-sm modal-dlg modal-dlg-wide print_hide" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "items/bulkEdit" ?>" title="<?= lang('Items.edit_multiple_items') ?>">
             <span class="glyphicon glyphicon-edit">&nbsp;</span><?= lang('Items.bulk_edit') ?>
         </button>
         <button id="generate_barcodes" class="btn btn-default btn-sm print_hide" data-href="<?= "$controller_name/generateBarcodes" ?>" title="<?= lang('Items.generate_barcodes') ?>">
             <span class="glyphicon glyphicon-barcode">&nbsp;</span><?= lang('Items.generate_barcodes') ?>
         </button>
-        <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm', 'id' => 'daterangepicker']) ?>
+        <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm dj-input-date', 'id' => 'daterangepicker']) ?>
         <?= form_multiselect('filters[]', $filters, $selected_filters ?? [], [
             'id'                        => 'filters',
             'class'                     => 'selectpicker show-menu-arrow',
