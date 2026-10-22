@@ -11,18 +11,32 @@ use Config\OSPOS;
  */
 function current_language_code(bool $load_system_language = false): string
 {
+    $config             = config(OSPOS::class)->settings;
+    $systemLanguageCode = $config['language_code'] ?? DEFAULT_LANGUAGE_CODE;
+
+    if ($load_system_language) {
+        return $systemLanguageCode;
+    }
+
+    // A language chosen through the sign-in switcher (App\Controllers\Language)
+    // is stored in a cookie and outranks the account and system defaults, so the
+    // choice survives a refresh, sign-in, sign-out and the recovery flow.
+    $preferredLanguageCode = get_preferred_language_code();
+    if ($preferredLanguageCode !== null) {
+        return $preferredLanguageCode;
+    }
+
     $employee = model(Employee::class);
-    $config = config(OSPOS::class)->settings;
 
-    if ($employee->is_logged_in() && !$load_system_language) {
-        $employee_info = $employee->get_logged_in_employee_info();
+    if ($employee->is_logged_in()) {
+        $employeeInfo = $employee->get_logged_in_employee_info();
 
-        if (property_exists($employee_info, 'language_code') && !empty($employee_info->language_code)) {
-            return $employee_info->language_code;
+        if (property_exists($employeeInfo, 'language_code') && ! empty($employeeInfo->language_code)) {
+            return $employeeInfo->language_code;
         }
     }
 
-    return $config['language_code'] ?? DEFAULT_LANGUAGE_CODE;
+    return $systemLanguageCode;
 }
 
 /**
@@ -31,15 +45,28 @@ function current_language_code(bool $load_system_language = false): string
  */
 function current_language(bool $load_system_language = false): string
 {
-    $employee = model(Employee::class);
     $config = config(OSPOS::class)->settings;
 
-    // Returns the language of the employee if set or system language if not
-    if ($employee->is_logged_in() && !$load_system_language) {
-        $employee_info = $employee->get_logged_in_employee_info();
+    if ($load_system_language) {
+        return $config['language'] ?? DEFAULT_LANGUAGE;
+    }
 
-        if (property_exists($employee_info, 'language') && !empty($employee_info->language)) {
-            return $employee_info->language;
+    $preferredLanguageCode = get_preferred_language_code();
+    if ($preferredLanguageCode !== null) {
+        $preferredLanguage = get_language_name($preferredLanguageCode);
+        if ($preferredLanguage !== null) {
+            return $preferredLanguage;
+        }
+    }
+
+    $employee = model(Employee::class);
+
+    // Returns the language of the employee if set or system language if not
+    if ($employee->is_logged_in()) {
+        $employeeInfo = $employee->get_logged_in_employee_info();
+
+        if (property_exists($employeeInfo, 'language') && ! empty($employeeInfo->language)) {
+            return $employeeInfo->language;
         }
     }
 
@@ -47,11 +74,66 @@ function current_language(bool $load_system_language = false): string
 }
 
 /**
+ * The visitor's explicitly chosen language code, read from the cookie written
+ * by the sign-in / recovery language switcher.
+ *
+ * Only a locale from the application's supported list is ever returned, so a
+ * tampered cookie cannot select an arbitrary locale.
+ */
+function get_preferred_language_code(): ?string
+{
+    $candidate = get_cookie('language');
+
+    if (! is_string($candidate)) {
+        return null;
+    }
+
+    $candidate = trim($candidate);
+
+    if ($candidate === '' || ! in_array($candidate, config('App')->supportedLocales, true)) {
+        return null;
+    }
+
+    return $candidate;
+}
+
+/**
+ * The languages offered by the sign-in / recovery switcher, labelled in their
+ * own language (endonym), as language pickers conventionally are.
+ *
+ * @return array<string, string> language code => endonym
+ */
+function get_auth_languages(): array
+{
+    return [
+        'ar-EG' => 'العربية',
+        'en'    => 'English',
+    ];
+}
+
+/**
+ * The language display name (e.g. "arabic") for a language code, or null when
+ * the code is not one of the languages the application ships.
+ */
+function get_language_name(string $languageCode): ?string
+{
+    foreach (array_keys(get_languages()) as $language) {
+        [$code, $name] = explode(':', $language, 2);
+
+        if ($code === $languageCode) {
+            return $name;
+        }
+    }
+
+    return null;
+}
+
+/**
  * Language codes written right-to-left (Arabic, Persian, Hebrew, Urdu and Central Kurdish).
  * The list holds both full codes and their primary subtag so a new regional variant
  * (e.g. ar-SA) is treated as RTL without an explicit entry.
  *
- * @return string[]
+ * @return list<string>
  */
 function get_rtl_language_codes(): array
 {
@@ -60,13 +142,10 @@ function get_rtl_language_codes(): array
 
 /**
  * Whether a language code (or the currently active language) is written right-to-left.
- *
- * @param string|null $language_code
- * @return bool
  */
 function is_rtl_language(?string $language_code = null): bool
 {
-    $language_code = $language_code ?? current_language_code();
+    $language_code ??= current_language_code();
 
     if (empty($language_code)) {
         return false;
@@ -86,9 +165,6 @@ function is_rtl_language(?string $language_code = null): bool
 
 /**
  * The document text direction ('rtl' or 'ltr') for a language code or the current language.
- *
- * @param string|null $language_code
- * @return string
  */
 function get_text_direction(?string $language_code = null): string
 {
@@ -442,6 +518,20 @@ function to_currency_tax(?string $number): string
     } else {
         return to_decimals($number, 'currency_decimals', NumberFormatter::CURRENCY);
     }
+}
+
+/**
+ * Wraps a formatted amount in an isolated LTR unit so the amount and its
+ * currency symbol render as one stable unit inside an RTL page. Display only:
+ * the value and its formatter pass through unchanged, so a caller keeps
+ * exact rounding semantics by naming the formatter (e.g. 'to_currency_tax').
+ *
+ * @param mixed $amount
+ * @return string
+ */
+function to_money_unit(mixed $amount, ?callable $formatter = null): string
+{
+    return '<span class="dj-money" dir="ltr">' . ($formatter ?? 'to_currency')((string) $amount) . '</span>';
 }
 
 /**

@@ -239,6 +239,16 @@ class Employees extends Persons
                 if ($employeeId == $loggedInEmployeeId) {
                     session()->set('language_code', $employeeData['language_code']);
                     session()->set('language', $employeeData['language']);
+
+                    // Keep the visitor-level language cookie (the same preference
+                    // the sign-in switcher writes) in step with the account, so the
+                    // two can never disagree after sign-out.
+                    if (!empty($employeeData['language_code'])
+                        && in_array($employeeData['language_code'], config('App')->supportedLocales, true)) {
+                        set_cookie('language', $employeeData['language_code'], YEAR, '', '/', '', $this->request->isSecure(), true, 'Lax');
+                    } else {
+                        delete_cookie('language');
+                    }
                 }
                 return $this->response->setJSON([
                     'success' => true,

@@ -8,7 +8,9 @@ $routes->setDefaultController('Login');
 $routes->get('/', 'Login::index');
 $routes->get('login', 'Login::index');
 $routes->post('login', 'Login::index');
+$routes->get('login/recovery', 'Login::recovery');
 $routes->post('migrate', 'Login::migrate');
+$routes->post('language/set', 'Language::set_language');
 
 $routes->add('no_access/index/(:segment)', 'No_access::index/$1');
 $routes->add('no_access/index/(:segment)/(:segment)', 'No_access::index/$1/$2');
