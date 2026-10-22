@@ -1,0 +1,80 @@
+/*
+ * Ru'ya direction semantics.
+ *
+ * The document direction (<html dir>) decides the reading order of the whole
+ * interface. These classes decide the direction of the *content* of a single
+ * control, which is a different question: a form mixes human prose with
+ * machine-readable values that must keep their own left-to-right content.
+ *
+ * The rules are locale independent on purpose. `.dj-input-text` follows the
+ * document direction, so it reads right-aligned in Arabic and left-aligned in
+ * English without a second rule. The machine-readable classes pin their
+ * content to left-to-right in every locale, so switching the language never
+ * leaves a stale direction behind.
+ *
+ * Loaded after dahrouj.css so the semantics win over the theme's defaults.
+ */
+
+/*
+ * Prose follows the document. `text-align: start` resolves to the inline
+ * start edge, so the caret, the text and the alignment always agree.
+ */
+.dj-input-text {
+    direction: inherit;
+    text-align: start;
+}
+
+/*
+ * Machine-readable values keep their own left-to-right content wherever they
+ * appear. `unicode-bidi: isolate` keeps the run from leaking into the
+ * surrounding paragraph, so an Arabic label next to an ISBN does not swap the
+ * punctuation between them.
+ */
+.dj-input-code,
+.dj-input-number,
+.dj-input-email,
+.dj-input-phone,
+.dj-input-secret {
+    direction: ltr;
+    text-align: left;
+    unicode-bidi: isolate;
+}
+
+/*
+ * Dates and times are produced by a calendar component that always writes the
+ * numeric pattern, so their content stays left-to-right as well.
+ */
+.dj-input-date {
+    direction: ltr;
+    text-align: left;
+    unicode-bidi: isolate;
+}
+
+/*
+ * A number inside a table cell or a read-only summary keeps the same
+ * treatment, so the shared `.dj-money` unit and the plain numeric cells agree.
+ */
+.dj-money {
+    direction: ltr;
+    unicode-bidi: isolate;
+    white-space: nowrap;
+}
+
+/*
+ * Search controls accept human text and must read right-to-left in Arabic:
+ * the placeholder and the typed query both start at the inline start edge.
+ */
+[dir="rtl"] .dj-search-input,
+[dir="rtl"] .search-input,
+[dir="rtl"] .bootstrap-table .fixed-table-toolbar .search .search-input {
+    direction: rtl;
+    text-align: right;
+}
+
+/*
+ * The same for the free-text filters of the report forms.
+ */
+[dir="rtl"] .dj-search {
+    direction: rtl;
+    text-align: right;
+}

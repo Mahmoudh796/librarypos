@@ -202,6 +202,8 @@ class Autoload extends AutoloadConfig
         'cookie',
         'tabular',
         'locale',
+        'direction',
+        'navigation',
         'security',
         'variant'
     ];
