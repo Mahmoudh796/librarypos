@@ -670,8 +670,9 @@ class HomeTest extends CIUnitTestCase
     }
 
     /**
-     * The dashboard is the highest-traffic page after login: it must keep the
-     * Dahrouj identity and must never fall back to the upstream product brand.
+     * The dashboard is the highest-traffic page after login: it must present the
+     * Ru'ya identity and must never fall back to the upstream product brand or
+     * the previous Dahrouj brand.
      *
      * TestResponse::getBody() re-serializes the parsed DOM, which turns every
      * non-ASCII character into a numeric HTML entity, so the body is decoded
@@ -679,11 +680,11 @@ class HomeTest extends CIUnitTestCase
      *
      * @return void
      */
-    public function testDashboardKeepsDahroujBrandingWithoutLegacyProductIdentity(): void
+    public function testDashboardPresentsRuyaBrandingWithoutLegacyProductIdentity(): void
     {
         $ospos = config(OSPOS::class);
         $originalCompany = $ospos->settings['company'] ?? null;
-        $ospos->settings['company'] = 'Dahrouj';
+        $ospos->settings['company'] = 'Test Co';
 
         try {
             $this->resetSession();
@@ -693,8 +694,12 @@ class HomeTest extends CIUnitTestCase
 
             $body = html_entity_decode($response->getBody(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
-            $this->assertStringContainsString('دحروج', $body);
-            $this->assertStringContainsString('Dahrouj', $body);
+            // The dashboard follows the active language: English here, so the
+            // Latin wordmark is shown and no Arabic brand text leaks in.
+            $this->assertStringContainsString("Ru'ya", $body);
+            $this->assertStringNotContainsString('رؤية', $body);
+            $this->assertStringNotContainsString('دحروج', $body);
+            $this->assertStringNotContainsString('Dahrouj', $body);
 
             $this->assertStringNotContainsString('OSPOS', $body);
             $this->assertStringNotContainsString('Open Source Point of Sale', $body);

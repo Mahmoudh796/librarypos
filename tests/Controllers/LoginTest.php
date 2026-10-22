@@ -6,6 +6,7 @@ use CodeIgniter\Config\Services;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
+use Config\Database;
 use Config\OSPOS;
 
 /**
@@ -29,6 +30,7 @@ class LoginTest extends CIUnitTestCase
         parent::setUp();
 
         Services::session()->destroy();
+        service('superglobals')->unsetCookie('language');
         $this->clearThrottleState();
     }
 
@@ -148,6 +150,78 @@ class LoginTest extends CIUnitTestCase
         $response->assertRedirectTo('home');
     }
 
+    /**
+     * A locale explicitly chosen on the sign-in switcher must become the
+     * account's persisted preference once authentication succeeds, instead of
+     * being dropped in favour of a stale stored value.
+     */
+    public function testSignInPromotesExplicitSwitcherChoiceToTheAccountPreference(): void
+    {
+        $db     = Database::connect();
+        $before = $db->table('employees')->where('person_id', 1)->get()->getRow();
+
+        try {
+            // Clear the stored preference so the assertion proves the sign-in
+            // choice, not a pre-existing value, drove the persisted locale.
+            $db->table('employees')->where('person_id', 1)->update([
+                'language'      => null,
+                'language_code' => null,
+            ]);
+            service('superglobals')->setCookie('language', 'en');
+
+            $response = $this->post('/login', [
+                'username' => 'admin',
+                'password' => 'pointofsale',
+            ]);
+            $this->trackThrottleKeys('admin');
+            $this->skipIfMigrationRequired($response);
+            $response->assertRedirectTo('home');
+
+            $after = $db->table('employees')->where('person_id', 1)->get()->getRow();
+            $this->assertSame('english', $after->language);
+            $this->assertSame('en', $after->language_code);
+        } finally {
+            $db->table('employees')->where('person_id', 1)->update([
+                'language'      => $before->language,
+                'language_code' => $before->language_code,
+            ]);
+            service('superglobals')->unsetCookie('language');
+        }
+    }
+
+    /**
+     * When no choice was made before sign-in, the stored account preference is
+     * mirrored into the language cookie so the next sign-in screen agrees with
+     * the application after sign-out.
+     */
+    public function testSignInMirrorsAccountPreferenceIntoTheLanguageCookie(): void
+    {
+        $db     = Database::connect();
+        $before = $db->table('employees')->where('person_id', 1)->get()->getRow();
+
+        try {
+            $db->table('employees')->where('person_id', 1)->update([
+                'language'      => 'english',
+                'language_code' => 'en',
+            ]);
+
+            $response = $this->post('/login', [
+                'username' => 'admin',
+                'password' => 'pointofsale',
+            ]);
+            $this->trackThrottleKeys('admin');
+            $this->skipIfMigrationRequired($response);
+            $response->assertRedirectTo('home');
+            $response->assertCookie('language', 'en');
+        } finally {
+            $db->table('employees')->where('person_id', 1)->update([
+                'language'      => $before->language,
+                'language_code' => $before->language_code,
+            ]);
+            service('superglobals')->unsetCookie('language');
+        }
+    }
+
     public function testGetRequestToLoginIsNeverThrottled(): void
     {
         for ($i = 0; $i < 10; $i++) {
@@ -168,19 +242,24 @@ class LoginTest extends CIUnitTestCase
     }
 
     /**
-     * The login / database update screen must present the Dahrouj identity and
-     * must not surface the upstream product identity as this application's brand.
+     * The login / database update screen must present the Ru'ya identity and
+     * must not surface the upstream product identity or the previous Dahrouj
+     * brand as this application's brand.
      */
-    public function testLoginPagePresentsDahroujIdentityWithoutLegacyProductBranding(): void
+    public function testLoginPagePresentsRuyaIdentityWithoutLegacyProductBranding(): void
     {
         $response = $this->get('/login');
         $response->assertStatus(200);
 
         $body = $this->decodedBody($response);
 
-        $this->assertStringContainsString('دحروج', $body);
-        $this->assertStringContainsString('Dahrouj', $body);
+        // The default (English) sign-in screen shows the Latin wordmark, and no
+        // Arabic brand text leaks into it.
+        $this->assertStringContainsString("Ru'ya", $body);
+        $this->assertStringNotContainsString('رؤية', $body);
 
+        $this->assertStringNotContainsString('دحروج', $body);
+        $this->assertStringNotContainsString('Dahrouj', $body);
         $this->assertStringNotContainsString('Open Source Point of Sale', $body);
         $this->assertStringNotContainsString('OSPOS', $body);
 
@@ -217,7 +296,7 @@ class LoginTest extends CIUnitTestCase
 
             $this->assertStringContainsString('lang="ar-EG"', $body);
             $this->assertMatchesRegularExpression('/<html[^>]*\bdir="rtl"/', $body);
-            $this->assertStringContainsString('دحروج', $body);
+            $this->assertStringContainsString('رؤية', $body);
         } finally {
             $ospos->settings = $original;
         }
@@ -253,5 +332,83 @@ class LoginTest extends CIUnitTestCase
 
         $result = json_decode($response->getJSON(), true);
         $this->assertTrue($result['success']);
+    }
+
+    /**
+     * The login card must expose a real, keyboard-reachable recovery action,
+     * not a dead link.
+     */
+    public function testLoginPageLinksToRecoveryScreen(): void
+    {
+        $response = $this->get('/login');
+        $response->assertStatus(200);
+
+        $body = $this->decodedBody($response);
+
+        $this->assertStringContainsString('login/recovery', $body);
+        $this->assertStringContainsString(lang('Login.forgot_username_or_password'), $body);
+    }
+
+    /**
+     * Recovery must be reachable without a session.
+     */
+    public function testRecoveryPageIsAccessibleWhileLoggedOut(): void
+    {
+        $response = $this->get('/login/recovery');
+        $response->assertStatus(200);
+
+        $body = $this->decodedBody($response);
+
+        $this->assertStringContainsString(lang('Login.recovery_title'), $body);
+        $this->assertStringContainsString(lang('Login.back_to_login'), $body);
+    }
+
+    public function testRecoveryPageRendersLeftToRightByDefault(): void
+    {
+        $response = $this->get('/login/recovery');
+        $response->assertStatus(200);
+
+        $body = $this->decodedBody($response);
+
+        $this->assertMatchesRegularExpression('/<html[^>]*\bdir="ltr"/', $body);
+        $this->assertDoesNotMatchRegularExpression('/<html[^>]*\bdir="rtl"/', $body);
+    }
+
+    public function testRecoveryPageRendersRightToLeftForArabicSystemLanguage(): void
+    {
+        $ospos = config(OSPOS::class);
+        $original = $ospos->settings;
+
+        $ospos->settings['language'] = 'arabic';
+        $ospos->settings['language_code'] = 'ar-EG';
+
+        try {
+            $response = $this->get('/login/recovery');
+            $response->assertStatus(200);
+
+            $body = $this->decodedBody($response);
+
+            $this->assertStringContainsString('lang="ar-EG"', $body);
+            $this->assertMatchesRegularExpression('/<html[^>]*\bdir="rtl"/', $body);
+            $this->assertStringContainsString('رؤية', $body);
+        } finally {
+            $ospos->settings = $original;
+        }
+    }
+
+    /**
+     * The recovery screen must not offer any credential lookup, so it cannot be
+     * used to probe whether a username / e-mail belongs to a valid account.
+     */
+    public function testRecoveryPageDoesNotDiscloseAccountExistence(): void
+    {
+        $response = $this->get('/login/recovery');
+        $response->assertStatus(200);
+
+        $body = $this->decodedBody($response);
+
+        $this->assertStringNotContainsString('name="username"', $body);
+        $this->assertStringNotContainsString('name="password"', $body);
+        $this->assertDoesNotMatchRegularExpression('/\b(reset[_-]?token|token)\b/i', $body);
     }
 }

@@ -8,7 +8,10 @@ use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use CodeIgniter\Config\Services;
 use App\Models\Employee;
+use App\Models\Item;
+use App\Libraries\Sale_lib;
 use Config\Database;
+use Config\OSPOS;
 use Tests\Support\ItemFixtureTrait;
 use Tests\Support\EmployeeFixtureTrait;
 use Tests\Support\SaleFixtureTrait;
@@ -58,6 +61,12 @@ class SalesControllerTest extends CIUnitTestCase
         // would otherwise render into the next test's response. Drop the cached
         // renderer so each test renders from its own request only.
         Services::resetSingle('renderer');
+
+        // The sign-in language switcher writes a persistent cookie that outranks
+        // the employee's own language preference. Drop it so the direction tests
+        // reflect the employee record rather than whatever the previous suite
+        // last selected.
+        service('superglobals')->unsetCookie('language');
     }
 
     protected function tearDown(): void
@@ -935,18 +944,37 @@ class SalesControllerTest extends CIUnitTestCase
         $this->assertStringContainsString('dir="ltr"', $response->getBody());
     }
 
-    public function testRegisterRendersDahroujBrandWordmark(): void
+    public function testRegisterRendersRuyaBrandWordmark(): void
     {
-        $cashierId = $this->createCashierEmployee();
-        $this->loginAs($cashierId);
+        $ospos = config(OSPOS::class);
+        $originalCompany = $ospos->settings['company'] ?? null;
+        $ospos->settings['company'] = 'Test Co';
 
-        $response = $this->get('/sales');
+        try {
+            $cashierId = $this->createCashierEmployee();
+            $this->loginAs($cashierId);
 
-        $response->assertStatus(200);
-        // assertSee() searches decoded text, so it matches the Arabic wordmark even
-        // though getBody() returns the DOM parser's numerically-encoded HTML.
-        $response->assertSee('دحروج');
-        $response->assertSee('Dahrouj');
+            $response = $this->get('/sales');
+
+            $response->assertStatus(200);
+            // TestResponse::getBody() re-serializes the parsed DOM, which encodes
+            // non-ASCII characters as numeric entities, so decode before matching.
+            $body = html_entity_decode($response->getBody(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+            // The register follows the employee's language: English here, so the
+            // Latin wordmark is shown and no Arabic brand text leaks in.
+            $this->assertStringContainsString("Ru'ya", $body);
+            $this->assertStringNotContainsString('رؤية', $body);
+            $this->assertStringNotContainsString('دحروج', $body);
+            $this->assertStringNotContainsString('Dahrouj', $body);
+            $this->assertStringNotContainsString('Open Source Point of Sale', $body);
+        } finally {
+            if ($originalCompany === null) {
+                unset($ospos->settings['company']);
+            } else {
+                $ospos->settings['company'] = $originalCompany;
+            }
+        }
     }
 
     public function testRegisterShowsReturnModeMarkerWhenInReturnMode(): void
@@ -973,5 +1001,50 @@ class SalesControllerTest extends CIUnitTestCase
 
         $response->assertStatus(200);
         $this->assertStringNotContainsString('dj-return-banner', $response->getBody());
+    }
+
+    /**
+     * A USB HID barcode scanner behaves like a keyboard: characters arrive in
+     * the "find or scan" field, then the terminating Enter submits the form
+     * once. postAdd() must resolve the product by the exact barcode string
+     * (leading zeros preserved — no numeric coercion) and place exactly one
+     * cart line with quantity 1.
+     */
+    public function testAddByScannedBarcodeKeepsLeadingZeroBarcodeAndAddsOnce(): void
+    {
+        $cashierId = $this->createCashierEmployee();
+        $this->loginAs($cashierId);
+
+        $barcode  = '0123456789';
+        $itemData = [
+            'item_id'               => null,
+            'name'                  => 'Scanner Item',
+            'description'           => 'Scanner Item',
+            'category'              => 'Test Category',
+            'cost_price'            => 1.00,
+            'unit_price'            => 5.00,
+            'reorder_level'         => 0,
+            'item_number'           => $barcode,
+            'allow_alt_description' => 0,
+            'is_serialized'         => 0,
+            'stock_type'            => HAS_STOCK,
+            'deleted'               => 0,
+        ];
+        model(Item::class)->save_value($itemData);
+        $itemId = (int) $itemData['item_id'];
+
+        $response = $this->post('/sales/add', ['item' => $barcode, 'quantity' => 1]);
+
+        $response->assertOk();
+        $this->assertStringContainsString($barcode, $response->getBody());
+
+        $saleLib = new Sale_lib();
+        $cart    = $saleLib->get_cart();
+
+        $line = reset($cart);
+        $this->assertCount(1, $cart, 'A single scan must produce exactly one cart line');
+        $this->assertSame($itemId, (int) $line['item_id']);
+        $this->assertSame($barcode, (string) $line['item_number'], 'Leading-zero barcode must not be coerced');
+        $this->assertEquals(1.0, (float) $line['quantity']);
     }
 }

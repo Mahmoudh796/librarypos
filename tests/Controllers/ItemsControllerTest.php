@@ -1431,5 +1431,61 @@ class ItemsControllerTest extends CIUnitTestCase
         $isValid = in_array($csvLocationName, $allowedLocations);
         $this->assertTrue($isValid, 'Valid location name should pass validation');
     }
+
+    /**
+     * Regression guard for the variants URL encoding fix.
+     *
+     * Previously, the "variants" button in the Items manage toolbar was rendered
+     * using `esc($url, 'url')`. Under CodeIgniter 4's Escaper, the 'url' context
+     * calls `rawurlencode()`, which double-encoded an already-absolute
+     * `base_url()` result (e.g. `http%3A%2F%2F...`). Navigating the resulting href
+     * produced a 404 because the browser sent the encoded string as the path.
+     *
+     * The fix uses `esc($url)` in HTML attributes (attribute context), which
+     * HTML-escapes without touching the URL structure, and `esc($url, 'js')` in
+     * inline JS string literals. This test locks the HTML-attribute side of that
+     * fix so a future refactor does not reintroduce the regression.
+     */
+    public function testVariantsButtonRendersAbsoluteUnencodedUrl(): void
+    {
+        $employeeId = $this->createItemsEmployee();
+        $this->loginAsItemsEmployee($employeeId);
+
+        $response = $this->get('/items');
+        $response->assertStatus(200);
+
+        $body = (string) $response->response()->getBody();
+
+        // Match an anchor whose href points to items/variants.
+        preg_match_all('/<a[^>]+href="([^"]*)"[^>]*>/i', $body, $matches, PREG_SET_ORDER);
+        $this->assertNotEmpty($matches, 'Expected at least one anchor tag in the items manage view.');
+
+        $foundVariantsAnchor = false;
+        foreach ($matches as $match) {
+            $href = $match[1];
+            if (! str_contains($href, 'items/variants')) {
+                continue;
+            }
+
+            $foundVariantsAnchor = true;
+
+            // The historical bug left the scheme and separators rawurlencoded.
+            $this->assertStringNotContainsString(
+                '%3A',
+                $href,
+                'Variants href must not contain rawurlencoded scheme separator (:).'
+            );
+            $this->assertStringNotContainsString(
+                '%2F',
+                $href,
+                'Variants href must not contain rawurlencoded path separators (/).'
+            );
+        }
+
+        $this->assertTrue(
+            $foundVariantsAnchor,
+            'Expected an anchor in the Items manage toolbar pointing at items/variants.'
+        );
+    }
 }
 

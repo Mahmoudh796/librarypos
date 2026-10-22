@@ -116,4 +116,102 @@ class LocaleHelperTest extends CIUnitTestCase
     {
         $this->assertContains('ar', get_rtl_language_codes());
     }
+
+    public function testAuthLanguagesOfferArabicAndEnglishEndonyms(): void
+    {
+        $this->assertSame(['ar-EG' => 'العربية', 'en' => 'English'], get_auth_languages());
+    }
+
+    public function testLanguageNameResolvesKnownCodesToTheirLanguage(): void
+    {
+        $this->assertSame('english', get_language_name('en'));
+        $this->assertSame('arabic', get_language_name('ar-EG'));
+        $this->assertSame('arabic', get_language_name('ar-LB'));
+    }
+
+    public function testLanguageNameReturnsNullForUnsupportedCode(): void
+    {
+        $this->assertNull(get_language_name('xx-NOTALOCALE'));
+    }
+
+    public function testPreferredLanguageCodeHonoursAWhitelistedCookie(): void
+    {
+        $this->withCookie('language', 'ar-EG', function (): void {
+            $this->assertSame('ar-EG', get_preferred_language_code());
+        });
+    }
+
+    public function testPreferredLanguageCodeRejectsACookieOutsideTheWhitelist(): void
+    {
+        $this->withCookie('language', 'xx-NOTALOCALE', function (): void {
+            $this->assertNull(get_preferred_language_code());
+        });
+    }
+
+    public function testPreferredLanguageCodeIsNullWhenNoCookieIsPresent(): void
+    {
+        $this->withCookie('language', null, function (): void {
+            $this->assertNull(get_preferred_language_code());
+        });
+    }
+
+    /**
+     * Local currency formatting: EGP with the ج.م symbol, formatted through the
+     * configured number_locale (en_US) so money keeps Western digits — the POS
+     * inputs, barcode quantities and JS arithmetic are all Western-digit, and
+     * Arabic-Indic digits in a total would break that round trip.
+     */
+    public function testToCurrencyFormatsEgyptianPoundWithWesternDigits(): void
+    {
+        $config           = new OSPOS();
+        $config->settings = [
+            'dateformat'          => 'Y-m-d',
+            'number_locale'       => 'en_US',
+            'currency_code'       => 'EGP',
+            'currency_symbol'     => 'ج.م',
+            'currency_decimals'   => 2,
+            'thousands_separator' => 1,
+        ];
+        Factories::injectMock('config', OSPOS::class, $config);
+
+        $formatted = to_currency('1234.5');
+
+        // ICU separates the symbol from the number with a narrow/nbsp space, so
+        // compare on normalised whitespace rather than on bytes.
+        $normalized = preg_replace('/[\x{00A0}\x{202F}]/u', ' ', $formatted);
+
+        $this->assertSame('ج.م 1,234.50', $normalized);
+        $this->assertMatchesRegularExpression('/[0-9]/u', $formatted, 'Western digits must survive the formatting path.');
+        $this->assertDoesNotMatchRegularExpression(
+            '/[\x{0660}-\x{0669}\x{06F0}-\x{06F9}]/u',
+            $formatted,
+            'en_US must not render Arabic-Indic digits; ar_EG is kept off number_locale on purpose.'
+        );
+    }
+
+    /**
+     * Runs $assertions with the given request cookie visible to the cookie
+     * helper, restoring the original request cookies afterwards.
+     */
+    private function withCookie(string $name, ?string $value, callable $assertions): void
+    {
+        $request  = service('request');
+        $original = $request->getCookie() ?? [];
+
+        $cookies = $original;
+
+        if ($value === null) {
+            unset($cookies[$name]);
+        } else {
+            $cookies[$name] = $value;
+        }
+
+        $request->setGlobal('cookie', $cookies);
+
+        try {
+            $assertions();
+        } finally {
+            $request->setGlobal('cookie', $original);
+        }
+    }
 }
