@@ -14,6 +14,67 @@ $template = $receipt_template_view ?? 'receipt_default';
 
 <?= view('partial/header') ?>
 
+<style type="text/css" media="print">
+    /* 80mm thermal receipt presentation — scoped to this document only.
+       Invoice/quote/work-order pages keep their own (A4) print behaviour. */
+    @page {
+        size: 80mm auto;
+        margin: 3mm 4mm;
+    }
+
+    html, body {
+        width: 80mm;
+        margin: 0;
+        padding: 0;
+        background: #ffffff !important;
+    }
+
+    #receipt_wrapper {
+        width: 100% !important;
+        max-width: 80mm;
+        margin: 0 auto;
+        padding: 0;
+        overflow-wrap: anywhere;
+        word-wrap: break-word;
+    }
+
+    #receipt_wrapper table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    #receipt_items td,
+    #receipt_items th {
+        padding: 1.5pt 0;
+        vertical-align: top;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .total-value {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    #receipt_wrapper #image {
+        max-width: 30mm;
+        max-height: 20mm;
+    }
+
+    #receipt_wrapper #barcode img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* Money, invoice/sale numbers, timestamps and phone stay LTR-read when
+       embedded in Arabic RTL labels. */
+    #receipt_general_info div,
+    #sale_time,
+    #company_phone {
+        unicode-bidi: plaintext;
+    }
+</style>
+
 <?php
 if (isset($error_message)) {
     echo '<div class="alert alert-dismissible alert-danger">' . $error_message . '</div>';
