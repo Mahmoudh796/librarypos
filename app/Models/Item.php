@@ -468,6 +468,16 @@ class Item extends Model
         if ($filters['no_description']) {
             $idBuilder->where('items.description', '');
         }
+        if (($filters['category'] ?? '') !== '') {
+            $idBuilder->where('items.category', $filters['category']);
+        }
+        if (!empty($filters['supplier_id'])) {
+            $idBuilder->where('items.supplier_id', (int) $filters['supplier_id']);
+        }
+        if (!empty($filters['out_of_stock']) && $filters['stock_location_id'] > -1) {
+            $idBuilder->where('item_quantities.quantity <=', 0);
+            $idBuilder->where('items.stock_type', HAS_STOCK);
+        }
         if ($filters['temporary']) {
             $idBuilder->where('items.item_type', ITEM_TEMP);
         } else {

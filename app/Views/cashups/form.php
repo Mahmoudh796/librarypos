@@ -114,10 +114,11 @@
                         <span class="input-group-addon input-sm"><b><?= esc($config['currency_symbol']) ?></b></span>
                     <?php endif; ?>
                     <?= form_input([
-                        'name'  => 'closed_amount_cash',
-                        'id'    => 'closed_amount_cash',
-                        'class' => 'form-control input-sm dj-input-number',
-                        'value' => to_currency_no_money($cash_ups_info->closed_amount_cash)
+                        'name'        => 'closed_amount_cash',
+                        'id'          => 'closed_amount_cash',
+                        'class'       => 'form-control input-sm dj-input-number',
+                        'placeholder' => lang('Cashups.count_the_cash'),
+                        'value'       => $cash_ups_info->closed_amount_cash === '' ? '' : to_currency_no_money((string) $cash_ups_info->closed_amount_cash)
                     ]) ?>
                     <?php if (is_right_side_currency_symbol()): ?>
                         <span class="input-group-addon input-sm"><b><?= esc($config['currency_symbol']) ?></b></span>
@@ -125,6 +126,29 @@
                 </div>
             </div>
         </div>
+
+        <?php if (isset($cash_ups_info->expected_amount_cash) && $cash_ups_info->expected_amount_cash !== null): ?>
+            <div class="form-group form-group-sm">
+                <?= form_label(lang('Cashups.expected_amount_cash'), 'expected_amount_cash', ['class' => 'control-label col-xs-3']) ?>
+                <div class="col-xs-4">
+                    <p class="form-control-static dj-num" id="expected_amount_cash" data-value="<?= esc((string) $cash_ups_info->expected_amount_cash, 'attr') ?>"><?= to_currency((string) $cash_ups_info->expected_amount_cash) ?></p>
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <?= form_label(lang('Cashups.difference_cash'), 'difference_cash', ['class' => 'control-label col-xs-3']) ?>
+                <div class="col-xs-6">
+                    <p class="form-control-static dj-num" id="difference_cash" aria-live="polite">
+                        <?php if (isset($cash_ups_info->difference_cash) && $cash_ups_info->difference_cash !== null): ?>
+                            <?= to_currency((string) $cash_ups_info->difference_cash) ?>
+                            <span class="label label-<?= (float) $cash_ups_info->difference_cash < 0 ? 'danger' : ((float) $cash_ups_info->difference_cash > 0 ? 'warning' : 'success') ?>">
+                                <?= lang((float) $cash_ups_info->difference_cash < 0 ? 'Cashups.shortage' : ((float) $cash_ups_info->difference_cash > 0 ? 'Cashups.overage' : 'Cashups.balanced')) ?>
+                            </span>
+                        <?php endif; ?>
+                    </p>
+                    <p class="help-block dj-hint"><?= lang('Cashups.difference_help') ?></p>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <div class="form-group form-group-sm">
             <?= form_label(lang('Cashups.note'), 'note', ['class' => 'control-label col-xs-3']) ?>
@@ -290,6 +314,30 @@
             todayHighlight: true,
             bootcssVer: 3,
             language: '<?= current_language_code() ?>'
+        });
+
+        // Live counted-minus-expected difference; Arabic-Indic digits are accepted as typed.
+        const differenceLabels = {
+            shortage: <?= json_encode(lang('Cashups.shortage')) ?>,
+            overage: <?= json_encode(lang('Cashups.overage')) ?>,
+            balanced: <?= json_encode(lang('Cashups.balanced')) ?>
+        };
+        const toNumber = function(value) {
+            const western = String(value || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace('٫', '.').replace(/[٬,\s]/g, '');
+            return parseFloat(western);
+        };
+        $('#closed_amount_cash').on('input', function() {
+            const expected = parseFloat($('#expected_amount_cash').data('value'));
+            const counted = toNumber($(this).val());
+            if (isNaN(expected) || isNaN(counted)) {
+                $('#difference_cash').text('');
+                return;
+            }
+            const difference = Math.round((counted - expected) * 100) / 100;
+            const kind = difference < 0 ? 'shortage' : (difference > 0 ? 'overage' : 'balanced');
+            const tone = difference < 0 ? 'danger' : (difference > 0 ? 'warning' : 'success');
+            $('#difference_cash').empty().append(document.createTextNode(difference.toFixed(2) + ' '))
+                .append($('<span>').addClass('label label-' + tone).text(differenceLabels[kind]));
         });
 
         $('#open_amount_cash, #transfer_amount_cash, #closed_amount_cash, #closed_amount_due, #closed_amount_card, #closed_amount_check').keyup(function() {

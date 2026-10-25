@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Паролі не співпадають.',
     'password_not_must_match'                => 'Поточний пароль та новий пароль не повинні співпадати.',
     'password_required'                      => 'Пароль - обов\'язкове поле.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

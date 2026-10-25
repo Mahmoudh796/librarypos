@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "accounting"                => "",
+    "accounting_desc"           => "",
     "admin_cashups"             => "",
     "admin_cashups_desc"        => "",
     "attributes"                => "",
@@ -46,4 +48,6 @@ return [
     "timeclocks_categories"     => "",
     "timeclocks_categories_desc"=> "",
     "timeclocks_desc"           => "",
+    "treasury"                  => "",
+    "treasury_desc"             => "",
 ];

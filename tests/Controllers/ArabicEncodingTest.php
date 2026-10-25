@@ -43,7 +43,7 @@ class ArabicEncodingTest extends CIUnitTestCase
     {
         foreach ([
             '/home'      => ['رؤية'],
-            '/items'     => ['رؤية', 'الأصناف'],
+            '/items'     => ['رؤية', 'المنتجات'],
             '/customers' => ['رؤية', 'العملاء'],
             '/suppliers' => ['رؤية', 'الموردين'],
             '/reports'   => ['رؤية'],
@@ -110,7 +110,7 @@ class ArabicEncodingTest extends CIUnitTestCase
             '/customers'  => ['dj-page-head', 'dj-page-title'],
             '/suppliers'  => ['dj-page-head', 'dj-page-title'],
             '/giftcards'  => ['dj-page-head', 'dj-page-title'],
-            '/reports'    => ['dj-page-head', 'reports-hub'],
+            '/reports'    => ['dj-page-head', 'ruya-hub'],
             '/sales'      => ['dj-page-head', 'dj-register'],
             '/receivings' => ['dj-page-head'],
             '/messages'   => ['dj-form-panel'],

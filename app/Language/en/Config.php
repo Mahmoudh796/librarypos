@@ -203,6 +203,8 @@ return [
     'invoice'                                  => 'Invoice',
     'invoice_configuration'                    => 'Invoice Print Settings',
     'invoice_default_comments'                 => 'Default Invoice Comments',
+    'invoice_discount_max_percent'             => 'Invoice discount limit',
+    'invoice_discount_max_percent_help'        => 'Largest whole-invoice discount, as a percentage of the invoice, that a cashier may give. Employees with the limit-override permission may exceed it.',
     'invoice_email_message'                    => 'Invoice Email Template',
     'invoice_enable'                           => 'Enable Invoicing',
     'invoice_printer'                          => 'Invoice Printer',

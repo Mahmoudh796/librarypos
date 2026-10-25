@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'รหัสผ่านไม่ตรงกัน',
     'password_not_must_match'                => 'รหัสผ่านปัจจุบันและรหัสผ่านใหม่จะต้องไม่ซ้ำกัน',
     'password_required'                      => 'ต้องระบุรหัสผ่าน',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

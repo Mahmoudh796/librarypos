@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Kata Sandi tidak cocok.',
     'password_not_must_match'                => 'Kata kunci sekarang dan kata kunci baru harus unik.',
     'password_required'                      => 'Kata Sandi wajib diisi.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

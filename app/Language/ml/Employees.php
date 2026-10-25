@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => '',
     'password_not_must_match'                => '',
     'password_required'                      => '',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Libraries\Accounting\Costing;
+use App\Libraries\Accounting\Posting;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use Config\OSPOS;
 use ReflectionException;
+use Throwable;
 
 /**
  * Receiving class
@@ -91,10 +94,22 @@ class Receiving extends Model
      */
     public function update($receiving_id = null, $receiving_data = null): bool
     {
+        $this->db->transStart();
+
         $builder = $this->db->table('receivings');
         $builder->where('receiving_id', $receiving_id);
+        $success = $builder->update($receiving_data);
 
-        return $builder->update($receiving_data);
+        // Date, supplier or payment edits change the posted entry.
+        if ($success && !$this->postToLedger((int) $receiving_id, null)) {
+            $this->db->transRollback();
+
+            return false;
+        }
+
+        $this->db->transComplete();
+
+        return $success && $this->db->transStatus();
     }
 
     /**
@@ -107,6 +122,7 @@ class Receiving extends Model
         $item = model(Item::class);
         $item_quantity = model(Item_quantity::class);
         $supplier = model(Supplier::class);
+        $costing = new Costing($this->db);
 
         if (count($items) == 0) {
             return -1;    // TODO: Replace -1 with a constant
@@ -123,6 +139,7 @@ class Receiving extends Model
 
         // Run these queries as a transaction, we want to make sure we do all or nothing
         $this->db->transStart();
+        $costing->lockItems(array_column($items, 'item_id'));
 
         $builder = $this->db->table('receivings');
         $builder->insert($receivings_data);
@@ -159,9 +176,18 @@ class Receiving extends Model
 
             $items_received = $item_data['receiving_quantity'] != 0 ? $item_data['quantity'] * $item_data['receiving_quantity'] : $item_data['quantity'];
 
-            // Update cost price, if changed AND is set in config as wanted
-            if ($cur_item_info->cost_price != $item_data['price'] && $config['receiving_calculate_average_price']) {
-                $item->change_cost_price($item_data['item_id'], $items_received, $item_data['price'], $cur_item_info->cost_price);
+            // Moving weighted average: blend the net unit cost (pack price spread
+            // over the pack, after the line discount) into the cost of the units
+            // already on hand. Runs before the quantity increases below.
+            if ($config['receiving_calculate_average_price'] && $items_received > 0) {
+                $costing->receive(
+                    (int) $item_data['item_id'],
+                    (float) $items_received,
+                    Costing::netUnitCost((float) $item_data['price'], (float) $item_data['quantity'], (float) $item_data['receiving_quantity'], (float) $item_data['discount'], (int) $item_data['discount_type']),
+                    Posting::SOURCE_RECEIVING,
+                    (int) $receiving_id,
+                    $employee_id
+                );
             }
 
             // Update stock quantity with the same atomic delta-based write as
@@ -193,9 +219,36 @@ class Receiving extends Model
             $attribute->copy_attribute_links($item_data['item_id'], 'receiving_id', $receiving_id);
         }
 
+        if (!$this->postToLedger((int) $receiving_id, $employee_id)) {
+            $this->db->transRollback();
+
+            return -1;
+        }
+
         $this->db->transComplete();
 
         return $this->db->transStatus() ? $receiving_id : -1;
+    }
+
+    /**
+     * Brings the receiving's journal entry in line with the document. Runs inside
+     * the caller's transaction; a failure must abort it.
+     */
+    private function postToLedger(int $receivingId, ?int $employeeId): bool
+    {
+        if (!Posting::enabled()) {
+            return true;
+        }
+
+        try {
+            (new Posting($this->db))->postReceiving($receivingId, $employeeId);
+
+            return true;
+        } catch (Throwable $e) {
+            log_message('error', "Posting receiving $receivingId failed: " . $e->getMessage());
+
+            return false;
+        }
     }
 
 
@@ -286,7 +339,8 @@ class Receiving extends Model
         $builder = $this->db->table('receivings');
         $builder->delete(['receiving_id' => $receiving_id]);
 
-        return true;
+        // The document is gone, so posting reverses its live entry.
+        return $this->postToLedger($receiving_id, $employee_id);
     }
 
     /**

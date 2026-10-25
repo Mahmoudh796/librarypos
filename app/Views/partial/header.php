@@ -6,53 +6,21 @@
  * @var array $config
  */
 
+use App\Models\Employee;
 use App\Models\Module;
 use Config\Services;
 
 $request = Services::request();
 
 /*
- * Navigation is split into an operations ribbon and an administration menu so
- * the header stays legible without hiding anything. The list is already
- * permission-filtered by Secure_Controller, so this only decides which band an
- * authorized module sits in — visibility is unchanged, and a module the
- * employee is not granted can never be promoted into either band.
+ * The menu is grouped by business workflow (sell, buy, stock, treasury, costs,
+ * accounting, reports, administration) instead of one entry per OSPOS module.
+ * Every entry is permission-filtered; a module or screen the employee is not
+ * granted is never offered, and the controllers enforce the same grants.
  */
-$activeSegment = (string)$request->getUri()->getSegment(1);
-
-/*
- * The day-to-day modules, in the order an operator reaches for them. This is an
- * explicit order rather than the modules table sort so the ribbon reads as a
- * workflow: Dashboard -> sell -> receive -> catalogue -> people -> reports.
- */
-$primaryModuleOrder = [
-    'home',
-    'sales',
-    'receivings',
-    'items',
-    'item_kits',
-    'customers',
-    'suppliers',
-    'reports',
-];
-
-/*
- * Administration and low-frequency modules. Anything granted but not named here
- * is appended afterwards, so an unknown or newly added module stays reachable
- * instead of silently disappearing from the header.
- */
-$adminModuleOrder = [
-    'employees',
-    'giftcards',
-    'messages',
-    'taxes',
-    'attributes',
-    'expenses',
-    'expenses_categories',
-    'cashups',
-    'config',
-    'office',
-];
+$uri = $request->getUri();
+$activeSegment = (string) $uri->getSegment(1);
+$activeSegment2 = $uri->getTotalSegments() >= 2 ? (string) $uri->getSegment(2) : '';
 
 $allowedModuleById = [];
 foreach ($allowed_modules ?? [] as $allowedModule) {
@@ -86,84 +54,58 @@ foreach ($djGrantGroups as $djGrantGroup) {
     }
 }
 
-$primaryModules = [];
-foreach ($primaryModuleOrder as $moduleId) {
-    if (isset($allowedModuleById[$moduleId])) {
-        $primaryModules[] = $allowedModuleById[$moduleId];
-        unset($allowedModuleById[$moduleId]);
-    }
-}
-
-$adminModules = [];
-foreach ($adminModuleOrder as $moduleId) {
-    if (isset($allowedModuleById[$moduleId])) {
-        $adminModules[] = $allowedModuleById[$moduleId];
-        unset($allowedModuleById[$moduleId]);
-    }
-}
-
-foreach ($allowedModuleById as $remainingModule) {
-    $adminModules[] = $remainingModule;
-}
+helper('navigation');
+// One query for every grant check in the menu instead of one per entry.
+$djGrantIds = array_flip(array_column(model(Employee::class)->get_employee_grants($djPersonId), 'permission_id'));
+$djHasGrant = static fn (string $grant): bool => isset($djGrantIds[$grant]);
+$djNavGroups = ruya_navigation(array_keys($allowedModuleById), $djHasGrant);
 
 /*
- * The administration menu is presented as grouped sections so it scans like a
- * table of contents instead of one long list. Every granted module still
- * appears exactly once: an ID not listed in the plan falls into the final
- * "System" group, so unknown and newly added modules stay reachable.
+ * Administration. Modules that no business group covers are appended to the
+ * system section, so an unknown or newly added module stays reachable instead
+ * of silently disappearing from the header.
  */
+$djCoveredModules = ['home', 'sales', 'customers', 'giftcards', 'receivings', 'suppliers', 'reports', 'items', 'item_kits', 'attributes', 'treasury', 'cashups', 'expenses', 'expenses_categories', 'accounting'];
 $djAdminGroupPlan = [
-    'team'    => ['employees'],
-    'finance' => ['taxes', 'expenses', 'expenses_categories', 'cashups', 'giftcards'],
-    'comms'   => ['messages'],
-    'system'  => ['attributes', 'config', 'office'],
+    'team'   => ['employees'],
+    'comms'  => ['messages'],
+    'system' => ['taxes', 'config', 'office'],
 ];
 
-$djAdminModuleById = [];
-foreach ($adminModules as $adminModule) {
-    $djAdminModuleById[$adminModule->module_id] = $adminModule;
-}
-
 $djAdminGroups = [];
-$djAdminGroupedIds = [];
 foreach ($djAdminGroupPlan as $groupId => $groupModuleIds) {
-    $modulesInGroup = [];
     foreach ($groupModuleIds as $moduleId) {
-        if (isset($djAdminModuleById[$moduleId])) {
-            $modulesInGroup[] = $djAdminModuleById[$moduleId];
-            $djAdminGroupedIds[] = $moduleId;
+        if (isset($allowedModuleById[$moduleId])) {
+            $djAdminGroups[$groupId][] = ['href' => $moduleId, 'label' => 'Module.' . $moduleId];
         }
     }
-    if ($modulesInGroup !== []) {
-        $djAdminGroups[$groupId] = $modulesInGroup;
-    }
 }
 
-$djAdminUngrouped = [];
-foreach ($adminModules as $adminModule) {
-    if (!in_array($adminModule->module_id, $djAdminGroupedIds, true)) {
-        $djAdminUngrouped[] = $adminModule;
-    }
-}
-if ($djAdminUngrouped !== []) {
-    $djAdminGroups['system'] = array_merge($djAdminGroups['system'] ?? [], $djAdminUngrouped);
-}
-
-$adminIsActive = false;
-foreach ($adminModules as $adminModule) {
-    if ($adminModule->module_id === $activeSegment) {
-        $adminIsActive = true;
-        break;
+foreach (array_keys($allowedModuleById) as $moduleId) {
+    if (!in_array($moduleId, $djCoveredModules, true) && !in_array($moduleId, array_merge(...array_values($djAdminGroupPlan)), true)) {
+        $djAdminGroups['system'][] = ['href' => $moduleId, 'label' => 'Module.' . $moduleId];
     }
 }
 
 /*
  * The database backup page is not a grantable module of its own; it is an
  * administration surface, so it shares the `config` grant and is only offered
- * when that grant is present.
+ * when that grant is present. The audit trail needs the accounting setup grant.
  */
-$canAdminister = in_array('config', array_column($adminModules, 'module_id'), true);
-$backupIsActive = $activeSegment === 'backups';
+$canAdminister = isset($allowedModuleById['config']);
+if ($canAdminister) {
+    $djAdminGroups['system'][] = ['href' => 'backups', 'label' => 'Common.backup'];
+}
+if (isset($allowedModuleById['accounting']) && $djHasGrant('accounting_setup')) {
+    $djAdminGroups['system'][] = ['href' => 'accounting/audit', 'label' => 'Accounting.audit_trail'];
+}
+
+$adminIsActive = false;
+foreach ($djAdminGroups as $djItems) {
+    foreach ($djItems as $djItem) {
+        $adminIsActive = $adminIsActive || ruya_nav_is_active($djItem['href'], $activeSegment, $activeSegment2);
+    }
+}
 ?>
 
 <!doctype html>
@@ -267,9 +209,11 @@ $backupIsActive = $activeSegment === 'backups';
     <link rel="stylesheet" href="css/dahrouj.css<?= $dj_theme_version('css/dahrouj.css') ?>">
     <link rel="stylesheet" href="css/direction.css<?= $dj_theme_version('css/direction.css') ?>">
     <link rel="stylesheet" href="css/rtl.css<?= $dj_theme_version('css/rtl.css') ?>">
+    <link rel="stylesheet" href="css/ruya.css<?= $dj_theme_version('css/ruya.css') ?>">
 
     <?= view('partial/header_js') ?>
     <script src="js/nav_history.js"></script>
+    <script src="js/ruya.js<?= $dj_theme_version('js/ruya.js') ?>"></script>
     <?= view('partial/lang_lines') ?>
 
     <style>
@@ -300,46 +244,65 @@ $backupIsActive = $activeSegment === 'backups';
 
                 <nav class="dj-nav collapse" id="dj-primary-nav">
                     <ul class="dj-nav-list">
-                        <?php foreach ($primaryModules as $module): ?>
-                            <?php $isActiveModule = $module->module_id === $activeSegment; ?>
-                            <?php $isDashboard = $module->module_id === 'home'; ?>
+                        <?php if (isset($allowedModuleById['home'])): ?>
+                            <?php $isActiveModule = $activeSegment === 'home' || $activeSegment === ''; ?>
                             <li class="dj-nav-item">
-                                <a class="dj-nav-link<?= $isActiveModule ? ' is-active' : '' ?><?= $isDashboard ? ' dj-nav-link--home' : '' ?>" href="<?= base_url($module->module_id) ?>" title="<?= esc($isDashboard ? lang('Common.dashboard') : lang('Module.' . $module->module_id), 'attr') ?>"<?= $isActiveModule ? ' aria-current="page"' : '' ?>>
-                                    <?php if ($isDashboard): ?>
-                                        <span class="glyphicon glyphicon-dashboard" aria-hidden="true"></span>
-                                    <?php endif; ?>
-                                    <?= $isDashboard ? lang('Common.dashboard') : lang('Module.' . $module->module_id) ?>
+                                <a class="dj-nav-link dj-nav-link--home<?= $isActiveModule ? ' is-active' : '' ?>" href="<?= base_url('home') ?>" title="<?= esc(lang('Common.dashboard'), 'attr') ?>"<?= $isActiveModule ? ' aria-current="page"' : '' ?>>
+                                    <span class="glyphicon glyphicon-dashboard" aria-hidden="true"></span>
+                                    <?= lang('Common.dashboard') ?>
                                 </a>
+                            </li>
+                        <?php endif; ?>
+
+                        <?php foreach ($djNavGroups as $groupId => $group): ?>
+                            <?php
+                            $groupIsActive = false;
+                            foreach ($group['items'] as $item) {
+                                $groupIsActive = $groupIsActive || (isset($item['href']) && ruya_nav_is_active($item['href'], $activeSegment, $activeSegment2));
+                            }
+                            ?>
+                            <li class="dj-nav-item dropdown dj-nav-group dj-nav-group--<?= esc($groupId, 'attr') ?><?= $groupIsActive ? ' is-active' : '' ?>">
+                                <a class="dj-nav-link dropdown-toggle<?= $groupIsActive ? ' is-active' : '' ?>" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                    <span class="dj-nav-label"><?= lang($group['label']) ?></span><span class="caret" aria-hidden="true"></span>
+                                </a>
+                                <ul class="dropdown-menu dj-nav-overflow">
+                                    <?php foreach ($group['items'] as $item): ?>
+                                        <?php if (isset($item['heading'])): ?>
+                                            <li class="dj-nav-group-heading" role="presentation"><?= esc(lang($item['heading'])) ?></li>
+                                            <?php continue; ?>
+                                        <?php endif; ?>
+                                        <?php $isActiveItem = ruya_nav_is_active($item['href'], $activeSegment, $activeSegment2); ?>
+                                        <li<?= $isActiveItem ? ' class="active"' : '' ?>>
+                                            <a href="<?= base_url($item['href']) ?>"<?= $isActiveItem ? ' aria-current="page"' : '' ?>><?= lang($item['label']) ?></a>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
                             </li>
                         <?php endforeach; ?>
 
-                        <?php if (!empty($adminModules) || $canAdminister): ?>
-                            <li class="dj-nav-item dropdown dj-nav-admin<?= ($adminIsActive || $backupIsActive) ? ' is-active' : '' ?>">
+                        <?php if (isset($allowedModuleById['reports'])): ?>
+                            <?php $isActiveModule = $activeSegment === 'reports' && $activeSegment2 !== 'detailed_receivings' && $activeSegment2 !== 'inventory_low'; ?>
+                            <li class="dj-nav-item">
+                                <a class="dj-nav-link<?= $isActiveModule ? ' is-active' : '' ?>" href="<?= base_url('reports') ?>"<?= $isActiveModule ? ' aria-current="page"' : '' ?>><?= lang('Module.reports') ?></a>
+                            </li>
+                        <?php endif; ?>
+
+                        <?php if ($djAdminGroups !== []): ?>
+                            <li class="dj-nav-item dropdown dj-nav-admin<?= $adminIsActive ? ' is-active' : '' ?>">
                                 <a class="dj-nav-link dropdown-toggle" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" title="<?= esc(lang('Common.admin'), 'attr') ?>">
                                     <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
                                     <span class="dj-nav-label"><?= lang('Common.admin') ?></span><span class="caret" aria-hidden="true"></span>
                                 </a>
                                 <ul class="dropdown-menu dj-nav-overflow">
-                                    <?php foreach ($djAdminGroups as $adminGroupId => $adminGroupModules): ?>
+                                    <?php foreach ($djAdminGroups as $adminGroupId => $adminItems): ?>
                                         <li class="dj-nav-group-heading" role="presentation"><?= esc(lang('Common.admin_group_' . $adminGroupId)) ?></li>
-                                        <?php foreach ($adminGroupModules as $adminModule): ?>
-                                            <?php $isActiveModule = $adminModule->module_id === $activeSegment; ?>
-                                            <li<?= $isActiveModule ? ' class="active"' : '' ?>>
-                                                <a href="<?= base_url($adminModule->module_id) ?>"<?= $isActiveModule ? ' aria-current="page"' : '' ?>>
-                                                    <?= lang('Module.' . $adminModule->module_id) ?>
-                                                </a>
+                                        <?php foreach ($adminItems as $item): ?>
+                                            <?php $isActiveItem = ruya_nav_is_active($item['href'], $activeSegment, $activeSegment2); ?>
+                                            <li<?= $isActiveItem ? ' class="active"' : '' ?>>
+                                                <a href="<?= base_url($item['href']) ?>"<?= $isActiveItem ? ' aria-current="page"' : '' ?>><?= lang($item['label']) ?></a>
                                             </li>
                                         <?php endforeach; ?>
                                     <?php endforeach; ?>
-
-                                    <?php if ($canAdminister): ?>
-                                        <li class="dj-nav-separator" role="presentation"></li>
-                                        <li<?= $backupIsActive ? ' class="active"' : '' ?>>
-                                            <a href="<?= base_url('backups') ?>"<?= $backupIsActive ? ' aria-current="page"' : '' ?>>
-                                                <span class="glyphicon glyphicon-hdd" aria-hidden="true"></span><?= lang('Common.backup') ?>
-                                            </a>
-                                        </li>
-                                    <?php endif; ?>
                                 </ul>
                             </li>
                         <?php endif; ?>

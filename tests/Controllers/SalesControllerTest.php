@@ -852,6 +852,89 @@ class SalesControllerTest extends CIUnitTestCase
         $response->assertDontSee(lang('Sales.amount_due_not_covered'));
     }
 
+    private function createCashierWithInvoiceDiscount(bool $override = false): int
+    {
+        $grants = [
+            ['permission_id' => 'sales', 'menu_group' => 'home'],
+            ['permission_id' => 'sales_stock', 'menu_group' => 'home'],
+            ['permission_id' => 'sales_invoice_discount', 'menu_group' => '--'],
+        ];
+
+        if ($override) {
+            $grants[] = ['permission_id' => 'sales_invoice_discount_override', 'menu_group' => '--'];
+        }
+
+        return $this->createEmployee(
+            first_name: 'Cashier',
+            last_name:  'InvoiceDiscount',
+            email:      'cashier-invoice-discount.' . uniqid() . '@test.com',
+            username:   'cashier_invdisc_' . uniqid(),
+            grants:     $grants,
+        );
+    }
+
+    public function testInvoiceDiscountNeedsItsGrant(): void
+    {
+        $this->loginAs($this->createCashierEmployee());
+        $this->seedCartLine(1, '100.00', $this->createTestItem(HAS_NO_STOCK));
+
+        $response = $this->post('/sales/invoiceDiscount', ['invoice_discount_type' => (string) PERCENT, 'invoice_discount_value' => '5', 'invoice_discount_reason' => 'x']);
+
+        $response->assertSee(lang('Sales.not_authorized'));
+        $this->assertNull(Services::session()->get('sales_invoice_discount'));
+    }
+
+    public function testInvoiceDiscountNeedsAReason(): void
+    {
+        $this->loginAs($this->createCashierWithInvoiceDiscount());
+        $this->seedCartLine(1, '100.00', $this->createTestItem(HAS_NO_STOCK));
+
+        $response = $this->post('/sales/invoiceDiscount', ['invoice_discount_type' => (string) PERCENT, 'invoice_discount_value' => '5', 'invoice_discount_reason' => '']);
+
+        $response->assertSee(lang('Sales.invoice_discount_reason_required'));
+        $this->assertNull(Services::session()->get('sales_invoice_discount'));
+    }
+
+    public function testInvoiceDiscountAboveLimitNeedsOverride(): void
+    {
+        $this->loginAs($this->createCashierWithInvoiceDiscount());
+        $this->seedCartLine(1, '100.00', $this->createTestItem(HAS_NO_STOCK));
+
+        $limit = (float) (config(OSPOS::class)->settings['invoice_discount_max_percent'] ?? 10);
+        $response = $this->post('/sales/invoiceDiscount', ['invoice_discount_type' => (string) FIXED, 'invoice_discount_value' => (string) ($limit + 5), 'invoice_discount_reason' => 'big']);
+
+        $this->assertNull(Services::session()->get('sales_invoice_discount'), 'Above the limit without the override grant nothing is applied.');
+
+        $this->loginAs($this->createCashierWithInvoiceDiscount(true));
+        $this->seedCartLine(1, '100.00', $this->createTestItem(HAS_NO_STOCK));
+        $this->post('/sales/invoiceDiscount', ['invoice_discount_type' => (string) FIXED, 'invoice_discount_value' => (string) ($limit + 5), 'invoice_discount_reason' => 'manager approved']);
+
+        $this->assertSame((string) ($limit + 5), (string) (Services::session()->get('sales_invoice_discount')['value'] ?? ''));
+        $this->assertSame(1, Database::connect()->table('audit_log')->where('action', 'invoice_discount')->where('reason', 'manager approved')->countAllResults());
+    }
+
+    public function testCompletedSaleStoresInvoiceDiscountAllocation(): void
+    {
+        $this->loginAs($this->createCashierWithInvoiceDiscount());
+        $itemId = $this->createTestItem(HAS_NO_STOCK);
+        $this->seedCartLine(1, '100.00', $itemId);
+        $this->withSession(array_merge($this->session, [
+            'sale_id'                => NEW_ENTRY,
+            'sales_mode'             => 'sale_invoice',
+            'sales_invoice_discount' => ['type' => PERCENT, 'value' => '5', 'reason' => 'regular customer'],
+        ]));
+
+        $this->post('/sales/complete');
+
+        $db = Database::connect();
+        $saleId = (int) $db->table('sales')->selectMax('sale_id')->get()->getRow()->sale_id;
+        $line = $db->table('sales_items')->where('sale_id', $saleId)->get()->getRow();
+        $sale = $db->table('sales')->where('sale_id', $saleId)->get()->getRow();
+
+        $this->assertEqualsWithDelta(5.0, (float) $line->invoice_discount, 0.001);
+        $this->assertSame('regular customer', $sale->invoice_discount_reason);
+    }
+
     public function testRegisterEscapesMaliciousTaxName(): void
     {
         $cashierId = $this->createCashierEmployee();

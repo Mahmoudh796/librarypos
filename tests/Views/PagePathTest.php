@@ -142,9 +142,11 @@ class PagePathTest extends CIUnitTestCase
             APPPATH . 'Views/reports/specific_input.php'          => ["partial/page_path", "get_report_path_info"],
             APPPATH . 'Views/reports/specific_customer_input.php' => ["partial/page_path", "get_report_path_info"],
             APPPATH . 'Views/reports/inventory_summary_input.php' => ["partial/page_path", "get_report_path_info"],
-            APPPATH . 'Views/reports/tabular.php'         => ["partial/page_path", "edit_report_inputs", "get_report_path_info"],
-            APPPATH . 'Views/reports/tabular_details.php' => ["partial/page_path", "edit_report_inputs", "get_report_path_info"],
-            APPPATH . 'Views/reports/graphical.php'       => ["partial/page_path", "edit_report_inputs", "get_report_path_info"],
+            // Report results share one head (breadcrumb, period, totals, edit-inputs link).
+            APPPATH . 'Views/reports/partials/result_head.php' => ["partial/page_path", "edit_report_inputs", "get_report_path_info"],
+            APPPATH . 'Views/reports/tabular.php'         => ["reports/partials/result_head"],
+            APPPATH . 'Views/reports/tabular_details.php' => ["reports/partials/result_head"],
+            APPPATH . 'Views/reports/graphical.php'       => ["reports/partials/result_head"],
             APPPATH . 'Views/barcodes/barcode_sheet.php'  => ["Common.back_to", "Module.items", ".barcode-sheet-bar"],
         ];
 

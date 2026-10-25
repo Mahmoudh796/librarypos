@@ -213,6 +213,28 @@ class SaleTest extends CIUnitTestCase
         return (int) $row->points;
     }
 
+    /**
+     * Every report total is net of the invoice discount: the sales history, the
+     * sale info and the line SQL all subtract each line's allocated share.
+     */
+    public function testInvoiceDiscountIsSubtractedFromSaleTotals(): void
+    {
+        $db = \Config\Database::connect();
+        $itemId = $this->createTestItem(HAS_NO_STOCK);
+        $db->table('sales')->insert(['sale_time' => '2001-04-05 10:00:00', 'employee_id' => 1, 'comment' => '', 'sale_status' => COMPLETED, 'sale_type' => SALE_TYPE_POS]);
+        $saleId = (int) $db->insertID();
+        $db->table('sales_items')->insert([
+            'sale_id' => $saleId, 'item_id' => $itemId, 'line' => 1, 'quantity_purchased' => 2, 'item_cost_price' => 1,
+            'item_unit_price' => 50, 'discount' => 0, 'discount_type' => PERCENT, 'invoice_discount' => 10, 'item_location' => self::LOCATION_ID,
+        ]);
+
+        $rows = model(Sale::class)->search('', ['start_date' => '2001-04-05', 'end_date' => '2001-04-05', 'sale_type' => 'all', 'location_id' => 'all', 'only_invoices' => false, 'only_cash' => false, 'only_due' => false, 'only_check' => false, 'only_creditcard' => false, 'only_debit' => false, 'only_bank_transfer' => false, 'only_wallet' => false, 'selected_customer' => false, 'is_valid_receipt' => false], 10, 0, 'sales.sale_time', 'desc')->getResultArray();
+        $row = array_values(array_filter($rows, static fn (array $r): bool => (int) $r['sale_id'] === $saleId))[0];
+
+        $this->assertEqualsWithDelta(90.0, (float) $row['amount_due'], 0.001);
+        $this->assertEqualsWithDelta(90.0, (float) $db->query('SELECT SUM(' . Sale::lineNetSql(2, $db->prefixTable('sales_items')) . ') AS net FROM ' . $db->prefixTable('sales_items') . ' WHERE sale_id = ?', [$saleId])->getRow()->net, 0.001);
+    }
+
     public function testSaveValueSucceedsWithSufficientGiftcardBalance(): void
     {
         $employeeId     = $this->createEmployee();

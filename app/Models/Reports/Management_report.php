@@ -2,6 +2,7 @@
 
 namespace App\Models\Reports;
 
+use App\Models\Sale;
 use CodeIgniter\Model;
 use Config\OSPOS;
 
@@ -55,9 +56,7 @@ class Management_report extends Model
         $config = config(OSPOS::class)->settings;
         $taxIncluded = (bool) $config['tax_included'];
 
-        $lineRevenue = "CASE WHEN sales_items.discount_type = " . PERCENT
-            . " THEN sales_items.quantity_purchased * sales_items.item_unit_price - ROUND(sales_items.quantity_purchased * sales_items.item_unit_price * sales_items.discount / 100, $decimals)"
-            . " ELSE sales_items.quantity_purchased * (sales_items.item_unit_price - sales_items.discount) END";
+        $lineRevenue = Sale::lineNetSql($decimals);
 
         $internalTax = "IFNULL(line_taxes.internal_tax, 0)";
         $salesTax = "IFNULL(line_taxes.sales_tax, 0)";
@@ -65,9 +64,7 @@ class Management_report extends Model
         $sql = "SELECT
                 SUM(CASE WHEN sales.sale_type IN (" . SALE_TYPE_POS . ", " . SALE_TYPE_INVOICE . ") THEN $lineRevenue ELSE 0 END) AS gross_revenue,
                 SUM(CASE WHEN sales.sale_type IN (" . SALE_TYPE_POS . ", " . SALE_TYPE_INVOICE . ") THEN
-                    (CASE WHEN sales_items.discount_type = " . PERCENT
-                        . " THEN ROUND(sales_items.quantity_purchased * sales_items.item_unit_price * sales_items.discount / 100, $decimals)"
-                        . " ELSE sales_items.quantity_purchased * sales_items.discount END) ELSE 0 END) AS discounts,
+                    " . Sale::lineDiscountSql($decimals) . " ELSE 0 END) AS discounts,
                 SUM(CASE WHEN sales.sale_type = " . SALE_TYPE_RETURN . " THEN $lineRevenue ELSE 0 END) AS return_revenue,
                 SUM(IFNULL(line_taxes.tax, 0)) AS total_tax,
                 SUM($internalTax) AS internal_tax,
@@ -147,9 +144,7 @@ class Management_report extends Model
         $config = config(OSPOS::class)->settings;
         $taxIncluded = (bool) $config['tax_included'];
 
-        $lineRevenue = "CASE WHEN sales_items.discount_type = " . PERCENT
-            . " THEN sales_items.quantity_purchased * sales_items.item_unit_price - ROUND(sales_items.quantity_purchased * sales_items.item_unit_price * sales_items.discount / 100, $decimals)"
-            . " ELSE sales_items.quantity_purchased * (sales_items.item_unit_price - sales_items.discount) END";
+        $lineRevenue = Sale::lineNetSql($decimals);
 
         $sql = "SELECT DATE(sales.sale_time) AS sale_date,
                 SUM($lineRevenue) AS revenue,
@@ -244,9 +239,7 @@ class Management_report extends Model
         $decimals = totals_decimals();
         $config = config(OSPOS::class)->settings;
 
-        $lineRevenue = "CASE WHEN sales_items.discount_type = " . PERCENT
-            . " THEN sales_items.quantity_purchased * sales_items.item_unit_price - ROUND(sales_items.quantity_purchased * sales_items.item_unit_price * sales_items.discount / 100, $decimals)"
-            . " ELSE sales_items.quantity_purchased * (sales_items.item_unit_price - sales_items.discount) END";
+        $lineRevenue = Sale::lineNetSql($decimals);
 
         $limit = max(1, min(100, $limit));
 

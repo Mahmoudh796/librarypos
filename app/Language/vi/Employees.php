@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Mật khẩu không khớp nhau.',
     'password_not_must_match'                => 'Mật khẩu hiện tại và mới phải khác nhau.',
     'password_required'                      => 'Mật khẩu là bắt buộc.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

@@ -146,7 +146,7 @@
                     <span><?= nl2br(esc($config['payment_message'])) ?></span>
                     <span><?= lang('Sales.comments') . ': ' . (empty($comments) ? esc($config['quote_default_comments']) : esc($comments)) ?></span>
                 </h5>
-                <?= nl2br(esc($config['return_policy'])) ?>
+                <?= nl2br(esc(store_info('return_policy'))) ?>
             </div>
             <div id="barcode">
                 <?= esc($quote_number) ?>

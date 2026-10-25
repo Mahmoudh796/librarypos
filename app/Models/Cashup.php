@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Libraries\Accounting\PaymentMethod;
+use App\Libraries\Accounting\Posting;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use Config\OSPOS;
 use stdClass;
+use Throwable;
 
 /**
  * Cashup class
@@ -227,21 +230,32 @@ class Cashup extends Model
      */
     public function save_value(array &$cash_up_data, $cashup_id = NEW_ENTRY): bool
     {
-        if (!$cashup_id == NEW_ENTRY || !$this->exists($cashup_id)) {
-            $builder = $this->db->table('cash_up');
-            if ($builder->insert($cash_up_data)) {
-                $cash_up_data['cashup_id'] = $this->db->insertID();
+        $this->db->transStart();
 
-                return true;
+        $cash_up_data = array_merge($cash_up_data, $this->reconcile($cash_up_data));
+        $builder = $this->db->table('cash_up');
+
+        if ($cashup_id == NEW_ENTRY || !$this->exists((int) $cashup_id)) {
+            $success = $builder->insert($cash_up_data);
+
+            if ($success) {
+                $cash_up_data['cashup_id'] = $this->db->insertID();
+                $cashup_id = (int) $cash_up_data['cashup_id'];
             }
+        } else {
+            $builder->where('cashup_id', $cashup_id);
+            $success = $builder->update($cash_up_data);
+        }
+
+        if ($success && !$this->postToLedger((int) $cashup_id)) {
+            $this->db->transRollback();
 
             return false;
         }
 
-        $builder = $this->db->table('cash_up');
-        $builder->where('cashup_id', $cashup_id);
+        $this->db->transComplete();
 
-        return $builder->update($cash_up_data);
+        return $success && $this->db->transStatus();
     }
 
     /**
@@ -254,8 +268,114 @@ class Cashup extends Model
         $builder = $this->db->table('cash_up');
         $builder->whereIn('cashup_id', $cashup_ids);
         $success = $builder->update(['deleted' => 1]);
+
+        foreach ($cashup_ids as $cashupId) {
+            if ($success && !$this->postToLedger((int) $cashupId)) {
+                $this->db->transRollback();
+
+                return false;
+            }
+        }
+
         $this->db->transComplete();
 
         return $success;
+    }
+
+    /**
+     * Expected cash at close and the counted-minus-expected difference
+     * (positive = overage, negative = shortage). A shift that is still open
+     * (close date equal to open date) has neither.
+     *
+     * @return array{expected_amount_cash: ?float, difference_cash: ?float}
+     */
+    public function reconcile(array $cashup): array
+    {
+        $open = $cashup['open_date'] ?? null;
+        $close = $cashup['close_date'] ?? null;
+
+        if ($open === null || $close === null || $close <= $open) {
+            return ['expected_amount_cash' => null, 'difference_cash' => null];
+        }
+
+        $expected = $this->expectedClosingCash(
+            $open,
+            $close,
+            (float) ($cashup['open_amount_cash'] ?? 0),
+            (float) ($cashup['transfer_amount_cash'] ?? 0),
+            !empty($cashup['treasury_id']) ? (int) $cashup['treasury_id'] : null
+        );
+
+        return [
+            'expected_amount_cash' => $expected,
+            'difference_cash'      => round((float) ($cashup['closed_amount_cash'] ?? 0) - $expected, 2),
+        ];
+    }
+
+    /**
+     * Opening float + cash added/removed + every cash movement of the drawer's
+     * treasury during the shift. Shifts from before the ledger existed fall back
+     * to cash sale payments minus cash expenses, as OSPOS always computed it.
+     */
+    public function expectedClosingCash(string $openDate, string $closeDate, float $openAmount, float $transferAmount, ?int $treasuryId = null): float
+    {
+        if (Posting::enabled() && Posting::inScope($openDate)) {
+            $treasuryId ??= (int) ($this->db->table('treasuries')->select('treasury_id')->where('kind', 'cash')->orderBy('is_default', 'DESC')->get()->getRow()->treasury_id ?? 0);
+
+            $row = $this->db->table('treasury_movements')
+                ->select("SUM(CASE WHEN direction = 'in' THEN amount ELSE -amount END) AS net", false)
+                ->where('treasury_id', $treasuryId)
+                ->where('movement_time >=', $openDate)
+                ->where('movement_time <=', $closeDate)
+                ->where('source_type !=', Posting::SOURCE_CASHUP)
+                ->get()
+                ->getRow();
+
+            return round($openAmount + $transferAmount + (float) ($row->net ?? 0), 2);
+        }
+
+        $cashLabels = array_keys(array_filter(
+            array_column($this->db->table('sales_payments')->distinct()->select('payment_type')->get()->getResultArray(), 'payment_type', 'payment_type'),
+            static fn (string $label): bool => PaymentMethod::resolve($label) === PaymentMethod::CASH
+        ));
+
+        $cashIn = 0.0;
+        if ($cashLabels !== []) {
+            $cashIn = (float) ($this->db->table('sales_payments')
+                ->select('SUM(sales_payments.payment_amount - sales_payments.cash_refund) AS amount', false)
+                ->join('sales', 'sales.sale_id = sales_payments.sale_id')
+                ->where('sales.sale_status', COMPLETED)
+                ->whereIn('sales_payments.payment_type', $cashLabels)
+                ->where('sales.sale_time >=', $openDate)
+                ->where('sales.sale_time <=', $closeDate)
+                ->get()
+                ->getRow()->amount ?? 0);
+        }
+
+        $cashOut = 0.0;
+        foreach ($this->db->table('expenses')->select('payment_type, SUM(amount) AS amount')->where('deleted', 0)->where('date >=', $openDate)->where('date <=', $closeDate)->groupBy('payment_type')->get()->getResult() as $row) {
+            if (PaymentMethod::resolve((string) $row->payment_type) === PaymentMethod::CASH) {
+                $cashOut += (float) $row->amount;
+            }
+        }
+
+        return round($openAmount + $transferAmount + $cashIn - $cashOut, 2);
+    }
+
+    private function postToLedger(int $cashupId): bool
+    {
+        if (!Posting::enabled()) {
+            return true;
+        }
+
+        try {
+            (new Posting($this->db))->postCashup($cashupId);
+
+            return true;
+        } catch (Throwable $e) {
+            log_message('error', "Posting cash-up $cashupId failed: " . $e->getMessage());
+
+            return false;
+        }
     }
 }

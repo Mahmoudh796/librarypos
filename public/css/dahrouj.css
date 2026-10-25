@@ -3840,49 +3840,6 @@
         margin: 0;
     }
 
-    /* ---------- Report hub ---------- */
-
-    .reports-hub {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: var(--dj-space-4);
-        margin-bottom: var(--dj-space-4);
-    }
-
-    .reports-hub .dj-section {
-        margin-bottom: 0;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .reports-hub .dj-section-head {
-        margin-bottom: var(--dj-space-2);
-    }
-
-    .reports-hub .list-group {
-        margin-bottom: 0;
-        overflow: hidden;
-    }
-
-    .reports-hub .list-group-item {
-        display: flex;
-        align-items: center;
-        gap: var(--dj-space-2);
-        padding: 10px 14px;
-        border: 0;
-        border-bottom: 1px solid var(--dj-border);
-        color: var(--dj-text);
-        font-weight: 500;
-        transition: background-color 0.12s ease, padding-inline-start 0.12s ease;
-    }
-
-    .reports-hub .list-group-item:hover,
-    .reports-hub .list-group-item:focus {
-        color: var(--ruya-primary-hover);
-        background-color: var(--ruya-primary-soft);
-        padding-inline-start: 18px;
-    }
-
     /* ---------- Report result pages ---------- */
 
     /*
@@ -4034,4 +3991,252 @@
             gap: var(--dj-space-2);
         }
     }
+}
+
+/* ==========================================================================
+   Ledger screens (treasury, accounting, partners, fixed assets)
+   ========================================================================== */
+.dj-subnav {
+    margin-bottom: var(--dj-space-4);
+}
+
+.dj-subnav-pills {
+    margin-bottom: var(--dj-space-3);
+}
+
+.dj-ledger-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--dj-space-2);
+    margin-bottom: var(--dj-space-4);
+}
+
+.dj-ledger-filter .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+}
+
+.dj-ledger-filter label {
+    font-size: 12px;
+    color: var(--dj-text-muted);
+    margin: 0;
+}
+
+.dj-ledger-table > thead > tr > th {
+    background: var(--dj-surface-alt);
+    white-space: nowrap;
+}
+
+.dj-ledger-table td.dj-num,
+.dj-ledger-table th.dj-num {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.dj-ledger-table .dj-section-row > th {
+    background: var(--dj-accent-soft);
+    color: var(--dj-accent-deep);
+    font-weight: 600;
+}
+
+.dj-ledger-table .dj-subtotal-row > th,
+.dj-ledger-table .dj-subtotal-row > td {
+    background: var(--dj-surface-alt);
+    font-weight: 600;
+}
+
+.dj-ledger-table .dj-total-row > th {
+    border-top: 2px solid var(--dj-border-strong);
+    font-weight: 700;
+}
+
+.dj-ledger-table .dj-grand-total-row > th {
+    border-top: 3px double var(--dj-text);
+    font-size: 1.1em;
+    font-weight: 700;
+}
+
+.dj-ledger-table .dj-grand-total-row.dj-negative > th,
+.dj-amount-out {
+    color: var(--dj-danger);
+}
+
+.dj-amount-in {
+    color: var(--dj-success);
+}
+
+.dj-ledger-table .dj-indent {
+    padding-inline-start: var(--dj-space-5);
+}
+
+.dj-ledger-table .dj-reversal-row > td {
+    color: var(--dj-text-muted);
+    font-style: italic;
+}
+
+.dj-chart .dj-chart-group > td {
+    background: var(--dj-surface-alt);
+}
+
+.dj-statement {
+    max-width: 760px;
+}
+
+.dj-statement-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--dj-space-3);
+    margin-bottom: var(--dj-space-3);
+}
+
+.dj-statement-balance {
+    margin: 0;
+    font-size: 1.1em;
+}
+
+.dj-report-list .list-group-item-heading {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 2px;
+}
+
+.dj-report-list .list-group-item-text {
+    margin: 0;
+}
+
+.dj-pager .pager {
+    margin: var(--dj-space-3) 0;
+}
+
+.dj-pager-status {
+    padding: 0 var(--dj-space-3);
+    color: var(--dj-text-muted);
+}
+
+.dj-audit-values {
+    display: block;
+    max-width: 320px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 11px;
+}
+
+.dj-balance-state {
+    margin-inline-start: var(--dj-space-3);
+    font-weight: 600;
+}
+
+.dj-category-add {
+    margin-bottom: var(--dj-space-4);
+}
+
+.dj-nav-group .dropdown-menu {
+    min-width: 220px;
+}
+
+@media print {
+    .dj-subnav,
+    .dj-subnav-pills,
+    .dj-ledger-filter,
+    .dj-pager {
+        display: none !important;
+    }
+}
+
+/* ==========================================================================
+   Register summary: amounts sit at the inline end in both directions. The
+   view's inline `text-align: right` does not flip under RTL, which pressed
+   every amount against its label.
+   ========================================================================== */
+#sale_totals th + th,
+#payment_totals th + th {
+    text-align: end !important;
+    white-space: nowrap;
+}
+
+#sale_totals .dj-summary-gross th {
+    color: var(--dj-text-muted);
+    font-weight: 500;
+}
+
+#sale_totals .dj-summary-discount th {
+    color: var(--dj-danger);
+    font-weight: 600;
+}
+
+#sale_totals .dj-summary-discount small {
+    display: block;
+    font-weight: 400;
+    color: var(--dj-text-muted);
+}
+
+#sale_totals .dj-inline-form {
+    display: inline;
+}
+
+.dj-change-due-row th {
+    background-color: rgba(30, 158, 106, 0.12);
+    color: var(--dj-success);
+    padding: var(--dj-space-2);
+    border-radius: var(--dj-radius-sm);
+    font-weight: 700;
+}
+
+.dj-invoice-discount {
+    margin: var(--dj-space-2) 0 var(--dj-space-3);
+    padding: var(--dj-space-2) var(--dj-space-3);
+    border: 1px dashed var(--dj-border-strong);
+    border-radius: var(--dj-radius-sm);
+    background: var(--dj-surface-alt);
+}
+
+.dj-invoice-discount > summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--dj-accent-strong);
+}
+
+.dj-invoice-discount-form {
+    display: grid;
+    gap: var(--dj-space-2);
+    margin-top: var(--dj-space-2);
+}
+
+.dj-invoice-discount-row {
+    display: grid;
+    grid-template-columns: 1fr 72px;
+    gap: var(--dj-space-2);
+}
+
+/* Section headings inside the two-column item form grid span both columns. */
+.dj-form-grid > .dj-form-grid-heading {
+    grid-column: 1 / -1;
+    margin: var(--dj-space-3) 0 0;
+    padding-bottom: var(--dj-space-1);
+    border-bottom: 1px solid var(--dj-border);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dj-accent-deep);
+}
+
+.dj-form-grid > .dj-form-grid-heading:first-child {
+    margin-top: 0;
+}
+
+/* `.dj-ltr` on a table cell keeps the code left-to-right without turning the cell
+   into an inline-block (which drew a box around empty references). */
+td.dj-ltr,
+th.dj-ltr {
+    display: table-cell;
+    text-align: start;
+}
+
+[dir="rtl"] td.dj-ltr,
+[dir="rtl"] th.dj-ltr {
+    text-align: right;
 }

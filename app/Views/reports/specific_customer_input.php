@@ -66,7 +66,7 @@ if (isset($error)) {
         echo form_button([
             'name'    => 'generate_report',
             'id'      => 'generate_report',
-            'content' => lang('Common.submit'),
+            'content' => lang('Reports.show_report'),
             'class'   => 'btn btn-primary btn-sm'
         ]);    ?>
     </div>

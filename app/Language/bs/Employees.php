@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Lozinke se ne podudaraju.',
     'password_not_must_match'                => 'Trenutna lozinka i nova lozinka moraju biti jedinstvene.',
     'password_required'                      => 'Lozinka je obavezna.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

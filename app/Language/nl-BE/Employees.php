@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Paswoorden komen niet overeen.',
     'password_not_must_match'                => 'Het huidige en het nieuwe paswoord moeten verschillend zijn.',
     'password_required'                      => 'Paswoord moet ingevuld worden.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

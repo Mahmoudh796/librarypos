@@ -5,9 +5,11 @@ namespace App\Models;
 use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
+use App\Libraries\Accounting\Posting;
 use App\Libraries\Sale_lib;
 use Config\OSPOS;
 use ReflectionException;
+use Throwable;
 
 /**
  * Sale class
@@ -48,9 +50,7 @@ class Sale extends Model
         $decimals = totals_decimals();
         $sales_tax = 'IFNULL(SUM(sales_items_taxes.sales_tax), 0)';
         $cash_adjustment = 'IFNULL(SUM(payments.sale_cash_adjustment), 0)';
-        $sale_price = 'CASE WHEN sales_items.discount_type = ' . PERCENT
-            . " THEN sales_items.quantity_purchased * sales_items.item_unit_price - ROUND(sales_items.quantity_purchased * sales_items.item_unit_price * sales_items.discount / 100, $decimals) "
-            . 'ELSE sales_items.quantity_purchased * (sales_items.item_unit_price - sales_items.discount) END';
+        $sale_price = self::lineNetSql($decimals);
 
         $sale_total = $config['tax_included']
             ? "ROUND(SUM($sale_price), $decimals) + $cash_adjustment"
@@ -133,9 +133,7 @@ class Sale extends Model
 
         $this->create_temp_table_sales_payments_data($where);
 
-        $sale_price = 'CASE WHEN `sales_items`.`discount_type` = ' . PERCENT
-            . " THEN `sales_items`.`quantity_purchased` * `sales_items`.`item_unit_price` - ROUND(`sales_items`.`quantity_purchased` * `sales_items`.`item_unit_price` * `sales_items`.`discount` / 100, $decimals) "
-            . 'ELSE `sales_items`.`quantity_purchased` * (`sales_items`.`item_unit_price` - `sales_items`.`discount`) END';
+        $sale_price = self::lineNetSql($decimals, '`sales_items`');
 
         $sale_cost = 'SUM(`sales_items`.`item_cost_price` * `sales_items`.`quantity_purchased`)';
 
@@ -452,11 +450,15 @@ class Sale extends Model
      */
     public function update($sale_id = null, $sale_data = null): bool
     {
+        // One transaction for the sale, its payments and the repost of its journal entry.
+        $this->db->transStart();
+
         $builder = $this->db->table('sales');
         $builder->where('sale_id', $sale_id);
         $update_data = $sale_data;
         unset($update_data['payments']);
-        $success = $builder->update($update_data);
+        // A payments-only edit has no sale columns to write; an empty update would throw.
+        $success = $update_data === [] ? true : $builder->update($update_data);
 
         // Touch payment only if update sale is successful and there is a payments object otherwise the result would be to delete all the payments associated to the sale
         if ($success && !empty($sale_data['payments'])) {
@@ -509,7 +511,15 @@ class Sale extends Model
             $success &= $this->db->transStatus();
         }
 
-        return $success;
+        if ($success && !$this->postToLedger((int) $sale_id, null)) {
+            $this->db->transRollback();
+
+            return false;
+        }
+
+        $this->db->transComplete();
+
+        return $success && $this->db->transStatus();
     }
 
     /**
@@ -530,7 +540,8 @@ class Sale extends Model
         int     $saleType,
         ?array  $payments,
         ?int    $dinnerTableId,
-        ?array  &$salesTaxes
+        ?array  &$salesTaxes,
+        array   $invoiceDiscount = []
     ): int {    // TODO: this method returns the sale_id but the override is expecting it to return a bool. The signature needs to be reworked.  Generally when there are more than 3 maybe 4 parameters, there's a good chance that an object needs to be passed rather than so many params.
         $config = config(OSPOS::class)->settings;
         $attribute = model(Attribute::class);
@@ -557,6 +568,13 @@ class Sale extends Model
             'dinner_table_id'   => $dinnerTableId,
             'sale_type'         => $saleType
         ];
+
+        // How the whole-sale discount was entered; its per-line allocation is stored on sales_items.
+        if ($this->db->fieldExists('invoice_discount_type', 'sales')) {
+            $salesData['invoice_discount_type'] = $invoiceDiscount === [] ? null : (int) $invoiceDiscount['type'];
+            $salesData['invoice_discount_value'] = $invoiceDiscount === [] ? null : (float) $invoiceDiscount['value'];
+            $salesData['invoice_discount_reason'] = $invoiceDiscount === [] ? null : mb_substr((string) $invoiceDiscount['reason'], 0, 255);
+        }
 
         // Run these queries as a transaction, we want to make sure we do all or nothing
         $this->db->transStart();
@@ -640,6 +658,7 @@ class Sale extends Model
                 'quantity_purchased' => $itemData['quantity'],
                 'discount'           => $itemData['discount'],
                 'discount_type'      => $itemData['discount_type'],
+                'invoice_discount'   => $itemData['invoice_discount'] ?? 0,
                 'item_cost_price'    => $itemData['cost_price'],
                 'item_unit_price'    => $itemData['price'],
                 'item_location'      => $itemData['item_location'],
@@ -702,9 +721,36 @@ class Sale extends Model
             }
         }
 
+        if ($saleStatus == COMPLETED && !$this->postToLedger((int) $saleId, $employeeId)) {
+            $this->db->transRollback();
+
+            return -1;
+        }
+
         $this->db->transComplete();
 
         return $this->db->transStatus() ? $saleId : -1;
+    }
+
+    /**
+     * Brings the sale's journal entry in line with the sale (post, repost or
+     * reverse). Runs inside the caller's transaction; a failure must abort it.
+     */
+    private function postToLedger(int $saleId, ?int $employeeId): bool
+    {
+        if (!Posting::enabled()) {
+            return true;
+        }
+
+        try {
+            (new Posting($this->db))->postSale($saleId, $employeeId);
+
+            return true;
+        } catch (Throwable $e) {
+            log_message('error', "Posting sale $saleId failed: " . $e->getMessage());
+
+            return false;
+        }
     }
 
     /**
@@ -859,6 +905,12 @@ class Sale extends Model
 
         $this->update_sale_status($sale_id, CANCELED);
 
+        if (!$this->postToLedger((int) $sale_id, $employee_id === null ? null : (int) $employee_id)) {
+            $this->db->transRollback();
+
+            return false;
+        }
+
         // Execute transaction
         $this->db->transComplete();
 
@@ -896,6 +948,7 @@ class Sale extends Model
             item_unit_price,
             discount,
             discount_type,
+            sales_items.invoice_discount,
             item_location,
             print_option,
             ' . $item->get_item_name('name') . ',
@@ -963,6 +1016,47 @@ class Sale extends Model
         }
 
         return $payments;
+    }
+
+    /**
+     * SQL for a sale line's net amount: quantity x price, less the line discount
+     * and the line's share of the invoice discount. Every report that sums sale
+     * lines uses this so totals agree with the receipt and the ledger.
+     *
+     * @param string $table qualified sales_items reference (alias or prefixed table name)
+     */
+    public static function lineNetSql(int $decimals, string $table = 'sales_items'): string
+    {
+        return "(CASE WHEN $table.discount_type = " . PERCENT
+            . " THEN $table.quantity_purchased * $table.item_unit_price - ROUND($table.quantity_purchased * $table.item_unit_price * $table.discount / 100, $decimals)"
+            . " ELSE $table.quantity_purchased * ($table.item_unit_price - $table.discount) END - IFNULL($table.invoice_discount, 0))";
+    }
+
+    /**
+     * SQL for a sale line's total discount (line discount plus its share of the invoice discount).
+     */
+    public static function lineDiscountSql(int $decimals, string $table = 'sales_items'): string
+    {
+        return "(CASE WHEN $table.discount_type = " . PERCENT
+            . " THEN ROUND($table.quantity_purchased * $table.item_unit_price * $table.discount / 100, $decimals)"
+            . " ELSE $table.quantity_purchased * $table.discount END + IFNULL($table.invoice_discount, 0))";
+    }
+
+    /**
+     * The whole-sale discount as entered (type, value, reason), or null when the sale has none.
+     */
+    public function get_invoice_discount_header(int $sale_id): ?object
+    {
+        if (!$this->db->fieldExists('invoice_discount_type', 'sales')) {
+            return null;
+        }
+
+        $row = $this->db->table('sales')
+            ->select('invoice_discount_type, invoice_discount_value, invoice_discount_reason')
+            ->where('sale_id', $sale_id)
+            ->get()->getRow();
+
+        return $row === null || $row->invoice_discount_type === null ? null : $row;
     }
 
     /**
@@ -1072,9 +1166,7 @@ class Sale extends Model
 
         $decimals = totals_decimals();
 
-        $sale_price = 'CASE WHEN sales_items.discount_type = ' . PERCENT
-            . " THEN sales_items.quantity_purchased * sales_items.item_unit_price - ROUND(sales_items.quantity_purchased * sales_items.item_unit_price * sales_items.discount / 100, $decimals) "
-            . 'ELSE sales_items.quantity_purchased * (sales_items.item_unit_price - sales_items.discount) END';
+        $sale_price = self::lineNetSql($decimals);
 
         $sale_cost = 'SUM(sales_items.item_cost_price * sales_items.quantity_purchased)';
 

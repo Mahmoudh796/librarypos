@@ -88,7 +88,7 @@ if (isset($error)) {
                 [
                     'name'    => 'generate_report',
                     'id'      => 'generate_report',
-                    'content' => lang('Common.submit'),
+                    'content' => lang('Reports.show_report'),
                     'class'   => 'btn btn-primary btn-sm'
                 ]
             );

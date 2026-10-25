@@ -16,6 +16,9 @@
  * @var array $payment_options
  * @var array $config
  */
+
+use App\Models\Employee;
+
 ?>
 
 <?= view('partial/header') ?>
@@ -34,12 +37,17 @@ if (isset($success)) {
 }
 ?>
 
-<div class="dj-page-head">
+<?php $canSeeHistory = model(Employee::class)->has_grant('reports_receivings', (int) session('person_id')); ?>
+<div class="dj-page-head ruya-report-head">
     <h1 class="dj-page-title">
         <span class="glyphicon glyphicon-import" aria-hidden="true"></span>
-        <?= lang('Module.' . $controller_name) ?>
+        <?= lang($mode === 'return' ? 'Receivings.title_return' : 'Receivings.title_purchase') ?>
     </h1>
-    <?= view('partial/page_nav') ?>
+    <?php if ($canSeeHistory): ?>
+        <a class="btn btn-default btn-sm" href="<?= esc(site_url('reports/detailed_receivings/' . date('Y-m-01') . '/' . date('Y-m-d') . '/all/all'), 'attr') ?>">
+            <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span> <?= lang('Common.nav_purchase_history') ?>
+        </a>
+    <?php endif; ?>
 </div>
 
 <div id="register_wrapper" class="dj-register">
@@ -81,6 +89,7 @@ if (isset($success)) {
 
     <?= form_close() ?>
 
+    <h2 class="ruya-step"><span class="ruya-step__n">2</span> <?= lang('Receivings.step_products') ?></h2>
     <?= form_open("$controller_name/add", ['id' => 'add_item_form', 'class' => 'form-horizontal panel panel-default']) ?>
 
     <div class="panel-body form-group">
@@ -281,6 +290,7 @@ if (isset($success)) {
 
 <div id="overall_sale" class="panel panel-default">
     <div class="panel-body">
+        <h2 class="ruya-step"><span class="ruya-step__n">1</span> <?= lang('Receivings.step_supplier') ?></h2>
         <?php if (isset($supplier)) { ?>
 
             <table class="sales_table_100">
@@ -323,7 +333,7 @@ if (isset($success)) {
             <?= form_open("$controller_name/selectSupplier", ['id' => 'select_supplier_form', 'class' => 'form-horizontal']) ?>
 
             <div class="form-group" id="select_customer">
-                <label id="supplier_label" for="supplier" class="control-label" style="margin-bottom: 1em; margin-top: -1em;">
+                <label id="supplier_label" for="supplier" class="control-label">
                     <?= lang(ucfirst($controller_name) . '.select_supplier') ?>
                 </label>
                 <?= form_input([
@@ -343,10 +353,11 @@ if (isset($success)) {
 
         <?php } ?>
 
+                <h2 class="ruya-step"><span class="ruya-step__n">3</span> <?= lang('Receivings.step_payment') ?></h2>
                 <table class="sales_table_100" id="sale_totals">
                     <tr class="dj-total-row">
                         <?php if ($mode != 'requisition') { ?>
-                            <th style="width: 55%;"><?= lang('Sales.total') ?></th>
+                            <th style="width: 55%;"><?= lang('Receivings.invoice_total') ?></th>
                             <th style="width: 45%; text-align: right;"><?= to_money_unit($total) ?></th>
                         <?php } else { ?>
                             <th style="width: 55%;"></th>
@@ -359,7 +370,7 @@ if (isset($success)) {
             <div id="finish_sale">
                 <?php if ($mode == 'requisition') { ?>
 
-                    <?= form_open("$controller_name/requisitionComplete", ['id' => 'finish_receiving_form', 'class' => 'form-horizontal']) ?>
+                    <?= form_open("$controller_name/requisitionComplete", ['id' => 'finish_receiving_form', 'class' => 'form-horizontal', 'data-ruya-once' => '1']) ?>
 
                     <div class="form-group form-group-sm">
                         <label id="comment_label" for="comment"><?= lang('Common.comments') ?></label>
@@ -383,34 +394,45 @@ if (isset($success)) {
 
                 <?php } else { ?>
 
-                    <?= form_open("$controller_name/complete", ['id' => 'finish_receiving_form', 'class' => 'form-horizontal']) ?>
+                    <?= form_open("$controller_name/complete", ['id' => 'finish_receiving_form', 'class' => 'form-horizontal', 'data-ruya-once' => '1']) ?>
 
                     <div class="form-group form-group-sm">
-                        <label id="comment_label" for="comment"><?= lang('Common.comments') ?></label>
-                        <?= form_textarea([
-                            'name'  => 'comment',
-                            'id'    => 'comment',
-                            'class' => 'form-control input-sm dj-input-text',
-                            'value' => $comment,
-                            'rows'  => '4'
-                        ]) ?>
                         <div id="payment_details">
                             <table class="sales_table_100">
                                 <tr>
-                                    <td><?= lang(ucfirst($controller_name) . '.print_after_sale') ?></td>
+                                    <td><label for="payment_types"><?= lang('Receivings.payment_method') ?></label></td>
                                     <td>
-                                        <?= form_checkbox([
-                                            'name'    => 'recv_print_after_sale',
-                                            'id'      => 'recv_print_after_sale',
-                                            'class'   => 'checkbox',
-                                            'value'   => 1,
-                                            'checked' => $print_after_sale == 1
+                                        <?= form_dropdown(
+                                            'payment_type',
+                                            $payment_options,
+                                            [],
+                                            [
+                                                'id'         => 'payment_types',
+                                                'class'      => 'selectpicker show-menu-arrow',
+                                                'data-style' => 'btn-default btn-sm',
+                                                'data-width' => '100%'
+                                            ]
+                                        ) ?>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2"><p class="dj-hint ruya-payment-hint"><?= lang('Receivings.payment_hint') ?></p></td>
+                                </tr>
+                                <tr>
+                                    <td><label for="amount_tendered"><?= lang('Receivings.amount_paid') ?></label></td>
+                                    <td>
+                                        <?= form_input([
+                                            'name'  => 'amount_tendered',
+                                            'id'    => 'amount_tendered',
+                                            'value' => '',
+                                            'class' => 'form-control input-sm dj-input-number',
+                                            'size'  => '5'
                                         ]) ?>
                                     </td>
                                 </tr>
                                 <?php if ($mode == "receive") { ?>
                                     <tr>
-                                        <td><?= lang(ucfirst($controller_name) . '.reference') ?></td>
+                                        <td><label for="recv_reference"><?= lang('Receivings.supplier_invoice_number') ?></label></td>
                                         <td>
                                             <?= form_input([
                                                 'name'  => 'recv_reference',
@@ -422,41 +444,33 @@ if (isset($success)) {
                                         </td>
                                     </tr>
                                 <?php } ?>
-                                <tr>
-                                    <td><?= lang('Sales.payment') ?></td>
-                                    <td>
-                                        <?= form_dropdown(
-                                            'payment_type',
-                                            $payment_options,
-                                            [],
-                                            [
-                                                'id'         => 'payment_types',
-                                                'class'      => 'selectpicker show-menu-arrow',
-                                                'data-style' => 'btn-default btn-sm',
-                                                'data-width' => 'auto'
-                                            ]
-                                        ) ?>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><?= lang('Sales.amount_tendered') ?></td>
-                                    <td>
-                                        <?= form_input([
-                                            'name'  => 'amount_tendered',
-                                            'value' => '',
-                                            'class' => 'form-control input-sm dj-input-number',
-                                            'size'  => '5'
-                                        ]) ?>
-                                    </td>
-                                </tr>
                             </table>
                         </div>
 
-                        <div class="btn btn-sm btn-danger pull-left" id="cancel_receiving_button">
-                            <span class="glyphicon glyphicon-remove">&nbsp;</span><?= lang(ucfirst($controller_name) . '.cancel_receiving') ?>
+                        <label id="comment_label" for="comment"><?= lang('Common.comments') ?></label>
+                        <?= form_textarea([
+                            'name'  => 'comment',
+                            'id'    => 'comment',
+                            'class' => 'form-control input-sm dj-input-text',
+                            'value' => $comment,
+                            'rows'  => '2'
+                        ]) ?>
+
+                        <label class="checkbox-inline ruya-print-option">
+                            <?= form_checkbox([
+                                'name'    => 'recv_print_after_sale',
+                                'id'      => 'recv_print_after_sale',
+                                'value'   => 1,
+                                'checked' => $print_after_sale == 1
+                            ]) ?>
+                            <?= lang(ucfirst($controller_name) . '.print_after_sale') ?>
+                        </label>
+
+                        <div class="btn btn-lg btn-success btn-block ruya-primary-action" id="finish_receiving_button" role="button" tabindex="0">
+                            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> <?= lang($mode === 'return' ? 'Receivings.complete_return' : 'Receivings.complete_receiving') ?>
                         </div>
-                        <div class="btn btn-sm btn-success pull-right" id="finish_receiving_button">
-                            <span class="glyphicon glyphicon-ok">&nbsp;</span><?= lang(ucfirst($controller_name) . '.complete_receiving') ?>
+                        <div class="btn btn-sm btn-default" id="cancel_receiving_button" role="button" tabindex="0">
+                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> <?= lang(ucfirst($controller_name) . '.cancel_receiving') ?>
                         </div>
                     </div>
 
@@ -495,13 +509,13 @@ if (isset($success)) {
             $(this).attr('value', "<?= lang('Sales.start_typing_item_name') ?>");
         });
 
-        $('#comment').keyup(function() {
+        $('#comment').on('input change', function() {
             $.post('<?= esc("$controller_name/setComment") ?>', {
                 comment: $('#comment').val()
             });
         });
 
-        $('#recv_reference').keyup(function() {
+        $('#recv_reference').on('input change', function() {
             $.post('<?= esc("$controller_name/setReference") ?>', {
                 recv_reference: $('#recv_reference').val()
             });
@@ -534,7 +548,9 @@ if (isset($success)) {
         });
 
         $("#finish_receiving_button").click(function() {
-            $('#finish_receiving_form').submit();
+            ruyaOnce(this, function() {
+                $('#finish_receiving_form').submit();
+            });
         });
 
         $("#cancel_receiving_button").click(function() {

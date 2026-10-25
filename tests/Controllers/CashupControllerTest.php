@@ -137,4 +137,42 @@ class CashupControllerTest extends CIUnitTestCase
         $this->assertEquals($cashierId, (int) $cashup->open_employee_id);
         $this->assertEquals($cashierId, (int) $cashup->close_employee_id);
     }
+
+    public function testClosingWithoutCountedCashIsRefused(): void
+    {
+        $this->loginAs($this->createCashupEmployee());
+
+        $result = json_decode($this->post('/cashups/save/-1', [
+            'open_date'            => '2026-09-06 08:00:00',
+            'close_date'           => '2026-09-06 16:00:00',
+            'open_amount_cash'     => '500',
+            'transfer_amount_cash' => '0',
+            'closed_amount_cash'   => '',
+        ])->getJSON(), true);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame(lang('Cashups.count_required'), $result['message']);
+    }
+
+    public function testClosingStoresExpectedCashAndDifference(): void
+    {
+        $this->loginAs($this->createCashupEmployee());
+
+        // No sales or expenses fall in this window: expected = 500 opening + 20 added.
+        $result = json_decode($this->post('/cashups/save/-1', [
+            'open_date'            => '2001-02-03 08:00:00',
+            'close_date'           => '2001-02-03 16:00:00',
+            'open_amount_cash'     => '500',
+            'transfer_amount_cash' => '20',
+            'closed_amount_cash'   => '512.50',
+            'closed_amount_due'    => '0',
+            'closed_amount_card'   => '0',
+            'closed_amount_check'  => '0',
+        ])->getJSON(), true);
+
+        $this->assertTrue($result['success']);
+        $row = $this->db->table('cash_up')->where('cashup_id', $result['id'])->get()->getRow();
+        $this->assertEqualsWithDelta(520.0, (float) $row->expected_amount_cash, 0.001);
+        $this->assertEqualsWithDelta(-7.5, (float) $row->difference_cash, 0.001, 'Counted 512.50 against 520.00 expected is a 7.50 shortage.');
+    }
 }

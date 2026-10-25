@@ -134,6 +134,15 @@ class Expenses extends Secure_Controller
         // Don't allow gift card to be a payment option in a sale transaction edit because it's a complex change
         $data['payment_options'] = $this->expense->get_payment_options();
 
+        // Where the money came from and which cost center bears the expense.
+        $db = \Config\Database::connect();
+        $data['treasuries'] = array_column($db->table('treasuries')->where('active', 1)->orderBy('is_default', 'DESC')->get()->getResultArray(), 'name', 'treasury_id');
+        $data['cost_centers'] = ['' => lang('Common.none_selected_text')] + array_column($db->table('acc_dimension_values')
+            ->select('acc_dimension_values.value_id, acc_dimension_values.name')
+            ->join('acc_dimensions', 'acc_dimensions.dimension_id = acc_dimension_values.dimension_id')
+            ->where('acc_dimensions.code', 'cost_center')->where('acc_dimension_values.active', 1)
+            ->get()->getResultArray(), 'name', 'value_id');
+
         return view("expenses/form", $data);
     }
 
@@ -178,16 +187,23 @@ class Expenses extends Secure_Controller
             'date'                => $date_formatter->format('Y-m-d H:i:s'),
             'supplier_id'         => $this->request->getPost('supplier_id') == '' ? null : $this->request->getPost('supplier_id', FILTER_SANITIZE_NUMBER_INT),
             'supplier_tax_code'   => $this->request->getPost('supplier_tax_code', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-            'amount'              => parse_decimals($this->request->getPost('amount')),
-            'tax_amount'          => parse_decimals($this->request->getPost('tax_amount')),
+            'amount'              => parse_decimals((string) $this->request->getPost('amount')),
+            // A blank tax field is "no tax", not an empty string a DECIMAL column would reject.
+            'tax_amount'          => trim((string) $this->request->getPost('tax_amount')) === '' ? null : parse_decimals((string) $this->request->getPost('tax_amount')),
             'payment_type'        => $this->request->getPost('payment_type', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'expense_category_id' => $this->request->getPost('expense_category_id', FILTER_SANITIZE_NUMBER_INT),
             'description'         => $this->request->getPost('description', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'employee_id'         => $employee_id,
-            'deleted'             => $this->request->getPost('deleted') != null
+            'deleted'             => $this->request->getPost('deleted') != null,
+            'treasury_id'         => (int) $this->request->getPost('treasury_id') ?: null,
+            'cost_center_id'      => (int) $this->request->getPost('cost_center_id') ?: null,
+            'reference'           => trim((string) $this->request->getPost('reference', FILTER_SANITIZE_FULL_SPECIAL_CHARS)) ?: null,
         ];
 
+        $previousExpense = $expense_id == NEW_ENTRY ? null : (array) $this->expense->get_info($expense_id);
+
         if ($this->expense->save_value($expense_data, $expense_id)) {
+            $this->audit($expense_id == NEW_ENTRY ? 'expense_create' : 'expense_update', 'expense', (int) ($expense_data['expense_id'] ?? $expense_id), $previousExpense, $expense_data);
             // New Expense
             if ($expense_id == NEW_ENTRY) {
                 return $this->response->setJSON(['success' => true, 'message' => lang('Expenses.successful_adding'), 'id' => $expense_data['expense_id']]);
@@ -207,6 +223,9 @@ class Expenses extends Secure_Controller
         $expenses_to_delete = $this->request->getPost('ids', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
         if ($this->expense->delete_list($expenses_to_delete)) {
+            foreach ($expenses_to_delete as $deletedExpenseId) {
+                $this->audit('expense_delete', 'expense', (int) $deletedExpenseId, ['deleted' => 0], ['deleted' => 1]);
+            }
             return $this->response->setJSON(['success' => true, 'message' => lang('Expenses.successful_deleted') . ' ' . count($expenses_to_delete) . ' ' . lang('Expenses.one_or_multiple'), 'ids' => $expenses_to_delete]);
         } else {
             return $this->response->setJSON(['success' => false, 'message' => lang('Expenses.cannot_be_deleted'), 'ids' => $expenses_to_delete]);

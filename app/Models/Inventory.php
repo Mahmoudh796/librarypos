@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Libraries\Accounting\Posting;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 
@@ -66,22 +67,30 @@ class Inventory extends Model
      */
     public function reset_quantity(int $item_id): bool|int|string
     {
-        $inventory_sums = $this->get_inventory_sum($item_id);
-        foreach ($inventory_sums as $inventory_sum) {
-            if ($inventory_sum['sum'] > 0) {
-                $employee = model(Employee::class);
+        $employeeId = (int) model(Employee::class)->get_logged_in_employee_info()->person_id;
+        $success = true;
 
-                return $this->insert([
-                    'trans_inventory' => -1 * $inventory_sum['sum'],
+        // Every location is written off; returning after the first one left the
+        // stock history of the other locations out of step with item_quantities.
+        foreach ($this->get_inventory_sum($item_id) as $inventory_sum) {
+            if ($inventory_sum['sum'] > 0) {
+                $quantity = -1 * (float) $inventory_sum['sum'];
+                $inserted = $this->insert([
+                    'trans_inventory' => $quantity,
                     'trans_items'     => $item_id,
                     'trans_location'  => $inventory_sum['location_id'],
                     'trans_comment'   => lang('Items.is_deleted'),
-                    'trans_user'      => $employee->get_logged_in_employee_info()->person_id
+                    'trans_user'      => $employeeId
                 ]);
+                $success = $success && (bool) $inserted;
+
+                if ($inserted && Posting::enabled()) {
+                    (new Posting($this->db))->postInventoryAdjustment((int) $inserted, $item_id, $quantity, $employeeId, lang('Items.is_deleted'));
+                }
             }
         }
 
-        return true;
+        return $success;
     }
 
     /**

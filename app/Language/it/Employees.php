@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Le Password non corrispondono.',
     'password_not_must_match'                => 'La password corrente e quella nuova devono essere uniche.',
     'password_required'                      => 'Password obbligatoria.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

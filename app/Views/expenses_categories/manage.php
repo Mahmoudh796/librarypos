@@ -28,7 +28,7 @@
 </script>
 
 <div class="dj-page-head">
-    <?= view('partial/page_path', ['crumbs' => [['module' => 'people'], ['component' => 'people', 'module' => 'expenses_categories']]]) ?>
+    <?= view('partial/page_path', ['crumbs' => [['label' => lang('Common.nav_costs')], ['label' => lang('Module.expenses_categories')]]]) ?>
     <h1 class="dj-page-title">
         <span class="glyphicon glyphicon-tags" aria-hidden="true"></span><?= lang('Module.expenses_categories') ?>
     </h1>

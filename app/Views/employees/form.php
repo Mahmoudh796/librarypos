@@ -128,7 +128,8 @@
                     'catalog'    => ['items', 'item_kits', 'attributes'],
                     'people'     => ['customers', 'suppliers'],
                     'reporting'  => ['reports'],
-                    'finance'    => ['expenses', 'expenses_categories', 'giftcards', 'taxes'],
+                    'finance'    => ['treasury', 'expenses', 'expenses_categories', 'giftcards', 'taxes'],
+                    'accounting' => ['accounting'],
                     'comms'      => ['messages'],
                     'admin'      => ['employees', 'home', 'config', 'office'],
                 ];

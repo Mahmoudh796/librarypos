@@ -2,6 +2,7 @@
 
 namespace App\Models\Reports;
 
+use App\Models\Sale;
 use Config\OSPOS;
 
 class Summary_payments extends Summary_report
@@ -137,9 +138,7 @@ class Summary_payments extends Summary_report
         // TODO: convert to using QueryBuilder. Use App/Models/Reports/Summary_taxes.php getData() as a reference template
         $decimals = totals_decimals();
 
-        $trans_amount = 'SUM(CASE WHEN sales_items.discount_type = ' . PERCENT
-            . " THEN sales_items.quantity_purchased * sales_items.item_unit_price - ROUND(sales_items.quantity_purchased * sales_items.item_unit_price * sales_items.discount / 100, $decimals) "
-            . ' ELSE sales_items.quantity_purchased * (sales_items.item_unit_price - sales_items.discount) END) AS trans_amount';
+        $trans_amount = 'SUM(' . Sale::lineNetSql($decimals) . ') AS trans_amount';
 
         $this->db->query(
             'CREATE TEMPORARY TABLE IF NOT EXISTS ' . $this->db->prefixTable('sumpay_taxes_temp') .

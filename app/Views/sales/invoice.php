@@ -167,6 +167,14 @@ if ($include_hsn) {
             <td class="blank" colspan="<?= $invoice_columns ?>" style="text-align: center;"><?= '&nbsp;' ?></td>
         </tr>
 
+        <?php if (!empty($invoice_discount_amount) && (float) $invoice_discount_amount != 0.0) { ?>
+            <tr>
+                <td colspan="<?= $invoice_columns - 3 ?>" class="blank"> </td>
+                <td colspan="2" class="total-line"><?= lang('Sales.invoice_discount') ?></td>
+                <td class="total-value"><?= to_currency((string) -(float) $invoice_discount_amount) ?></td>
+            </tr>
+        <?php } ?>
+
         <tr>
             <td colspan="<?= $invoice_columns - 3 ?>" class="blank-bottom"> </td>
             <td colspan="2" class="total-line"><?= lang('Sales.sub_total') ?></td>
@@ -226,7 +234,7 @@ foreach ($payments as $payment_id => $payment) {
                 <span><?= nl2br(esc($config['payment_message'])) ?></span>
                 <span style="padding: 4%;"><?= empty($comments) ? esc($config['invoice_default_comments']) : lang('Sales.comments') . ': ' . esc($comments) ?></span>
             </h5>
-            <div style="padding: 2%;"><?= nl2br(esc($config['return_policy'])) ?></div>
+            <div style="padding: 2%;"><?= nl2br(esc(store_info('return_policy'))) ?></div>
         </div>
         <div id="barcode">
             <?= $barcode ?><br>

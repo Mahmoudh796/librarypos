@@ -171,6 +171,44 @@ class HeaderNavTest extends CIUnitTestCase
         $this->assertStringContainsString(base_url('sales'), $nav, 'Granted modules must still render.');
     }
 
+    public function testAccountingGroupOffersOnlyGrantedScreens(): void
+    {
+        $personId = $this->createEmployeeWithGrants([
+            ['permission_id' => 'home', 'menu_group' => 'home'],
+            ['permission_id' => 'accounting', 'menu_group' => 'office'],
+            ['permission_id' => 'accounting_view', 'menu_group' => '--'],
+        ], 'acctview');
+
+        $nav = $this->navBlock($this->renderHeaderAs($personId));
+
+        $this->assertStringContainsString(base_url('accounting/trialBalance'), $nav);
+        $this->assertStringContainsString(base_url('journal'), $nav);
+        $this->assertStringNotContainsString(base_url('fixed_assets'), $nav, 'Fixed assets need accounting_assets.');
+        $this->assertStringNotContainsString(base_url('shareholders'), $nav, 'Partners need accounting_shareholders.');
+        $this->assertStringNotContainsString(base_url('accounts/periods'), $nav, 'Periods need accounting_periods.');
+    }
+
+    public function testBusinessGroupsAreLabelledAndOrdered(): void
+    {
+        $personId = $this->createEmployeeWithGrants([
+            ['permission_id' => 'home', 'menu_group' => 'home'],
+            ['permission_id' => 'sales', 'menu_group' => 'home'],
+            ['permission_id' => 'receivings', 'menu_group' => 'home'],
+            ['permission_id' => 'items', 'menu_group' => 'home'],
+            ['permission_id' => 'expenses', 'menu_group' => 'office'],
+        ], 'groups');
+
+        $nav = $this->navBlock($this->renderHeaderAs($personId));
+
+        $positions = array_map(static fn (string $key): int|false => strpos($nav, 'dj-nav-group--' . $key), ['sales', 'purchases', 'inventory', 'costs']);
+        $this->assertNotContains(false, $positions, 'Each granted business group must render.');
+        $this->assertSame($positions, array_values(array_unique($positions)));
+        $sorted = $positions;
+        sort($sorted);
+        $this->assertSame($sorted, $positions, 'Groups follow the business workflow order.');
+        $this->assertStringNotContainsString('dj-nav-group--treasury', $nav, 'A group with no granted screen is not rendered.');
+    }
+
     public function testBackupLinkOnlyShownWhenConfigGrantPresent(): void
     {
         $withoutConfig = $this->createEmployeeWithGrants([

@@ -180,7 +180,136 @@ class Sale_lib
             $this->set_cart([]);
         }
 
-        return $this->session->get('sales_cart');
+        return $this->allocate_invoice_discount($this->session->get('sales_cart'));
+    }
+
+    /**
+     * The invoice discount entered for the current sale:
+     * ['type' => PERCENT|FIXED, 'value' => string, 'reason' => string], or [] when none.
+     */
+    public function get_invoice_discount(): array
+    {
+        $discount = $this->session->get('sales_invoice_discount');
+
+        return is_array($discount) ? $discount : [];
+    }
+
+    public function set_invoice_discount(int $type, string $value, string $reason): void
+    {
+        $this->session->set('sales_invoice_discount', [
+            'type'   => $type === PERCENT ? PERCENT : FIXED,
+            'value'  => $value,
+            'reason' => $reason,
+        ]);
+    }
+
+    public function clear_invoice_discount(): void
+    {
+        $this->session->remove('sales_invoice_discount');
+    }
+
+    /**
+     * Sum of the line nets (after line discounts) the invoice discount is spread over.
+     */
+    public function get_invoice_discount_base(): string
+    {
+        $base = '0';
+        foreach ($this->session->get('sales_cart') ?: [] as $line) {
+            if (isset($line['invoice_discount_unit'])) {
+                continue;
+            }
+
+            $net = $this->get_item_total((string) $line['quantity'], (string) $line['price'], (string) $line['discount'], (int) $line['discount_type'], true);
+            if (bccomp($net, '0', 2) > 0) {
+                $base = bcadd($base, $net, 2);
+            }
+        }
+
+        return $base;
+    }
+
+    /**
+     * Total invoice discount for a base amount (percentage of it, or the fixed
+     * amount capped at it), rounded to the totals precision.
+     */
+    public static function invoice_discount_amount(array $discount, string $base): string
+    {
+        if ($discount === [] || bccomp($base, '0', 2) <= 0) {
+            return '0';
+        }
+
+        $decimals = totals_decimals();
+        $amount = (int) $discount['type'] === PERCENT
+            ? (string) round((float) $base * (float) $discount['value'] / 100, $decimals)
+            : (string) round((float) $discount['value'], $decimals);
+
+        return bccomp($amount, $base, $decimals) > 0 ? $base : $amount;
+    }
+
+    /**
+     * Gives every line its share of the invoice discount in 'invoice_discount'.
+     *
+     * Returned lines taken from a receipt keep the per-unit share of the
+     * original sale ('invoice_discount_unit'), so a partial return refunds
+     * exactly what was paid for the returned units. Other lines share the
+     * current invoice discount in proportion to their net after line discounts,
+     * by the largest-remainder method so the cents always add up to the total.
+     */
+    private function allocate_invoice_discount(array $cart): array
+    {
+        $discount = $this->get_invoice_discount();
+        $decimals = totals_decimals();
+        $unit = 10 ** $decimals;
+        $nets = [];
+
+        foreach ($cart as $key => $line) {
+            if (isset($line['invoice_discount_unit'])) {
+                $cart[$key]['invoice_discount'] = (string) round((float) $line['quantity'] * (float) $line['invoice_discount_unit'], $decimals);
+                continue;
+            }
+
+            $cart[$key]['invoice_discount'] = '0';
+            $net = $this->get_item_total((string) $line['quantity'], (string) $line['price'], (string) $line['discount'], (int) $line['discount_type'], true);
+
+            if ($discount !== [] && bccomp($net, '0', $decimals) > 0) {
+                $nets[$key] = (float) $net;
+            }
+        }
+
+        $base = array_sum($nets);
+        $total = (float) self::invoice_discount_amount($discount, (string) $base);
+
+        if ($total <= 0 || $base <= 0) {
+            return $cart;
+        }
+
+        $totalUnits = (int) round($total * $unit);
+        $shares = [];
+        $remainders = [];
+        $assigned = 0;
+
+        foreach ($nets as $key => $net) {
+            $exact = $totalUnits * $net / $base;
+            $shares[$key] = (int) floor($exact);
+            $remainders[$key] = $exact - $shares[$key];
+            $assigned += $shares[$key];
+        }
+
+        // Hand the leftover cents to the largest remainders, ties by line order.
+        uksort($remainders, static fn ($a, $b) => [$remainders[$b], $cart[$a]['line'] ?? $a] <=> [$remainders[$a], $cart[$b]['line'] ?? $b]);
+        foreach (array_keys($remainders) as $key) {
+            if ($assigned >= $totalUnits) {
+                break;
+            }
+            $shares[$key]++;
+            $assigned++;
+        }
+
+        foreach ($shares as $key => $share) {
+            $cart[$key]['invoice_discount'] = number_format($share / $unit, $decimals, '.', '');
+        }
+
+        return $cart;
     }
 
     /**
@@ -701,6 +830,7 @@ class Sale_lib
         $subtotal = '0.0';
         $total = '0.0';
         $total_discount = '0.0';
+        $invoice_discount = '0.0';
         $item_count = 0;
         $total_units = 0.0;
 
@@ -711,9 +841,11 @@ class Sale_lib
             }
             $discount_amount = $this->get_item_discount($item['quantity'], $item['price'], $item['discount'], $item['discount_type']);
             $total_discount = bcadd($total_discount, $discount_amount);
+            $line_invoice_discount = (string) ($item['invoice_discount'] ?? '0');
+            $invoice_discount = bcadd($invoice_discount, $line_invoice_discount);
 
             $extended_amount = $this->get_extended_amount($item['quantity'], $item['price']);
-            $extended_discounted_amount = $this->get_extended_amount($item['quantity'], $item['price'], $discount_amount);
+            $extended_discounted_amount = bcsub($this->get_extended_amount($item['quantity'], $item['price'], $discount_amount), $line_invoice_discount);
             $prediscount_subtotal = bcadd($prediscount_subtotal, $extended_amount);
             $total = bcadd($total, $extended_discounted_amount);
 
@@ -722,6 +854,9 @@ class Sale_lib
 
         $totals['prediscount_subtotal'] = $prediscount_subtotal;
         $totals['total_discount'] = $total_discount;
+        $totals['invoice_discount'] = $invoice_discount;
+        // Subtotal after line discounts, before the invoice discount and taxes.
+        $totals['subtotal_before_invoice_discount'] = bcadd($subtotal, $invoice_discount);
         $sales_tax = '0';
 
         foreach ($taxes as $tax) {
@@ -1315,12 +1450,41 @@ class Sale_lib
 
         $this->empty_cart();
         $this->remove_customer();
+        $this->clear_invoice_discount();
+
+        $invoiceDiscounts = [];
 
         foreach ($this->sale->get_sale_items_ordered($sale_id)->getResult() as $row) {
             $this->add_item($row->item_id, $row->item_location, -$row->quantity_purchased, $row->discount, $row->discount_type, PRICE_MODE_STANDARD, null, null, $row->item_unit_price, $row->description, $row->serialnumber, null, true);
+
+            $key = $row->item_id . ':' . $row->item_location;
+            $invoiceDiscounts[$key]['amount'] = ($invoiceDiscounts[$key]['amount'] ?? 0.0) + (float) ($row->invoice_discount ?? 0);
+            $invoiceDiscounts[$key]['quantity'] = ($invoiceDiscounts[$key]['quantity'] ?? 0.0) + (float) $row->quantity_purchased;
         }
 
+        $this->carry_invoice_discount_units($invoiceDiscounts);
         $this->set_customer($this->sale->get_customer($sale_id)->person_id);
+    }
+
+    /**
+     * Stamps each returned line with the original sale's per-unit share of the
+     * invoice discount, so returning part of the sale refunds only what was paid.
+     *
+     * @param array<string, array{amount: float, quantity: float}> $invoiceDiscounts keyed "item_id:location"
+     */
+    private function carry_invoice_discount_units(array $invoiceDiscounts): void
+    {
+        $cart = $this->session->get('sales_cart') ?: [];
+
+        foreach ($cart as $lineKey => $line) {
+            $discount = $invoiceDiscounts[$line['item_id'] . ':' . $line['item_location']] ?? null;
+
+            if ($discount !== null && $discount['amount'] != 0.0 && $discount['quantity'] != 0.0) {
+                $cart[$lineKey]['invoice_discount_unit'] = (string) ($discount['amount'] / $discount['quantity']);
+            }
+        }
+
+        $this->set_cart($cart);
     }
 
     /**
@@ -1399,6 +1563,13 @@ class Sale_lib
         $this->set_comment($this->sale->get_comment($sale_id));
         $this->set_dinner_table($this->sale->get_dinner_table($sale_id));
         $this->session->set('sale_id', $sale_id);
+
+        // Restore the whole-sale discount; the allocation over the same lines is deterministic.
+        $this->clear_invoice_discount();
+        $header = $this->sale->get_invoice_discount_header($sale_id);
+        if ($header !== null) {
+            $this->set_invoice_discount((int) $header->invoice_discount_type, (string) $header->invoice_discount_value, (string) $header->invoice_discount_reason);
+        }
     }
 
     /**
@@ -1428,6 +1599,7 @@ class Sale_lib
         $this->empty_payments();
         $this->remove_customer();
         $this->clear_cash_flags();
+        $this->clear_invoice_discount();
     }
 
     /**
@@ -1532,15 +1704,15 @@ class Sale_lib
      * @param bool $include_discount
      * @return string
      */
-    public function get_item_total_tax_exclusive(int $item_id, string $quantity, string $price, string $discount, int $discount_type, bool $include_discount = false): string
+    public function get_item_total_tax_exclusive(int $item_id, string $quantity, string $price, string $discount, int $discount_type, bool $include_discount = false, string $invoice_discount = '0'): string
     {
         $tax_info = $this->item_taxes->get_info($item_id);
-        $item_total = $this->get_item_total($quantity, $price, $discount, $discount_type, $include_discount);
+        $item_total = $this->get_item_total($quantity, $price, $discount, $discount_type, $include_discount, $invoice_discount);
 
         // Only additive tax here
         foreach ($tax_info as $tax) {
             $tax_percentage = $tax['percent'];
-            $item_total = bcsub($item_total, $this->get_item_tax($quantity, $price, $discount, $discount_type, $tax_percentage));
+            $item_total = bcsub($item_total, $this->get_item_tax($quantity, $price, $discount, $discount_type, $tax_percentage, $include_discount ? $invoice_discount : '0'));
         }
 
         return $item_total;
@@ -1578,13 +1750,14 @@ class Sale_lib
      * @param bool $include_discount
      * @return string
      */
-    public function get_item_total(string $quantity, string $price, string $discount, int $discount_type, bool $include_discount = false): string
+    public function get_item_total(string $quantity, string $price, string $discount, int $discount_type, bool $include_discount = false, string $invoice_discount = '0'): string
     {
         $total = bcmul($quantity, $price);
         if ($include_discount) {
             $discount_amount = $this->get_item_discount($quantity, $price, $discount, $discount_type);
 
-            return bcsub($total, $discount_amount);
+            // The line's share of the invoice discount reduces it like any other discount.
+            return bcsub(bcsub($total, $discount_amount), $invoice_discount === '' ? '0' : $invoice_discount);
         }
 
         return $total;
@@ -1642,9 +1815,9 @@ class Sale_lib
      * @param string $tax_percentage
      * @return string
      */
-    public function get_item_tax(string $quantity, string $price, string $discount, int $discount_type, string $tax_percentage): string
+    public function get_item_tax(string $quantity, string $price, string $discount, int $discount_type, string $tax_percentage, string $invoice_discount = '0'): string
     {
-        $item_total = $this->get_item_total($quantity, $price, $discount, $discount_type, true);
+        $item_total = $this->get_item_total($quantity, $price, $discount, $discount_type, true, $invoice_discount);
 
         if ($this->config['tax_included']) {
             $tax_fraction = bcdiv(bcadd('100', $tax_percentage), '100');
@@ -1667,10 +1840,12 @@ class Sale_lib
     {
         $subtotal = '0.0';
         foreach ($this->get_cart() as $item) {
+            $invoiceDiscount = (string) ($item['invoice_discount'] ?? '0');
+
             if ($exclude_tax && $this->config['tax_included']) {
-                $subtotal = bcadd($subtotal, $this->get_item_total_tax_exclusive($item['item_id'], $item['quantity'], $item['price'], $item['discount'], $item['discount_type'], $include_discount));
+                $subtotal = bcadd($subtotal, $this->get_item_total_tax_exclusive($item['item_id'], $item['quantity'], $item['price'], $item['discount'], $item['discount_type'], $include_discount, $invoiceDiscount));
             } else {
-                $subtotal = bcadd($subtotal, $this->get_item_total($item['quantity'], $item['price'], $item['discount'], $item['discount_type'], $include_discount));
+                $subtotal = bcadd($subtotal, $this->get_item_total($item['quantity'], $item['price'], $item['discount'], $item['discount_type'], $include_discount, $invoiceDiscount));
             }
         }
 

@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Las contraseñas no coinciden.',
     'password_not_must_match'                => 'La contraseña actual y nueva contraseña deben ser distintas.',
     'password_required'                      => 'Se requiere contraseña.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

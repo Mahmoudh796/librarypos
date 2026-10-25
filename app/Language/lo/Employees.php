@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Password ບໍ່ຄືກັນ.',
     'password_not_must_match'                => 'Password ປັດຈຸບັນ ແລະ Password ໃໝ່ ຈະຕ້ອງບໍ່ຄືກັນ.',
     'password_required'                      => 'Password ຈຳເປັນຕ້ອງໃສ່.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

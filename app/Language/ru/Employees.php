@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Пароли не совпадают.',
     'password_not_must_match'                => 'Текущий пароль и новый пароль должны быть уникальными.',
     'password_required'                      => 'Ввод пароля - обязателен.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

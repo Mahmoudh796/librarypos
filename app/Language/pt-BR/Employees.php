@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'As senhas não correspondem.',
     'password_not_must_match'                => 'A senha atual e a nova senha devem ser exclusivas.',
     'password_required'                      => 'Senha requerida.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

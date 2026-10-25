@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'وشەی نهێنییەکان هاوشێوە نین.',
     'password_not_must_match'                => 'وشەی نهێنی ئێستا و وشەی نهێنی نوێ دەبێت بێهاوتابن.',
     'password_required'                      => 'وشەی نهێنی پێویستە.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

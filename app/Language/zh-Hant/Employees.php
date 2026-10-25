@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => '密碼與確認密碼不一致.',
     'password_not_must_match'                => '當前密碼和新密碼一致。',
     'password_required'                      => '請輸入密碼.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

@@ -14,17 +14,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        // When any filter is clicked and the dropdown window is closed
-        $('#filters').on('hidden.bs.select', function(e) {
-            table_support.refresh();
-        });
-
+        // Filter and date changes reload the table via partial/table_filter_persistence.
         // Load the preset datarange picker
         <?= view('partial/daterangepicker') ?>
-
-        $("#daterangepicker").on('apply.daterangepicker', function(ev, picker) {
-            table_support.refresh();
-        });
 
         <?= view('partial/bootstrap_tables_locale') ?>
 
@@ -58,6 +50,16 @@
             },
             queryParams: function() {
                 return $.extend(arguments[0], table_support.query_params());
+            },
+            // Each row is an invoice; expanding it lists every product line of that invoice.
+            detailView: true,
+            detailFormatter: function(index, row) {
+                return row.sale_id ? '<div class="dj-sale-lines-holder"><?= esc(lang('Common.loading'), 'js') ?></div>' : '';
+            },
+            onExpandRow: function(index, row, $detail) {
+                if (row.sale_id) {
+                    $detail.find('.dj-sale-lines-holder').load('<?= site_url('sales/lines') ?>/' + encodeURIComponent(row.sale_id));
+                }
             },
             columns: {
                 'invoice': {

@@ -7,6 +7,7 @@ use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use CodeIgniter\Test\TestResponse;
+use App\Controllers\Home;
 use App\Models\Employee;
 use Config\OSPOS;
 use RuntimeException;
@@ -613,8 +614,8 @@ class HomeTest extends CIUnitTestCase
 
         $response->assertStatus(200);
         $response->assertSee('id="dashboard"');
-        $response->assertSee('Sales Today');
-        $response->assertDontSee('Low Stock');
+        $response->assertSee('Net sales today');
+        $response->assertDontSee('Products below reorder level');
     }
 
     /**
@@ -638,8 +639,8 @@ class HomeTest extends CIUnitTestCase
 
         $response->assertStatus(200);
         $response->assertSee('id="dashboard"');
-        $response->assertSee('Low Stock');
-        $response->assertDontSee('Sales Today');
+        $response->assertSee('Products below reorder level');
+        $response->assertDontSee('Net sales today');
     }
 
     /**
@@ -664,9 +665,9 @@ class HomeTest extends CIUnitTestCase
 
         $response->assertStatus(200);
         $response->assertSee('id="dashboard"');
-        $response->assertSee('Sales Today');
-        $response->assertSee('Inventory Value (Cost)');
-        $response->assertSee('Inventory Value (Retail)');
+        $response->assertSee('Net sales today');
+        $response->assertSee('Stock value at cost');
+        $response->assertSee('Stock value at current selling prices');
     }
 
     /**
@@ -713,5 +714,43 @@ class HomeTest extends CIUnitTestCase
                 $ospos->settings['company'] = $originalCompany;
             }
         }
+    }
+
+    /**
+     * The period switch changes the sales figures and their comparison, and an
+     * unknown period falls back to today instead of failing.
+     */
+    public function testDashboardPeriodSwitchAndDrillDownLinks(): void
+    {
+        $this->resetSession();
+        service('renderer')->resetData();
+        $month = $this->get('/home?period=month');
+
+        $month->assertStatus(200);
+        $month->assertSee('Net sales this month');
+        $month->assertSee('vs the same days last month');
+        // Links are attribute-escaped, so compare the decoded markup.
+        $body = html_entity_decode($month->getBody(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $this->assertStringContainsString('reports/summary_sales/' . date('Y-m-01') . '/' . date('Y-m-d') . '/complete/all', $body);
+        $this->assertMatchesRegularExpression('/items\?filters%5B0?%5D=out_of_stock/', $body);
+        $this->assertMatchesRegularExpression('/items\?filters%5B0?%5D=low_inventory/', $body);
+
+        service('renderer')->resetData();
+        $fallback = $this->get('/home?period=bogus');
+        $fallback->assertStatus(200);
+        $fallback->assertSee('Net sales today');
+        $this->assertStringContainsString('reports/detailed_sales/' . date('Y-m-d') . '/' . date('Y-m-d') . '/complete/all', html_entity_decode($fallback->getBody(), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    }
+
+    public function testPeriodRangesCompareLikeWithLike(): void
+    {
+        $now = strtotime('2026-03-31 12:00:00');
+
+        $this->assertSame(['2026-03-31', '2026-03-31'], Home::periodRanges('today', $now)['current']);
+        $this->assertSame(['2026-03-30', '2026-03-30'], Home::periodRanges('today', $now)['previous']);
+        $this->assertSame(['2026-03-25', '2026-03-31'], Home::periodRanges('week', $now)['current']);
+        $this->assertSame(['2026-03-18', '2026-03-24'], Home::periodRanges('week', $now)['previous']);
+        // 31 days into March compare with February, capped at its last day.
+        $this->assertSame(['2026-02-01', '2026-02-28'], Home::periodRanges('month', $now)['previous']);
     }
 }

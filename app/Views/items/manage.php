@@ -9,6 +9,10 @@
  * @var string|null $start_date
  * @var string|null $end_date
  * @var array $selected_filters
+ * @var array $category_filter_options
+ * @var array $supplier_filter_options
+ * @var string $selected_category
+ * @var string $selected_supplier
  */
 
 use App\Models\Employee;
@@ -56,7 +60,9 @@ use App\Models\Employee;
                     "start_date": start_date,
                     "end_date": end_date,
                     "stock_location": $("#stock_location").val(),
-                    "filters": $("#filters").val()
+                    "filters": $("#filters").val(),
+                    "category": $("#category").val(),
+                    "supplier_id": $("#supplier_id").val()
                 });
             },
             onLoadSuccess: function(response) {
@@ -74,7 +80,7 @@ use App\Models\Employee;
     });
 </script>
 
-<?= view('partial/table_filter_persistence', ['additional_params' => ['stock_location']]) ?>
+<?= view('partial/table_filter_persistence', ['options' => ['additional_params' => ['stock_location', 'category', 'supplier_id']]]) ?>
 
 <div class="dj-page-head">
     <h1 class="dj-page-title">
@@ -95,6 +101,10 @@ use App\Models\Employee;
 
     <a class="btn btn-info btn-sm pull-right" href="<?= esc(base_url("$controller_name/variants")) ?>" title="<?= lang('Items.create_variants') ?>">
         <span class="glyphicon glyphicon-th-large">&nbsp;</span><?= lang('Items.create_variants') ?>
+    </a>
+
+    <a class="btn btn-default btn-sm pull-right" href="<?= esc(base_url("$controller_name/categories")) ?>" title="<?= lang('Items.categories') ?>">
+        <span class="glyphicon glyphicon-folder-open">&nbsp;</span><?= lang('Items.categories') ?>
     </a>
 </div>
 
@@ -117,6 +127,22 @@ use App\Models\Employee;
             'data-selected-text-format' => 'count > 1',
             'data-style'                => 'btn-default btn-sm',
             'data-width'                => 'fit'
+        ]) ?>
+        <?= form_dropdown('category', $category_filter_options, $selected_category, [
+            'id'               => 'category',
+            'class'            => 'selectpicker show-menu-arrow',
+            'data-live-search' => 'true',
+            'data-style'       => 'btn-default btn-sm',
+            'data-width'       => 'fit',
+            'title'            => lang('Items.category'),
+        ]) ?>
+        <?= form_dropdown('supplier_id', $supplier_filter_options, $selected_supplier, [
+            'id'               => 'supplier_id',
+            'class'            => 'selectpicker show-menu-arrow',
+            'data-live-search' => 'true',
+            'data-style'       => 'btn-default btn-sm',
+            'data-width'       => 'fit',
+            'title'            => lang('Items.supplier'),
         ]) ?>
         <?php
         if (count($stock_locations) > 1) {

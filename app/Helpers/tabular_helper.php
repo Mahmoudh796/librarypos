@@ -293,7 +293,7 @@ function get_customer_data_row(object $person, object $stats): array
         'email'            => empty($person->email) ? '' : mailto(esc($person->email), esc($person->email)),
         'phone_number'     => $person->phone_number,
         'total'            => to_currency($stats->total),
-        'messages'         => empty($person->phone_number)
+        'messages'         => (empty($person->phone_number)
             ? ''
             : anchor(
                 "Messages/view/$person->person_id",
@@ -303,7 +303,7 @@ function get_customer_data_row(object $person, object $stats): array
                     'data-btn-submit' => lang('Common.submit'),
                     'title'           => lang('Messages.sms_send')
                 ]
-            ),
+            )) . party_statement_link('customer', (int) $person->person_id),
         'edit'             => anchor(
             "$controller/view/$person->person_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -350,6 +350,30 @@ function get_suppliers_manage_table_headers(): string
 /**
  * Get the html data row for the supplier
  */
+/**
+ * Link to a customer's or supplier's account statement, offered only with the
+ * accounting_view grant (checked once per request).
+ */
+function party_statement_link(string $partyType, int $personId): string
+{
+    static $canView = null;
+
+    if ($canView === null) {
+        $employee = model(\App\Models\Employee::class);
+        $canView = $employee->has_grant('accounting_view', (int) $employee->get_logged_in_employee_info()->person_id);
+    }
+
+    if (!$canView) {
+        return '';
+    }
+
+    return ' ' . anchor(
+        "accounting/statement?party_type=$partyType&party_id=$personId&from=" . date('Y-01-01'),
+        '<span class="glyphicon glyphicon-list-alt"></span>',
+        ['title' => lang($partyType === 'customer' ? 'Accounting.customer_statement' : 'Accounting.supplier_statement')]
+    );
+}
+
 function get_supplier_data_row(object $supplier): array
 {
     $controller = get_controller();
@@ -363,7 +387,7 @@ function get_supplier_data_row(object $supplier): array
         'first_name'       => $supplier->first_name,
         'email'            => empty($supplier->email) ? '' : mailto(esc($supplier->email), esc($supplier->email)),
         'phone_number'     => $supplier->phone_number,
-        'messages'         => empty($supplier->phone_number)
+        'messages'         => (empty($supplier->phone_number)
             ? ''
             : anchor(
                 "Messages/view/$supplier->person_id",
@@ -373,7 +397,7 @@ function get_supplier_data_row(object $supplier): array
                     'data-btn-submit' => lang('Common.submit'),
                     'title'           => lang('Messages.sms_send')
                 ]
-            ),
+            )) . party_statement_link('supplier', (int) $supplier->person_id),
         'edit'             => anchor(
             "$controller/view/$supplier->person_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -877,7 +901,8 @@ function cashup_headers(): array
         ['closed_amount_due'    => lang('Cashups.closed_amount_due')],
         ['closed_amount_card'   => lang('Cashups.closed_amount_card')],
         ['closed_amount_check'  => lang('Cashups.closed_amount_check')],
-        ['closed_amount_total'  => lang('Cashups.closed_amount_total')]
+        ['closed_amount_total'  => lang('Cashups.closed_amount_total')],
+        ['difference_cash'      => lang('Cashups.difference_cash')]
     ];
 }
 
@@ -913,6 +938,9 @@ function get_cash_up_data_row(object $cash_up): array
         'closed_amount_card'   => to_currency($cash_up->closed_amount_card),
         'closed_amount_check'  => to_currency($cash_up->closed_amount_check),
         'closed_amount_total'  => to_currency($cash_up->closed_amount_total),
+        'difference_cash'      => isset($cash_up->difference_cash)
+            ? '<span class="' . ((float) $cash_up->difference_cash < 0 ? 'text-danger' : ((float) $cash_up->difference_cash > 0 ? 'text-warning' : 'text-success')) . '">' . to_currency((string) $cash_up->difference_cash) . '</span>'
+            : '',
         'edit'                 => anchor(
             "$controller/view/$cash_up->cashup_id",
             '<span class="glyphicon glyphicon-edit"></span>',

@@ -1,12 +1,14 @@
 <?php
 
 return [
+    "accounting"                 => "Accounting",
+    "accounting_desc"            => "Chart of accounts, journal, ledger, financial statements, partners and fixed assets.",
     "admin_cashups"              => "",
     "admin_cashups_desc"         => "",
     "attributes"                 => "Attributes",
     "attributes_desc"            => "Add, Update, Delete, and Search attributes.",
     "both"                       => "Both",
-    "cashups"                    => "Cashups",
+    "cashups"                    => "Cashier shifts",
     "cashups_desc"               => "Add, Update, Delete, and Search Cashups.",
     "config"                     => "Configuration",
     "config_desc"                => "Change the رؤية configuration.",
@@ -46,4 +48,6 @@ return [
     "timeclocks_categories"      => "",
     "timeclocks_categories_desc" => "",
     "timeclocks_desc"            => "",
+    "treasury"                   => "Treasury",
+    "treasury_desc"              => "Treasury balances, movements, receipts, payments and transfers.",
 ];

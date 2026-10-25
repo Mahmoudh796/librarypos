@@ -15,44 +15,10 @@
     dialog_support.init("a.modal-dlg");
 </script>
 
-<?php $reportPath = get_report_path_info(); ?>
-
-<div class="dj-page-head">
-    <?= view('partial/page_path', ['crumbs' => $reportPath['crumbs']]) ?>
-    <?= view('partial/page_nav') ?>
-</div>
-
-<div id="page_title"><?= esc($title) ?></div>
-
-<div id="page_subtitle"><?= esc($subtitle) ?></div>
-
-<div id="toolbar">
-    <div class="pull-left form-inline" role="toolbar">
-        <a id="edit_report_inputs" class="btn btn-default btn-sm print_hide" href="<?= $reportPath['input_path'] ?>">
-            <span class="glyphicon glyphicon-filter">&nbsp;</span><?= lang('Reports.edit_inputs') ?>
-        </a>
-        <button id="toggleCostProfitButton" class="btn btn-default btn-sm print_hide">
-            <?php echo lang('Reports.toggle_cost_and_profit'); ?>
-        </button>
-    </div>
-</div>
+<?= view('reports/partials/result_head', ['title' => $title, 'subtitle' => $subtitle, 'summary' => $summary_data, 'costProfit' => true]) ?>
 
 <div id="table_holder">
     <table id="table"></table>
-</div>
-
-<div id="report_summary">
-    <?php
-    foreach ($summary_data as $name => $value) {
-        if ($name == "total_quantity") {
-            ?>
-            <div class="summary_row" data-key="<?= esc($name) ?>"><?= lang("Reports.$name") . ': ' . esc($value) ?></div>
-        <?php } else { ?>
-            <div class="summary_row"><?= lang("Reports.$name") . ': ' . (is_numeric($value) ? '<span class="dj-money" dir="ltr">' . esc(to_currency($value)) . '</span>' : esc($value)) ?></div>
-            <?php
-        }
-    }
-    ?>
 </div>
 
 <script type="text/javascript">
@@ -72,7 +38,7 @@
                 sortable: true,
                 showExport: true,
                 exportDataType: 'all',
-                exportTypes: ['json', 'xml', 'csv', 'txt', 'sql', 'xlsx', 'pdf'],
+                exportTypes: ['csv', 'xlsx'],
                 pagination: true,
                 showColumns: true,
                 data: <?= json_encode($data) ?>,

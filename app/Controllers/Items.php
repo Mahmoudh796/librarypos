@@ -2,9 +2,12 @@
 
 namespace App\Controllers;
 
+use App\Libraries\Accounting\Costing;
+use App\Libraries\Accounting\Posting;
 use App\Libraries\Barcode_lib;
 use App\Libraries\Item_lib;
 use App\Models\Attribute;
+use App\Models\Category;
 use App\Models\Inventory;
 use App\Models\Item;
 use App\Models\Item_kit;
@@ -23,6 +26,7 @@ use Config\OSPOS;
 use Config\Services;
 use Exception;
 use ReflectionException;
+use Throwable;
 
 require_once('Secure_Controller.php');
 
@@ -33,6 +37,7 @@ class Items extends Secure_Controller
     private Barcode_lib $barcode_lib;
     private Item_lib $item_lib;
     private Attribute $attribute;
+    private Category $category;
     private Inventory $inventory;
     private Item $item;
     private Item_kit $item_kit;
@@ -58,6 +63,7 @@ class Items extends Secure_Controller
         $this->item_lib = new Item_lib();
 
         $this->attribute = model(Attribute::class);
+        $this->category = model(Category::class);
         $this->inventory = model(Inventory::class);
         $this->item = model(Item::class);
         $this->item_kit = model(Item_kit::class);
@@ -89,12 +95,27 @@ class Items extends Secure_Controller
         $data['filters'] = [
             'empty_upc'      => lang('Items.empty_upc_items'),
             'low_inventory'  => lang('Items.low_inventory_items'),
+            'out_of_stock'   => lang('Items.out_of_stock_items'),
             'is_serialized'  => lang('Items.serialized_items'),
             'no_description' => lang('Items.no_description_items'),
             'search_custom'  => lang('Items.search_attributes'),
             'is_deleted'     => lang('Items.is_deleted'),
             'temporary'      => lang('Items.temp')
         ];
+
+        $data['category_filter_options'] = ['' => lang('Items.all_categories')];
+        foreach ($this->category->getAllWithCounts() as $category) {
+            $data['category_filter_options'][$category['name']] = $category['name'];
+        }
+
+        $data['supplier_filter_options'] = ['' => lang('Items.all_suppliers')];
+        foreach ($this->supplier->get_all()->getResultArray() as $row) {
+            $data['supplier_filter_options'][$row['person_id']] = $row['company_name'];
+        }
+
+        $data['selected_category'] = (string) $this->request->getGet('category');
+        $data['selected_supplier'] = (string) $this->request->getGet('supplier_id', FILTER_SANITIZE_NUMBER_INT);
+        $data['can_manage_categories'] = $this->canManageCategories();
 
         // Restore filters from URL
         $data = array_merge($data, restoreTableFilters($this->request));
@@ -131,12 +152,18 @@ class Items extends Secure_Controller
             'search_custom'     => false,
             'is_deleted'        => false,
             'temporary'         => false,
+            'out_of_stock'      => false,
             'definition_ids'    => $definitionIds
         ];
 
         // Check if any filter is set in the multiselect dropdown
         $requestFilters = array_fill_keys($this->request->getGet('filters', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?? [], true);
         $filters = array_merge($filters, $requestFilters);
+
+        // Exact-match filters, combined with the free-text search and each other.
+        $filters['category'] = (string) ($this->request->getGet('category') ?? '');
+        $supplierId = (int) $this->request->getGet('supplier_id', FILTER_SANITIZE_NUMBER_INT);
+        $filters['supplier_id'] = $supplierId > 0 ? $supplierId : null;
 
         // When search_custom is enabled, include attributes that are searchable but may not be visible in table
         if (!empty($filters['search_custom'])) {
@@ -314,9 +341,184 @@ class Items extends Secure_Controller
      */
     public function getSuggestCategory(): ResponseInterface
     {
-        $suggestions = $this->item->get_category_suggestions($this->request->getGet('term'));
+        $suggestions = $this->item->get_category_suggestions((string) $this->request->getGet('term'));
 
         return $this->response->setJSON($suggestions);
+    }
+
+    /**
+     * Approved category list with item counts. Viewable by anyone with the items
+     * grant; changing it needs items_categories.
+     * @noinspection PhpUnused
+     */
+    public function getCategories(): string
+    {
+        return view('items/categories', [
+            'categories'            => $this->category->getAllWithCounts(),
+            'can_manage_categories' => $this->canManageCategories(),
+        ]);
+    }
+
+    /**
+     * Creates a category, or renames/merges one when `original` is posted.
+     * @noinspection PhpUnused
+     */
+    public function postSaveCategory(): ResponseInterface
+    {
+        if (!$this->canManageCategories()) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => lang('Items.category_not_authorized')]);
+        }
+
+        $name = Category::cleanName((string) $this->request->getPost('name'));
+        $original = (string) $this->request->getPost('original');
+
+        if ($name === '') {
+            return $this->response->setJSON(['success' => false, 'message' => lang('Items.category_required')]);
+        }
+
+        if ($original === '') {
+            $duplicate = $this->category->findApprovedMatch($name);
+
+            if ($duplicate !== null) {
+                return $this->response->setJSON(['success' => false, 'message' => lang('Items.category_duplicate', [$duplicate])]);
+            }
+
+            $success = $this->category->create($name);
+
+            if ($success) {
+                $this->audit('category_create', 'category', $name, null, ['name' => $name]);
+            }
+
+            return $this->response->setJSON([
+                'success' => $success,
+                'message' => lang($success ? 'Items.category_saved' : 'Items.category_save_failed'),
+            ]);
+        }
+
+        $moved = $this->category->rename($original, $name);
+
+        if ($moved !== false) {
+            $this->audit('category_rename', 'category', $original, ['name' => $original], ['name' => $name, 'items_moved' => $moved]);
+        }
+
+        if ($moved === false) {
+            return $this->response->setJSON(['success' => false, 'message' => lang('Items.category_save_failed')]);
+        }
+
+        return $this->response->setJSON(['success' => true, 'message' => lang('Items.category_renamed', [$moved])]);
+    }
+
+    /**
+     * @noinspection PhpUnused
+     */
+    public function postDeleteCategory(): ResponseInterface
+    {
+        if (!$this->canManageCategories()) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => lang('Items.category_not_authorized')]);
+        }
+
+        $name = (string) $this->request->getPost('name');
+
+        if ($this->category->countActiveItems($name) > 0) {
+            return $this->response->setJSON(['success' => false, 'message' => lang('Items.category_in_use')]);
+        }
+
+        $success = $this->category->remove($name);
+
+        if ($success) {
+            $this->audit('category_delete', 'category', $name, ['name' => $name]);
+        }
+
+        return $this->response->setJSON([
+            'success' => $success,
+            'message' => lang($success ? 'Items.category_deleted' : 'Items.category_save_failed'),
+        ]);
+    }
+
+    /**
+     * Values a manual stock change at the item's average cost in the ledger.
+     */
+    private function postInventoryAdjustment(int $inventoryTransId, int $itemId, float $quantityDelta, int $employeeId, string $comment, bool $opening = false): bool
+    {
+        if (!Posting::enabled() || $quantityDelta == 0.0) {
+            return true;
+        }
+
+        try {
+            (new Posting($this->db))->postInventoryAdjustment($inventoryTransId, $itemId, $quantityDelta, $employeeId, $comment, null, $opening);
+
+            return true;
+        } catch (Throwable $e) {
+            log_message('error', "Posting inventory adjustment for item $itemId failed: " . $e->getMessage());
+
+            return false;
+        }
+    }
+
+    /**
+     * A hand-edited cost revalues the stock on hand; the change is kept in the
+     * cost history and the difference posted to inventory cost variance.
+     */
+    private function postCostChange(int $itemId, float $previousCost, float $newCost, int $employeeId): bool
+    {
+        if (round($previousCost, 2) === round($newCost, 2)) {
+            return true;
+        }
+
+        try {
+            $costing = new Costing($this->db);
+            $revaluation = $costing->recordManualChange($itemId, $previousCost, $newCost, $employeeId);
+            $this->audit('cost_change', 'item', $itemId, ['cost_price' => $previousCost], ['cost_price' => $newCost, 'stock_revaluation' => $revaluation]);
+
+            if (Posting::enabled()) {
+                (new Posting($this->db))->postCostRevaluation((int) $this->db->insertID(), $itemId, $revaluation, $employeeId);
+            }
+
+            return true;
+        } catch (Throwable $e) {
+            log_message('error', "Recording the cost change of item $itemId failed: " . $e->getMessage());
+
+            return false;
+        }
+    }
+
+    private function canManageCategories(): bool
+    {
+        return $this->employee->has_grant('items_categories', $this->employee->get_logged_in_employee_info()->person_id);
+    }
+
+    /**
+     * Maps a posted category onto its approved spelling.
+     *
+     * Returns null when the category dropdown is on and the value is neither
+     * approved nor the item's existing category, so a hand-crafted POST cannot
+     * create the spelling variants the dropdown exists to prevent. With the
+     * dropdown off, free text is still accepted but snapped to an approved
+     * spelling when one matches.
+     */
+    private function resolveCategory(string $posted, int $itemId): ?string
+    {
+        $posted = Category::cleanName($posted);
+
+        if ($posted === '' || $this->category->isApproved($posted)) {
+            return $posted;
+        }
+
+        $approved = $this->category->findApprovedMatch($posted);
+
+        if ($approved !== null) {
+            return $approved;
+        }
+
+        if ($this->config['category_dropdown'] !== '1') {
+            return $posted;
+        }
+
+        if ($itemId !== NEW_ENTRY && (string) $this->item->get_info($itemId)->category === $posted) {
+            return $posted;
+        }
+
+        return null;
     }
 
     /**
@@ -385,13 +587,11 @@ class Items extends Secure_Controller
         $data['category_dropdown'] = $this->config['category_dropdown'];
 
         if ($data['category_dropdown'] === '1') {
-            $categories = ['' => lang('Items.none')];
-            $categoryOptions = $this->attribute->getDefinitionValues(CATEGORY_DEFINITION_ID);
-            $categoryOptions = array_combine($categoryOptions, $categoryOptions);    // Overwrite indexes with values for saving in items table instead of attributes
-            $data['categories'] = array_merge($categories, $categoryOptions);
-
+            $data['categories'] = $this->category->getDropdownOptions(lang('Items.choose_category'), (string) $item_info->category);
             $data['selected_category'] = $item_info->category;
         }
+
+        $data['can_manage_categories'] = $this->canManageCategories();
 
         if ($item_id === NEW_ENTRY) {
             $data['default_tax_1_rate'] = $this->config['default_tax_1_rate'];
@@ -895,14 +1095,7 @@ class Items extends Secure_Controller
         $data['categoryDropdown'] = $this->config['category_dropdown'] === '1';
 
         if ($data['categoryDropdown']) {
-            $categories = ['' => lang('Items.none')];
-            $categoryOptions = $this->attribute->getDefinitionValues(CATEGORY_DEFINITION_ID);
-
-            if ($categoryOptions !== []) {
-                $categories = array_merge($categories, array_combine($categoryOptions, $categoryOptions));
-            }
-
-            $data['categories'] = $categories;
+            $data['categories'] = $this->category->getDropdownOptions(lang('Items.none'));
         }
 
         $data['useDestinationBasedTax'] = (bool) $this->config['use_destination_based_tax'];
@@ -1096,12 +1289,12 @@ class Items extends Secure_Controller
         $taxNamesInput = $this->request->getPost('tax_names');
 
         if (!empty($taxNamesInput)) {
+            // Blank tax rows (no default tax configured) are allowed here and skipped when saving.
             $rules = [
-                'tax_names.*' => 'required|max_length[255]|unicode_alpha_numeric_punct',
+                'tax_names.*' => 'permit_empty|max_length[255]|unicode_alpha_numeric_punct',
             ];
             $messages = [
                 'tax_names.*' => [
-                    'required'                    => lang('Items.tax_name_invalid'),
                     'max_length'                  => lang('Items.tax_name_invalid'),
                     'unicode_alpha_numeric_punct' => lang('Items.tax_name_invalid'),
                 ],
@@ -1197,6 +1390,28 @@ class Items extends Secure_Controller
             $itemData['reorder_level'] = 0;
         }
 
+        $category = $this->resolveCategory((string) $itemData['category'], $itemId);
+
+        // With the approved-category list in use, every product belongs to one; the
+        // form marks it required, but its picker is hidden from client validation.
+        if ($category === '' && $this->config['category_dropdown'] === '1') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => lang('Items.category_required'),
+                'id'      => $itemId,
+            ]);
+        }
+
+        if ($category === null) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => lang('Items.category_not_approved'),
+                'id'      => $itemId,
+            ]);
+        }
+
+        $itemData['category'] = $category;
+
         $taxCategoryId = $this->request->getPost('tax_category_id');
 
         if (!isset($taxCategoryId)) {
@@ -1210,6 +1425,7 @@ class Items extends Secure_Controller
         }
 
         $employeeId = $this->employee->get_logged_in_employee_info()->person_id;
+        $previousCost = $itemId === NEW_ENTRY ? null : (float) $this->item->get_info($itemId)->cost_price;
 
         // Wrap the entire save sequence in a single transaction for atomicity
         $db = db_connect();
@@ -1224,6 +1440,11 @@ class Items extends Secure_Controller
                 $newItem = true;
             }
 
+            // Revalue the quantity on hand before any quantity edit below, which is then valued at the new cost.
+            if ($previousCost !== null && $itemData['item_type'] != ITEM_TEMP) {
+                $success = $this->postCostChange((int) $itemId, $previousCost, (float) $costPrice, $employeeId);
+            }
+
             $useDestinationBasedTax = (bool)$this->config['use_destination_based_tax'];
 
             if (!$useDestinationBasedTax) {
@@ -1232,15 +1453,27 @@ class Items extends Secure_Controller
                 $taxPercents = $this->request->getPost('tax_percents');
 
                 $taxNameIndex = 0;
+                $seenTaxes = [];
 
-                foreach ($taxPercents as $taxPercent) {
-                    $taxPercentage = parse_tax($taxPercent);
+                foreach ($taxPercents ?? [] as $taxPercent) {
+                    $taxPercentage = parse_tax((string) $taxPercent);
+                    $taxName = trim((string) ($taxNames[$taxNameIndex] ?? ''));
+                    $taxNameIndex++;
 
-                    if (is_numeric($taxPercentage)) {
-                        $itemsTaxesData[] = ['name' => $taxNames[$taxNameIndex], 'percent' => $taxPercentage];
+                    // (item_id, name, percent) is the primary key: a blank name or a repeated
+                    // row would make the insert fail and roll back the whole item save.
+                    if ($taxName === '' || !is_numeric($taxPercentage)) {
+                        continue;
                     }
 
-                    $taxNameIndex++;
+                    $taxKey = mb_strtolower($taxName) . '|' . (float) $taxPercentage;
+
+                    if (isset($seenTaxes[$taxKey])) {
+                        continue;
+                    }
+
+                    $seenTaxes[$taxKey] = true;
+                    $itemsTaxesData[] = ['name' => $taxName, 'percent' => $taxPercentage];
                 }
                 $success = $success && $this->item_taxes->save_value($itemsTaxesData, $itemId);
             }
@@ -1275,6 +1508,7 @@ class Items extends Secure_Controller
                     ];
 
                     $success = $success && $this->inventory->insert($invData, false);
+                    $success = $success && $this->postInventoryAdjustment((int) $db->insertID(), (int) $itemId, (float) $invData['trans_inventory'], $employeeId, $invData['trans_comment'], $newItem);
                 }
             }
             $success = $success && $this->saveItemAttributes($itemId);
@@ -1421,16 +1655,24 @@ class Items extends Secure_Controller
         $db->transStart();
 
         $this->inventory->insert($inv_data, false);
+        $inventoryTransId = (int) $db->insertID();
 
         // Update stock quantity with the same atomic delta-based write as sales
         // and receivings, so concurrent adjustments cannot lose updates; the
         // zero floor rejects an adjustment that would drive the location below
         // zero.
         $success = $this->item_quantity->changeQuantity((int) $item_id, (int) $location_id, $quantity_change, 0.0);
+        $success = $success && $this->postInventoryAdjustment($inventoryTransId, (int) $item_id, (float) $quantity_change, $employee_id, (string) $inv_data['trans_comment']);
 
-        $db->transComplete();
+        // A refused adjustment must not leave its history row behind.
+        if (!$success) {
+            $db->transRollback();
+        } else {
+            $db->transComplete();
+        }
 
         if ($success && $db->transStatus()) {
+            $this->audit('inventory_adjustment', 'item', (int) $item_id, null, ['location_id' => (int) $location_id, 'quantity_change' => $quantity_change], (string) $inv_data['trans_comment']);
             $message = lang('Items.successful_updating') . " $cur_item_info->name";
 
             return $this->response->setJSON(['success' => true, 'message' => $message, 'id' => $item_id]);
@@ -1845,11 +2087,15 @@ class Items extends Secure_Controller
             ];
 
             if (!empty($row["location_$location_name"]) || $row["location_$location_name"] === '0') {
+                $previousQuantity = (float) $this->item_quantity->get_item_quantity((int) $item_data['item_id'], (int) $location_id)->quantity;
                 $item_quantity_data['quantity'] = $row["location_$location_name"];
                 $success &= $this->item_quantity->save_value($item_quantity_data, $item_data['item_id'], $location_id);
 
-                $csv_data['trans_inventory'] = $row["location_$location_name"];
+                // The stock history records the change, not the new level, so that
+                // quantity on hand stays the sum of its movements on re-import.
+                $csv_data['trans_inventory'] = (float) $row["location_$location_name"] - $previousQuantity;
                 $success &= (bool)$this->inventory->insert($csv_data, false);
+                $success &= $this->postInventoryAdjustment((int) $this->db->insertID(), (int) $item_data['item_id'], (float) $csv_data['trans_inventory'], $employee_id, $comment, !$is_update);
             } elseif ($is_update) {
                 continue;
             } else {

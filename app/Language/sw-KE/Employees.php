@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Manenosiri hayafanani.',
     'password_not_must_match'                => 'Nenosiri la sasa na jipya lazima liwe tofauti.',
     'password_required'                      => 'Nenosiri linahitajika.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

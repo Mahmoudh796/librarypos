@@ -1,3 +1,4 @@
+<?php helper('store'); ?>
 <?php
 /**
  * @var bool $print_after_sale
@@ -45,8 +46,8 @@ echo view('partial/print_receipt', ['print_after_sale', $print_after_sale, 'sele
             <div id="company_name"><?= esc($config['company']) ?></div>
         <?php } ?>
 
-        <div id="company_address"><?= nl2br(esc($config['address'])) ?></div>
-        <div id="company_phone"><?= esc($config['phone']) ?></div>
+        <div id="company_address"><?= nl2br(esc(store_info('address'))) ?></div>
+        <div id="company_phone"><?= esc(store_info('phone')) ?></div>
         <div id="sale_receipt"><?= lang('Receivings.receipt') ?></div>
         <div id="sale_time"><?= esc($transaction_time) ?></div>
     </div>
@@ -123,7 +124,7 @@ echo view('partial/print_receipt', ['print_after_sale', $print_after_sale, 'sele
     </table>
 
     <div id="sale_return_policy">
-        <?= nl2br(esc($config['return_policy'])) ?>
+        <?= nl2br(esc(store_info('return_policy'))) ?>
     </div>
 
     <div id="barcode">

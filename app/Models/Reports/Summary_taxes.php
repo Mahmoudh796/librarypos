@@ -2,6 +2,7 @@
 
 namespace App\Models\Reports;
 
+use App\Models\Sale;
 use Config\OSPOS;
 
 class Summary_taxes extends Summary_report
@@ -42,9 +43,7 @@ class Summary_taxes extends Summary_report
         $decimals = totals_decimals();
         $db_prefix = $this->db->getPrefix();
 
-        $sale_amount = '(CASE WHEN ' . $db_prefix . 'sales_items.discount_type = ' . PERCENT
-            . " THEN " . $db_prefix . "sales_items.quantity_purchased * " . $db_prefix . "sales_items.item_unit_price - ROUND(" . $db_prefix . "sales_items.quantity_purchased * " . $db_prefix . "sales_items.item_unit_price * " . $db_prefix . "sales_items.discount / 100, $decimals)"
-            . ' ELSE ' . $db_prefix . 'sales_items.quantity_purchased * (' . $db_prefix . "sales_items.item_unit_price - " . $db_prefix . "sales_items.discount) END)";
+        $sale_amount = Sale::lineNetSql($decimals, $db_prefix . 'sales_items');
 
         $sale_tax = "IFNULL(" . $db_prefix . "sales_items_taxes.item_tax_amount, 0)";
 

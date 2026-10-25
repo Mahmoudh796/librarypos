@@ -226,7 +226,16 @@ class Employees extends Persons
             }
         }
 
+        $previousGrantIds = $employeeId == NEW_ENTRY ? [] : array_column($this->employee->get_employee_grants($employeeId), 'permission_id');
+
         if ($this->employee->save_employee($personData, $employeeData, $grantsArray, $employeeId)) {
+            $newGrantIds = array_column($grantsArray, 'permission_id');
+            sort($previousGrantIds);
+            sort($newGrantIds);
+
+            if ($previousGrantIds !== $newGrantIds) {
+                $this->audit('grants_change', 'employee', (int) ($employeeData['person_id'] ?? $employeeId), ['grants' => $previousGrantIds], ['grants' => $newGrantIds]);
+            }
             // New employee
             if ($employeeId == NEW_ENTRY) {
                 return $this->response->setJSON([

@@ -47,7 +47,7 @@
 <?= view('partial/print_receipt', ['print_after_sale' => false, 'selected_printer' => 'takings_printer']) ?>
 
 <div class="dj-page-head">
-    <?= view('partial/page_path', ['crumbs' => [['module' => 'people'], ['component' => 'people', 'module' => 'cashups']]]) ?>
+    <?= view('partial/page_path', ['crumbs' => [['label' => lang('Common.nav_treasury'), 'href' => 'treasury'], ['label' => lang('Treasury.shifts')]]]) ?>
     <h1 class="dj-page-title">
         <span class="glyphicon glyphicon-usd" aria-hidden="true"></span><?= lang('Module.cashups') ?>
     </h1>

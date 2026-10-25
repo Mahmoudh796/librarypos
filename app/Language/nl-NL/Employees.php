@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Wachtwoorden komen niet overeen.',
     'password_not_must_match'                => 'Huidige wachtwoord en nieuwe wachtwoord moeten uniek zijn.',
     'password_required'                      => 'Wachtwoord is vereist.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

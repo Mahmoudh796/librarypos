@@ -246,6 +246,13 @@ class ReceivingTest extends CIUnitTestCase
         $this->assertTrue($result1);
         $this->assertTrue($result2);
         $this->assertEqualsWithDelta(20.0, $this->getItemQuantity($itemId, self::LOCATION_ID), 0.001);
+
+        // The second receipt must average against the first one's stock, not a stale snapshot.
+        $quantitiesBefore = array_map('floatval', array_column(
+            \Config\Database::connect()->table('item_cost_history')->select('qty_before')->where('item_id', $itemId)->orderBy('history_id')->get()->getResultArray(),
+            'qty_before'
+        ));
+        $this->assertSame([10.0, 15.0], $quantitiesBefore);
     }
 
     public function testConcurrentReceivingAndSaleOfSameItemSerialize(): void

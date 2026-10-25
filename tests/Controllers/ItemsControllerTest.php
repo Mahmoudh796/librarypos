@@ -11,8 +11,10 @@ use App\Models\Item_quantity;
 use App\Models\Inventory;
 use App\Models\Item_taxes;
 use App\Models\Attribute;
+use App\Models\Category;
 use App\Models\Stock_location;
 use App\Models\Supplier;
+use Config\OSPOS;
 use Tests\Support\EmployeeFixtureTrait;
 use Tests\Support\ItemFixtureTrait;
 
@@ -215,6 +217,176 @@ class ItemsControllerTest extends CIUnitTestCase
         $response->assertStatus(200);
         $result = json_decode($response->getJSON(), true);
         $this->assertFalse($result['success']);
+    }
+
+    /**
+     * With no default taxes configured the item form posts blank tax rows, and a
+     * stored "0" placeholder produced two identical rows. Either used to fail the
+     * items_taxes primary key and roll back the whole save.
+     */
+    public function testPostSaveSkipsBlankAndDuplicateTaxRows(): void
+    {
+        $this->loginAsItemsEmployee($this->createItemsEmployee());
+
+        $postData = $this->baseItemPostData();
+        $postData['tax_names'] = ['', '0', '0', 'VAT', 'vat'];
+        $postData['tax_percents'] = ['', '0', '0', '14', '14'];
+
+        $result = json_decode($this->post('/items/save', $postData)->getJSON(), true);
+
+        $this->assertTrue($result['success'], $result['message'] ?? '');
+        $taxes = $this->db->table('items_taxes')->where('item_id', $result['id'])->get()->getResultArray();
+        $this->assertCount(2, $taxes);
+        $this->assertEqualsCanonicalizing(['0', 'VAT'], array_column($taxes, 'name'));
+    }
+
+    public function testPostSaveRejectsUnapprovedCategoryWhenDropdownIsOn(): void
+    {
+        $this->withCategoryDropdown(function (): void {
+            $this->loginAsItemsEmployee($this->createItemsEmployee());
+
+            $postData = $this->baseItemPostData();
+            $postData['category'] = 'Unapproved ' . uniqid();
+
+            $result = json_decode($this->post('/items/save', $postData)->getJSON(), true);
+
+            $this->assertFalse($result['success']);
+            $this->assertSame(lang('Items.category_not_approved'), $result['message']);
+        });
+    }
+
+    public function testPostSaveRequiresACategoryWhenDropdownIsOn(): void
+    {
+        $this->withCategoryDropdown(function (): void {
+            $this->loginAsItemsEmployee($this->createItemsEmployee());
+
+            $postData = $this->baseItemPostData();
+            $postData['category'] = '';
+
+            $result = json_decode($this->post('/items/save', $postData)->getJSON(), true);
+
+            $this->assertFalse($result['success']);
+            $this->assertSame(lang('Items.category_required'), $result['message']);
+        });
+    }
+
+    public function testPostSaveSnapsCategorySpellingVariantToApprovedName(): void
+    {
+        $this->withCategoryDropdown(function (): void {
+            $suffix = uniqid();
+            model(Category::class)->create('أقلام ' . $suffix);
+            $this->loginAsItemsEmployee($this->createItemsEmployee());
+
+            $postData = $this->baseItemPostData();
+            $postData['category'] = ' اقلام  ' . $suffix;
+
+            $result = json_decode($this->post('/items/save', $postData)->getJSON(), true);
+
+            $this->assertTrue($result['success'], $result['message'] ?? '');
+            $this->assertSame('أقلام ' . $suffix, $this->item->get_info($result['id'])->category);
+        });
+    }
+
+    public function testPostSaveKeepsExistingUnapprovedCategoryOfAnItem(): void
+    {
+        $this->withCategoryDropdown(function (): void {
+            $itemId = $this->createTestItem();
+            $legacy = 'Legacy ' . uniqid();
+            $this->db->table('items')->where('item_id', $itemId)->update(['category' => $legacy]);
+            $this->loginAsItemsEmployee($this->createItemsEmployee());
+
+            $postData = $this->baseItemPostData();
+            $postData['category'] = $legacy;
+
+            $result = json_decode($this->post("/items/save/$itemId", $postData)->getJSON(), true);
+
+            $this->assertTrue($result['success'], $result['message'] ?? '');
+            $this->assertSame($legacy, $this->item->get_info($itemId)->category);
+        });
+    }
+
+    public function testCategoryManagementRequiresGrant(): void
+    {
+        $this->loginAsItemsEmployee($this->createItemsEmployee());
+
+        $response = $this->post('/items/saveCategory', ['name' => 'Blocked ' . uniqid()]);
+
+        $response->assertStatus(403);
+        $this->assertFalse(json_decode($response->getJSON(), true)['success']);
+    }
+
+    public function testCategoryManagerCanCreateAndRenameCategory(): void
+    {
+        $this->withCategoryDropdown(function (): void {
+            $personId = $this->createItemsEmployee();
+            $this->db->table('grants')->insert(['person_id' => $personId, 'permission_id' => 'items_categories', 'menu_group' => '--']);
+            $this->loginAsItemsEmployee($personId);
+
+            $name = 'Created ' . uniqid();
+            $this->assertTrue(json_decode($this->post('/items/saveCategory', ['name' => $name])->getJSON(), true)['success']);
+            $this->assertFalse(json_decode($this->post('/items/saveCategory', ['name' => " $name "])->getJSON(), true)['success']);
+
+            $itemId = $this->createTestItem();
+            $this->db->table('items')->where('item_id', $itemId)->update(['category' => $name]);
+
+            $renamed = 'Renamed ' . uniqid();
+            $result = json_decode($this->post('/items/saveCategory', ['name' => $renamed, 'original' => $name])->getJSON(), true);
+
+            $this->assertTrue($result['success']);
+            $this->assertSame($renamed, $this->item->get_info($itemId)->category);
+            $this->assertFalse(json_decode($this->post('/items/deleteCategory', ['name' => $renamed])->getJSON(), true)['success']);
+        });
+    }
+
+    public function testSearchFiltersByCategoryAndSupplier(): void
+    {
+        $this->loginAsItemsEmployee($this->createItemsEmployee());
+        $category = 'Filter ' . uniqid();
+        $matching = $this->createTestItem();
+        $other = $this->createTestItem();
+        $this->db->table('items')->where('item_id', $matching)->update(['category' => $category]);
+
+        // Item search only lists items with stock rows, which createTestItem() does not write.
+        foreach ([$matching, $other] as $itemId) {
+            $this->db->table('item_quantities')->insert(['item_id' => $itemId, 'location_id' => 1, 'quantity' => 0]);
+            $this->db->table('inventory')->insert([
+                'trans_items' => $itemId, 'trans_user' => 1, 'trans_location' => 1,
+                'trans_comment' => 'fixture', 'trans_inventory' => 0, 'trans_date' => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        $response = $this->get('/items/search', ['search' => '', 'category' => $category, 'limit' => 50, 'offset' => 0, 'stock_location' => 1]);
+        $result = json_decode($response->getJSON(), true);
+
+        $this->assertSame(1, $result['total']);
+        $this->assertStringNotContainsString('"items.item_id":' . $other . ',', json_encode($result['rows']));
+    }
+
+    /**
+     * Runs $assertions with the category dropdown enabled and the hidden category
+     * definition present, restoring the setting afterwards.
+     */
+    private function withCategoryDropdown(callable $assertions): void
+    {
+        if ($this->db->table('attribute_definitions')->where('definition_id', CATEGORY_DEFINITION_ID)->countAllResults() === 0) {
+            $this->db->table('attribute_definitions')->insert([
+                'definition_id'    => CATEGORY_DEFINITION_ID,
+                'definition_name'  => 'ospos_category',
+                'definition_type'  => DROPDOWN,
+                'definition_flags' => 0,
+                'deleted'          => 0,
+            ]);
+        }
+
+        $settings = &config(OSPOS::class)->settings;
+        $original = $settings['category_dropdown'] ?? '0';
+        $settings['category_dropdown'] = '1';
+
+        try {
+            $assertions();
+        } finally {
+            $settings['category_dropdown'] = $original;
+        }
     }
 
     /**

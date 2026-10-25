@@ -81,7 +81,7 @@ function summaryRowState(key) {
 
 // Function to apply visibility for cost and profit rows
 function applySummaryVisibility() {
-    $('#report_summary .summary_row[data-key]').each(function () {
+    $('.ruya-kpis .ruya-kpi[data-key]').each(function () {
         summaryRowState($(this).data('key')) ? $(this).show() : $(this).hide();
     });
 }

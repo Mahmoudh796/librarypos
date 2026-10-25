@@ -27,8 +27,8 @@
             <div id="company_name"><?= esc($config['company']) ?></div>
         <?php } ?>
 
-        <div id="company_address"><?= nl2br(esc($config['address'])) ?></div>
-        <div id="company_phone"><?= esc($config['phone']) ?></div>
+        <div id="company_address"><?= nl2br(esc(store_info('address'))) ?></div>
+        <div id="company_phone"><?= esc(store_info('phone')) ?></div>
         <div id="sale_receipt"><?= lang('Sales.receipt') ?></div>
         <div id="sale_time"><?= esc($transaction_time) ?></div>
     </div>
@@ -92,6 +92,13 @@
             </tr>
         <?php } ?>
 
+        <?php if (!empty($invoice_discount_amount) && (float) $invoice_discount_amount != 0.0) { ?>
+            <tr>
+                <td colspan="2" class="total-value"><?= lang('Sales.invoice_discount') ?>:</td>
+                <td class="total-value"><?= to_currency((string) -(float) $invoice_discount_amount) ?></td>
+            </tr>
+        <?php } ?>
+
         <?php if ($config['receipt_show_taxes']) { ?>
             <tr>
                 <td colspan="2" style="text-align: right; border-top: 2px solid #000000;"><?= lang('Sales.sub_total') ?></td>
@@ -144,7 +151,7 @@
     </table>
 
     <div id="sale_return_policy">
-        <?= nl2br(esc($config['return_policy'])) ?>
+        <?= nl2br(esc(store_info('return_policy'))) ?>
     </div>
 
     <div id="barcode">

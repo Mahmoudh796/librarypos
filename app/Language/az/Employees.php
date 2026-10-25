@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Şifrələr uyğun gəlmir.',
     'password_not_must_match'                => 'Hazırki şifrə və yeni şifrə unikal olmalıdır.',
     'password_required'                      => 'Şifrə tələb olunur.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

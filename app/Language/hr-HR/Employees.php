@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Lozinka se ne podudara',
     'password_not_must_match'                => '',
     'password_required'                      => 'Lozinka je potrebna',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

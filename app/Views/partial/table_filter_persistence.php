@@ -56,7 +56,7 @@ $filter_select_id = $options['filter_select_id'] ?? 'filters';
             });
 
             // Update URL without page reload
-            const new_url = window.location.pathname;
+            let new_url = window.location.pathname;
             const params_str = params.toString();
             if (params_str) {
                 new_url += '?' + params_str;
@@ -64,21 +64,20 @@ $filter_select_id = $options['filter_select_id'] ?? 'filters';
             window.history.replaceState({}, '', new_url);
         }
 
-        // Update URL when filter dropdown changes
-        $('#' + filter_select_id).on('hidden.bs.select', function(e) {
+        // Every filter change must both reload the table and record the state in the URL.
+        function apply_filters() {
+            if (typeof table_support !== 'undefined') {
+                table_support.refresh();
+            }
             update_url();
-        });
-
-        // Update URL when stock location changes (if exists)
-        if ($('#stock_location').length) {
-            $("#stock_location").change(function() {
-                update_url();
-            });
         }
 
-        // Update URL when daterangepicker changes
-        $("#daterangepicker").on('apply.daterangepicker', function(ev, picker) {
-            update_url();
+        $('#' + filter_select_id).on('hidden.bs.select', apply_filters);
+
+        additional_params.forEach(function(param) {
+            $('#' + param).on('change', apply_filters);
         });
+
+        $("#daterangepicker").on('apply.daterangepicker', apply_filters);
     });
 </script>

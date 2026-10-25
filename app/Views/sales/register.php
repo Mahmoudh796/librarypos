@@ -421,6 +421,40 @@ helper('url');
                 <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.quantity_of_items', [$item_count]) ?></th>
                 <th style="width: 45%; text-align: right;"><?= $total_units ?></th>
             </tr>
+            <?php $hasLineDiscount = (float) $line_discount_total != 0.0; ?>
+            <?php $hasInvoiceDiscount = (float) $invoice_discount_amount != 0.0; ?>
+            <?php if ($hasLineDiscount || $hasInvoiceDiscount): ?>
+                <tr class="dj-summary-gross">
+                    <th style="width: 55%;"><?= lang('Sales.gross_total') ?></th>
+                    <th style="width: 45%; text-align: right;"><?= to_money_unit($prediscount_subtotal) ?></th>
+                </tr>
+            <?php endif; ?>
+            <?php if ($hasLineDiscount): ?>
+                <tr class="dj-summary-discount">
+                    <th style="width: 55%;"><?= lang('Sales.item_discounts') ?></th>
+                    <th style="width: 45%; text-align: right;"><?= to_money_unit((string) -(float) $line_discount_total) ?></th>
+                </tr>
+            <?php endif; ?>
+            <?php if ($hasInvoiceDiscount): ?>
+                <tr class="dj-summary-discount" id="invoice_discount_row">
+                    <th style="width: 55%;">
+                        <?= lang('Sales.invoice_discount') ?>
+                        <?php if ((int) ($invoice_discount['type'] ?? FIXED) === PERCENT): ?>
+                            <span class="dj-num">(<?= to_tax_decimals((string) $invoice_discount['value']) ?>%)</span>
+                        <?php endif; ?>
+                        <small class="dj-hint" dir="auto" title="<?= esc(lang('Sales.invoice_discount_reason'), 'attr') ?>"><?= esc($invoice_discount['reason'] ?? '') ?></small>
+                    </th>
+                    <th style="width: 45%; text-align: right;">
+                        <?= to_money_unit((string) -(float) $invoice_discount_amount) ?>
+                        <?php if ($can_invoice_discount): ?>
+                            <?= form_open("$controller_name/invoiceDiscount", ['class' => 'dj-inline-form', 'id' => 'remove_invoice_discount_form']) ?>
+                                <input type="hidden" name="remove" value="1">
+                                <button type="submit" class="btn btn-link btn-xs" title="<?= esc(lang('Sales.remove_invoice_discount'), 'attr') ?>" aria-label="<?= esc(lang('Sales.remove_invoice_discount'), 'attr') ?>"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                            <?= form_close() ?>
+                        <?php endif; ?>
+                    </th>
+                </tr>
+            <?php endif; ?>
             <tr>
                 <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.sub_total') ?></th>
                 <th style="width: 45%; text-align: right;"><?= to_money_unit($subtotal) ?></th>
@@ -432,10 +466,27 @@ helper('url');
                 </tr>
             <?php } ?>
             <tr class="dj-total-row">
-                <th style="width: 55%; font-size: 150%"><?= lang(ucfirst($controller_name) . '.total') ?></th>
-                <th style="width: 45%; font-size: 150%; text-align: right;"><span id="sale_total"><?= to_money_unit($total) ?></span></th>
+                <th style="width: 55%;"><?= lang('Sales.total_payable') ?></th>
+                <th style="width: 45%; text-align: right;"><span id="sale_total"><?= to_money_unit($total) ?></span></th>
             </tr>
         </table>
+
+        <?php if ($can_invoice_discount && count($cart) > 0 && !$hasInvoiceDiscount): ?>
+            <details class="dj-invoice-discount" id="invoice_discount_panel">
+                <summary><span class="glyphicon glyphicon-tag" aria-hidden="true"></span> <?= lang('Sales.add_invoice_discount') ?></summary>
+                <?= form_open("$controller_name/invoiceDiscount", ['id' => 'invoice_discount_form', 'class' => 'dj-invoice-discount-form']) ?>
+                    <div class="dj-invoice-discount-row">
+                        <label class="sr-only" for="invoice_discount_value"><?= lang('Sales.invoice_discount') ?></label>
+                        <input type="text" inputmode="decimal" name="invoice_discount_value" id="invoice_discount_value" class="form-control input-sm dj-input-number" required>
+                        <?= form_dropdown('invoice_discount_type', [PERCENT => '%', FIXED => $config['currency_symbol']], PERCENT, ['class' => 'form-control input-sm', 'id' => 'invoice_discount_type', 'aria-label' => lang('Sales.discount_type')]) ?>
+                    </div>
+                    <label class="sr-only" for="invoice_discount_reason"><?= lang('Sales.invoice_discount_reason') ?></label>
+                    <input type="text" name="invoice_discount_reason" id="invoice_discount_reason" maxlength="255" class="form-control input-sm" dir="auto" placeholder="<?= esc(lang('Sales.invoice_discount_reason'), 'attr') ?>" required>
+                    <p class="help-block dj-hint"><?= lang('Sales.invoice_discount_help', [to_tax_decimals((string) $invoice_discount_max_percent)]) ?></p>
+                    <button type="submit" class="btn btn-default btn-sm"><?= lang('Sales.apply_invoice_discount') ?></button>
+                <?= form_close() ?>
+            </details>
+        <?php endif; ?>
 
         <?php if (count($cart) > 0) { // Only show this part if there are Items already in the register ?>
             <table class="sales_table_100" id="payment_totals">
@@ -443,15 +494,22 @@ helper('url');
                     <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.payments_total') ?></th>
                     <th style="width: 45%; text-align: right;"><?= to_money_unit($payments_total) ?></th>
                 </tr>
-                <tr class="dj-amount-due-row">
-                    <th style="width: 55%; font-size: 120%"><?= lang(ucfirst($controller_name) . '.amount_due') ?></th>
-                    <th style="width: 45%; font-size: 120%; text-align: right;"><span id="sale_amount_due"><?= to_money_unit($amount_due) ?></span></th>
-                </tr>
+                <?php if ($mode !== 'return' && (float) $amount_due < 0): ?>
+                    <tr class="dj-change-due-row ruya-due ruya-due--change">
+                        <th style="width: 55%;"><?= lang('Sales.change_due') ?></th>
+                        <th style="width: 45%; text-align: right;"><span id="sale_change_due"><?= to_money_unit((string) abs((float) $amount_due)) ?></span></th>
+                    </tr>
+                <?php else: ?>
+                    <tr class="dj-amount-due-row ruya-due<?= (float) $amount_due == 0.0 ? ' ruya-due--settled' : '' ?>">
+                        <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.amount_due') ?></th>
+                        <th style="width: 45%; text-align: right;"><span id="sale_amount_due"><?= to_money_unit($amount_due) ?></span></th>
+                    </tr>
+                <?php endif; ?>
             </table>
 
             <div id="payment_details">
                 <?php if ($payments_cover_total) { // Show Complete sale button instead of Add Payment if there is no amount due left ?>
-                    <?= form_open("$controller_name/addPayment", ['id' => 'add_payment_form', 'class' => 'form-horizontal']) ?>
+                    <?= form_open("$controller_name/addPayment", ['id' => 'add_payment_form', 'class' => 'form-horizontal', 'data-ruya-once' => '1']) ?>
                         <input type="hidden" name="complete_after_payment" value="0">
                         <table class="sales_table_100">
                             <tr>
@@ -508,7 +566,7 @@ helper('url');
 
                         if (!$due_payment || ($due_payment && isset($customer))) {    // TODO: $due_payment is not needed because the first clause insures that it will always be true if it gets to this point.  Can be shortened to if (!$due_payment || isset($customer))
                     ?>
-                            <div class="btn btn-sm btn-success pull-right" id="finish_sale_button" role="button" tabindex="<?= ++$tabindex ?>">
+                            <div class="btn btn-lg btn-success btn-block ruya-primary-action" id="finish_sale_button" role="button" tabindex="<?= ++$tabindex ?>">
                                 <span class="glyphicon glyphicon-ok">&nbsp;</span><?= lang(ucfirst($controller_name) . '.complete_sale') ?>
                             </div>
                     <?php
@@ -516,7 +574,7 @@ helper('url');
                     }
                     ?>
                 <?php } else { ?>
-                    <?= form_open("$controller_name/addPayment", ['id' => 'add_payment_form', 'class' => 'form-horizontal']) ?>
+                    <?= form_open("$controller_name/addPayment", ['id' => 'add_payment_form', 'class' => 'form-horizontal', 'data-ruya-once' => '1']) ?>
                         <input type="hidden" name="complete_after_payment" value="0">
                         <table class="sales_table_100">
                             <tr>
@@ -550,7 +608,7 @@ helper('url');
                         </table>
                     <?= form_close() ?>
 
-                    <div class="btn btn-sm btn-success pull-right" id="add_payment_button" role="button" tabindex="<?= ++$tabindex ?>">
+                    <div class="btn btn-lg btn-success btn-block ruya-primary-action" id="add_payment_button" role="button" tabindex="<?= ++$tabindex ?>">
                         <span class="glyphicon glyphicon-credit-card">&nbsp;</span><?= lang(ucfirst($controller_name) . '.add_payment') ?>
                     </div>
                 <?php } ?>
@@ -578,7 +636,7 @@ helper('url');
                 <?php } ?>
             </div>
 
-            <?= form_open("$controller_name/cancel", ['id' => 'buttons_form']) ?>
+            <?= form_open("$controller_name/cancel", ['id' => 'buttons_form', 'data-ruya-once' => '1']) ?>
             <div class="form-group" id="buttons_sale">
                 <div class="btn btn-sm btn-default pull-left" id="suspend_sale_button" role="button" tabindex="0"><span class="glyphicon glyphicon-align-justify">&nbsp;</span><?= lang(ucfirst($controller_name) . '.suspend_sale') ?></div>
                 <?php if (!$pos_mode && isset($customer)) { // Only show this part if the payment covers the total ?>
@@ -798,14 +856,14 @@ helper('url');
             }
         });
 
-        $('#comment').keyup(function() {
+        $('#comment').on('input change', function() {
             $.post("<?= esc(site_url("$controller_name/setComment")) ?>", {
                 comment: $('#comment').val()
             });
         });
 
         <?php if ($config['invoice_enable']) { ?>
-            $('#sales_invoice_number').keyup(function() {
+            $('#sales_invoice_number').on('input change', function() {
                 $.post("<?= esc(site_url("$controller_name/setInvoiceNumber")) ?>", {
                     sales_invoice_number: $('#sales_invoice_number').val()
                 });
@@ -831,31 +889,36 @@ helper('url');
             });
         });
 
+        // Each sale action posts the whole form once; a second press is ignored.
+        const submitButtonsForm = function(button, action) {
+            ruyaOnce(button, function() {
+                $('#buttons_form').attr('action', action).submit();
+            });
+        };
+
         $('#finish_sale_button').click(function() {
-            $('#buttons_form').attr('action', "<?= "$controller_name/complete" ?>");
-            $('#buttons_form').submit();
+            submitButtonsForm(this, "<?= "$controller_name/complete" ?>");
         });
 
         $('#finish_invoice_quote_button').click(function() {
-            $('#buttons_form').attr('action', "<?= "$controller_name/complete" ?>");
-            $('#buttons_form').submit();
+            submitButtonsForm(this, "<?= "$controller_name/complete" ?>");
         });
 
         $('#suspend_sale_button').click(function() {
-            $('#buttons_form').attr('action', "<?= site_url("$controller_name/suspend") ?>");
-            $('#buttons_form').submit();
+            submitButtonsForm(this, "<?= site_url("$controller_name/suspend") ?>");
         });
 
         $('#cancel_sale_button').click(function() {
             if (confirm("<?= lang(ucfirst($controller_name) . '.confirm_cancel_sale') ?>")) {
-                $('#buttons_form').attr('action', "<?= site_url("$controller_name/cancel") ?>");
-                $('#buttons_form').submit();
+                submitButtonsForm(this, "<?= site_url("$controller_name/cancel") ?>");
             }
         });
 
         $('#add_payment_button').click(function() {
-            $('#add_payment_form').find('input[name="complete_after_payment"]').val('0');
-            $('#add_payment_form').submit();
+            ruyaOnce(this, function() {
+                $('#add_payment_form').find('input[name="complete_after_payment"]').val('0');
+                $('#add_payment_form').submit();
+            });
         });
 
         $('#payment_types').change(check_payment_type).ready(check_payment_type);
@@ -874,7 +937,7 @@ helper('url');
 
         $('#finish_sale_button').keypress(function(event) {
             if (event.which == 13) {
-                $('#finish_sale_form').submit();
+                $(this).click();
             }
         });
 

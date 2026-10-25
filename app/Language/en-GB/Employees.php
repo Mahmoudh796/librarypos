@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Passwords do not match.',
     'password_not_must_match'                => 'Current password and new password must be unique.',
     'password_required'                      => 'Password is required.',
+    'perm_group_accounting'                  => 'Accounting',
+    'perm_group_finance'                     => 'Treasury and finance',
     'perm_group_admin'                       => 'Administration',
     'perm_group_catalog'                     => 'Catalog',
     'perm_group_comms'                       => 'Communication',

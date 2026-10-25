@@ -2,12 +2,15 @@
 
 namespace App\Controllers;
 
+use App\Libraries\Accounting\Ledger;
+use App\Libraries\Accounting\Reports;
 use App\Libraries\MY_Migration;
 use App\Models\Employee;
 use App\Models\Reports\Management_report;
 use App\Models\Stock_location;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Database;
 
 class Home extends Secure_Controller
 {
@@ -24,62 +27,129 @@ class Home extends Secure_Controller
     }
 
     /**
-     * Operational dashboard.
+     * Operational dashboard: a decision page ordered by the owner's questions
+     * (sales, profit, cash, who owes whom, stock), each figure linking to the
+     * report that explains it.
      *
-     * The Home module is the landing page, so the management KPIs live here
-     * instead of a parallel dashboard app. Financial cards require the matching
-     * reports grant, and the inventory cards require the inventory report grant.
-     * Everything is constrained to the stock locations the employee is granted.
-     *
-     * @return string
+     * Sales cards need reports_sales, stock cards reports_inventory, cash cards
+     * treasury_view and ledger figures accounting_view. Everything is limited to
+     * the stock locations the employee is granted.
      */
     public function getIndex(): string
     {
         $personId = (int) $this->session->get('person_id');
-        $data = [];
+        $period = (string) $this->request->getGet('period');
+        $period = in_array($period, ['today', 'week', 'month'], true) ? $period : 'today';
+        $data = ['period' => $period];
 
         if ($this->employee->has_grant('reports_sales', $personId)) {
-            $data['sales_dashboard'] = $this->buildSalesDashboard();
+            $data['sales_dashboard'] = $this->buildSalesDashboard($period);
         }
 
         if ($this->employee->has_grant('reports_inventory', $personId)) {
             $data['inventory_dashboard'] = $this->buildInventoryDashboard();
         }
 
+        // Sample store details from the installer are hidden on receipts; ask whoever can fix them.
+        if ($this->employee->has_grant('config', $personId)) {
+            helper('store');
+            $data['store_placeholders'] = store_info_placeholders();
+        }
+
+        $finance = $this->buildFinanceDashboard($personId, $period);
+        if ($finance !== []) {
+            $data['finance_dashboard'] = $finance;
+        }
+
         return view('home/home', $data);
+    }
+
+    /**
+     * The selected period and the one it is compared with, as [start, end] dates.
+     * Month-to-date is compared with the same number of days of last month.
+     *
+     * @return array{current: array{0: string, 1: string}, previous: array{0: string, 1: string}}
+     */
+    public static function periodRanges(string $period, ?int $now = null): array
+    {
+        $now ??= time();
+        $today = date('Y-m-d', $now);
+        $day = static fn (string $modifier): string => date('Y-m-d', strtotime($modifier, $now));
+
+        switch ($period) {
+            case 'week':
+                return ['current' => [$day('-6 days'), $today], 'previous' => [$day('-13 days'), $day('-7 days')]];
+            case 'month':
+                $previousStart = date('Y-m-01', strtotime('first day of last month', $now));
+                $previousEnd = date('Y-m-d', min(
+                    strtotime(date('Y-m-t', strtotime($previousStart))),
+                    strtotime($previousStart . ' +' . ((int) date('j', $now) - 1) . ' days')
+                ));
+
+                return ['current' => [date('Y-m-01', $now), $today], 'previous' => [$previousStart, $previousEnd]];
+            default:
+                return ['current' => [$today, $today], 'previous' => [$day('-1 day'), $day('-1 day')]];
+        }
+    }
+
+    /**
+     * Cash position and obligations. Treasury balances need treasury_view; the
+     * ledger figures need accounting_view. Nothing financial is shown otherwise.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildFinanceDashboard(int $personId, string $period): array
+    {
+        $finance = [];
+        $db = Database::connect();
+
+        if (!$db->tableExists('acc_journal_entries')) {
+            return $finance;
+        }
+
+        if ($this->employee->has_grant('treasury_view', $personId)) {
+            $finance['treasuries'] = [];
+            foreach ($db->table('treasuries')->where('active', 1)->orderBy('is_default', 'DESC')->orderBy('treasury_id')->get()->getResultArray() as $treasury) {
+                $last = $db->table('treasury_movements')->select('balance_after')->where('treasury_id', $treasury['treasury_id'])->orderBy('movement_id', 'DESC')->limit(1)->get()->getRow();
+                $finance['treasuries'][] = $treasury + ['balance' => (float) ($last->balance_after ?? 0)];
+            }
+        }
+
+        if ($this->employee->has_grant('accounting_view', $personId)) {
+            $reports = new Reports($db);
+            $ledger = new Ledger($db);
+            $today = date('Y-m-d');
+            [$from, $to] = self::periodRanges($period)['current'];
+
+            $finance['receivables'] = $reports->accountBalance($ledger->mapped('accounts_receivable'), $today);
+            $finance['payables'] = 0.0 - $reports->accountBalance($ledger->mapped('accounts_payable'), $today);
+            $finance['expenses'] = round((float) ($db->table('expenses')->selectSum('amount')->where('deleted', 0)
+                ->where('date >=', $from)->where('date <', date('Y-m-d', strtotime($to . ' +1 day')))->get()->getRow()->amount ?? 0), 2);
+            $finance['expenses_range'] = [$from, $to];
+            $finance['month_profit'] = $reports->incomeStatement(date('Y-m-01'), $today)['totals']['net_profit'];
+            $finance['unmapped_payments'] = $reports->unmappedPaymentLabels();
+        }
+
+        return $finance;
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function buildSalesDashboard(): array
+    private function buildSalesDashboard(string $period): array
     {
         $management = model(Management_report::class);
         $locationIds = $this->allowedLocationIds('sales');
-
-        $today = date('Y-m-d');
-        $yesterday = date('Y-m-d', strtotime('-1 day'));
-        $last7Start = date('Y-m-d', strtotime('-6 days'));
-        $prev7Start = date('Y-m-d', strtotime('-13 days'));
-        $prev7End = date('Y-m-d', strtotime('-7 days'));
-
-        $monthStart = date('Y-m-01');
-        $prevMonthStart = date('Y-m-01', strtotime('first day of last month'));
-        // Compare month-to-date against the same number of elapsed days last month.
-        $daysElapsed = (int) date('j');
-        $prevMonthEnd = date('Y-m-d', min(
-            strtotime(date('Y-m-t', strtotime($prevMonthStart))),
-            strtotime($prevMonthStart . ' +' . ($daysElapsed - 1) . ' days')
-        ));
+        $ranges = self::periodRanges($period);
+        [$from, $to] = $ranges['current'];
+        $trendFrom = $period === 'month' ? $from : date('Y-m-d', strtotime('-6 days'));
 
         return [
-            'today'       => $management->getSalesTotals($today, $today, $locationIds),
-            'yesterday'   => $management->getSalesTotals($yesterday, $yesterday, $locationIds),
-            'last_7'      => $management->getSalesTotals($last7Start, $today, $locationIds),
-            'prev_7'      => $management->getSalesTotals($prev7Start, $prev7End, $locationIds),
-            'this_month'  => $management->getSalesTotals($monthStart, $today, $locationIds),
-            'prev_month'  => $management->getSalesTotals($prevMonthStart, $prevMonthEnd, $locationIds),
-            'trend'       => $management->getDailyTrend($last7Start, $today, $locationIds),
+            'range'     => $ranges['current'],
+            'current'   => $management->getSalesTotals($from, $to, $locationIds),
+            'previous'  => $management->getSalesTotals($ranges['previous'][0], $ranges['previous'][1], $locationIds),
+            'trend'     => $management->getDailyTrend($trendFrom, date('Y-m-d'), $locationIds),
+            'top_items' => $management->getTopItems($from, $to, $locationIds, 5),
         ];
     }
 

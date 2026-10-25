@@ -83,6 +83,26 @@
             </div>
 
             <div class="form-group form-group-sm">
+                <?= form_label(lang('Config.invoice_discount_max_percent'), 'invoice_discount_max_percent', ['class' => 'control-label col-xs-3 col-sm-2']) ?>
+                <div class="col-xs-9 col-sm-4 col-md-3 col-lg-2">
+                    <div class="input-group">
+                        <?= form_input([
+                            'name'  => 'invoice_discount_max_percent',
+                            'id'    => 'invoice_discount_max_percent',
+                            'class' => 'form-control input-sm dj-input-number',
+                            'type'  => 'number',
+                            'min'   => 0,
+                            'max'   => 100,
+                            'step'  => '0.5',
+                            'value' => $config['invoice_discount_max_percent'] ?? 10
+                        ]) ?>
+                        <span class="input-group-addon input-sm">%</span>
+                    </div>
+                </div>
+                <p class="help-block dj-hint col-xs-offset-3 col-sm-offset-2 col-xs-9"><?= lang('Config.invoice_discount_max_percent_help') ?></p>
+            </div>
+
+            <div class="form-group form-group-sm">
                 <?= form_label(lang('Config.default_receivings_discount'), 'default_receivings_discount', ['class' => 'control-label col-xs-3 col-sm-2 text-danger required']) ?>
                 <div class="col-xs-9 col-sm-4 col-md-3 col-lg-2">
                     <div class="input-group">

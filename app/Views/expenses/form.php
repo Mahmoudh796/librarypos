@@ -116,10 +116,33 @@
             </div>
         </div>
 
+        <div class="form-group form-group-sm" id="expense_treasury_group">
+            <?= form_label(lang('Expenses.paid_from_treasury'), 'treasury_id', ['class' => 'control-label col-xs-3']) ?>
+            <div class="col-xs-6">
+                <?= form_dropdown('treasury_id', $treasuries, (string) ($expenses_info->treasury_id ?? ''), ['class' => 'form-control', 'id' => 'treasury_id']) ?>
+                <p class="help-block dj-hint"><?= lang('Expenses.treasury_help') ?></p>
+            </div>
+        </div>
+
         <div class="form-group form-group-sm">
             <?= form_label(lang('Expenses_categories.name'), 'category', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-6">
                 <?= form_dropdown('expense_category_id', $expense_categories, $expenses_info->expense_category_id, ['class' => 'form-control', 'id' => 'category']) ?>
+                <p class="help-block dj-hint"><?= lang('Expenses.not_for_assets_or_stock') ?></p>
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+            <?= form_label(lang('Expenses.cost_center'), 'cost_center_id', ['class' => 'control-label col-xs-3']) ?>
+            <div class="col-xs-6">
+                <?= form_dropdown('cost_center_id', $cost_centers, (string) ($expenses_info->cost_center_id ?? ''), ['class' => 'form-control', 'id' => 'cost_center_id']) ?>
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+            <?= form_label(lang('Expenses.reference'), 'reference', ['class' => 'control-label col-xs-3']) ?>
+            <div class="col-xs-6">
+                <?= form_input(['name' => 'reference', 'id' => 'reference', 'maxlength' => 64, 'class' => 'form-control input-sm dj-input-text', 'dir' => 'auto', 'value' => $expenses_info->reference ?? '']) ?>
             </div>
         </div>
 
@@ -167,6 +190,14 @@
 <script type="text/javascript">
     // Validation and submit handling
     $(document).ready(function() {
+        // Only cash leaves a treasury; other payment types are settled through the bank.
+        const cashLabel = <?= json_encode(lang('Sales.cash')) ?>;
+        const toggleTreasury = function() {
+            $('#expense_treasury_group').toggle($('#payment_type').val() === cashLabel);
+        };
+        $('#payment_type').on('change', toggleTreasury);
+        toggleTreasury();
+
         <?= view('partial/datepicker_locale') ?>
 
         $('#supplier_name').click(function() {
@@ -229,10 +260,10 @@
                 },
                 amount: {
                     required: true,
-                    remote: "<?= "$controller_name/checkNumeric" ?>"
+                    localeNumber: true
                 },
                 tax_amount: {
-                    remote: "<?= "$controller_name/checkNumeric" ?>"
+                    localeNumber: true
                 }
             },
 
@@ -245,10 +276,10 @@
                 },
                 amount: {
                     required: "<?= lang('Expenses.amount_required') ?>",
-                    remote: "<?= lang('Expenses.amount_number') ?>"
+                    localeNumber: "<?= lang('Expenses.amount_number') ?>"
                 },
                 tax_amount: {
-                    remote: "<?= lang('Expenses.tax_amount_number') ?>"
+                    localeNumber: "<?= lang('Expenses.tax_amount_number') ?>"
                 }
             }
         }, form_support.error));

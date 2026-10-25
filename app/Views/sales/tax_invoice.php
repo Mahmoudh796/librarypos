@@ -229,7 +229,7 @@ if (isset($error_message)) {
                 <span style="padding: 4%;"><?= empty($comments) ? '' : lang('Sales.comments') . esc(": $comments") ?></span>
                 <span style="padding: 4%;"><?= esc($config['invoice_default_comments']) ?></span>
             </h5>
-            <div style="padding: 2%;"><?= nl2br(esc($config['return_policy'])) ?></div>
+            <div style="padding: 2%;"><?= nl2br(esc(store_info('return_policy'))) ?></div>
         </div>
         <div id="barcode">
             <img style="padding-top: 4%;" alt="<?= esc($barcode) ?>" src="data:image/png;base64,<?= esc($barcode) ?>"><br>

@@ -398,6 +398,7 @@ class Config extends Secure_Controller
             'login_form'                        => $this->request->getPost('login_form'),
             'default_sales_discount_type'       => $this->request->getPost('default_sales_discount_type') != null,
             'default_sales_discount'            => parse_decimals($this->request->getPost('default_sales_discount')),
+            'invoice_discount_max_percent'      => (string) max(0, min(100, (float) parse_decimals((string) ($this->request->getPost('invoice_discount_max_percent') ?? '10')))),
             'default_receivings_discount_type'  => $this->request->getPost('default_receivings_discount_type') != null,
             'default_receivings_discount'       => parse_decimals($this->request->getPost('default_receivings_discount')),
             'enforce_privacy'                   => $this->request->getPost('enforce_privacy') != null,
@@ -859,14 +860,15 @@ class Config extends Secure_Controller
      */
     public function postSaveTax(): ResponseInterface
     {
-        $default_tax_1_rate = $this->request->getPost('default_tax_1_rate');
-        $default_tax_2_rate = $this->request->getPost('default_tax_2_rate');
+        // parse_tax() handles the locale; FILTER_SANITIZE_NUMBER_FLOAT would strip Arabic-Indic digits.
+        $defaultTax1Rate = (string) $this->request->getPost('default_tax_1_rate');
+        $defaultTax2Rate = (string) $this->request->getPost('default_tax_2_rate');
 
         $batch_save_data = [
-            'default_tax_1_rate'        => parse_tax(filter_var($default_tax_1_rate, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION)),
-            'default_tax_1_name'        => $this->request->getPost('default_tax_1_name'),
-            'default_tax_2_rate'        => parse_tax(filter_var($default_tax_2_rate, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION)),
-            'default_tax_2_name'        => $this->request->getPost('default_tax_2_name'),
+            'default_tax_1_rate'        => parse_tax($defaultTax1Rate),
+            'default_tax_1_name'        => trim((string) $this->request->getPost('default_tax_1_name')),
+            'default_tax_2_rate'        => parse_tax($defaultTax2Rate),
+            'default_tax_2_name'        => trim((string) $this->request->getPost('default_tax_2_name')),
             'tax_included'              => $this->request->getPost('tax_included') != null,
             'use_destination_based_tax' => $this->request->getPost('use_destination_based_tax') != null,
             'default_tax_code'          => $this->request->getPost('default_tax_code'),

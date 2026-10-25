@@ -31,6 +31,8 @@
 <?= form_open("items/save/$item_info->item_id", ['id' => 'item_form', 'enctype' => 'multipart/form-data', 'class' => 'form-horizontal']) ?>
     <fieldset id="item_basic_info" class="dj-form-grid">
 
+        <h3 class="dj-form-section-title dj-form-grid-heading"><?= lang('Items.section_item_data') ?></h3>
+
         <div class="form-group form-group-sm">
             <?= form_label(lang('Items.item_number'), 'item_number', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-8">
@@ -66,7 +68,10 @@
                     <span class="input-group-addon input-sm"><span class="glyphicon glyphicon-tag"></span></span>
                     <?php
                     if ($config['category_dropdown']) {
-                        echo form_dropdown('category', $categories, $selected_category, ['class' => 'selectpicker show-menu-arrow', 'data-live-search' => 'true', 'data-width' => '100%']);
+                        echo form_dropdown('category', $categories, $selected_category, ['id' => 'category', 'class' => 'form-control selectpicker show-menu-arrow', 'data-live-search' => 'true', 'data-width' => '100%', 'title' => lang('Items.choose_category')]);
+                        // The form arrives by AJAX inside a dialog, after bootstrap-select's
+                        // page-load initialisation, and an uninitialised .selectpicker is hidden.
+                        echo '<script type="text/javascript">$("#item_form #category.selectpicker").selectpicker();</script>';
                     } else {
                         echo form_input([
                             'name'  => 'category',
@@ -77,7 +82,12 @@
                     }
                     ?>
                 </div>
-                <p class="help-block dj-hint"><?= lang('Items.category_help') ?></p>
+                <p class="help-block dj-hint">
+                    <?= lang('Items.category_help') ?>
+                    <?php if (!empty($can_manage_categories)): ?>
+                        <a href="<?= esc(base_url('items/categories'), 'attr') ?>" target="_blank" rel="noopener"><?= lang('Items.category_manage_link') ?></a>
+                    <?php endif; ?>
+                </p>
             </div>
         </div>
 
@@ -175,6 +185,8 @@
                 <?= form_dropdown('supplier_id', $suppliers, $selected_supplier, ['class' => 'form-control']) ?>
             </div>
         </div>
+
+        <h3 class="dj-form-section-title dj-form-grid-heading"><?= lang('Items.section_pricing_taxes') ?></h3>
 
         <div class="form-group form-group-sm">
             <?= form_label(lang('Items.cost_price'), 'cost_price', ['class' => 'control-label col-xs-3 text-danger required']) ?>
@@ -300,6 +312,8 @@
             </div>
         <?php endif; ?>
 
+        <h3 class="dj-form-section-title dj-form-grid-heading"><?= lang('Items.section_stock') ?></h3>
+
         <?php foreach ($stock_locations as $key => $location_detail) { ?>
             <div class="form-group form-group-sm">
                 <?= form_label(lang('Items.quantity') . ' ' . $location_detail['location_name'], "quantity_$key", ['class' => 'control-label col-xs-3 text-danger required']) ?>
@@ -340,6 +354,8 @@
                 ]) ?>
             </div>
         </div>
+
+        <h3 class="dj-form-section-title dj-form-grid-heading"><?= lang('Items.section_details') ?></h3>
 
         <div class="form-group form-group-sm dj-field--full">
             <?= form_label(lang('Items.description'), 'description', ['class' => 'control-label col-xs-3']) ?>
@@ -567,29 +583,29 @@
                     },
                     cost_price: {
                         required: true,
-                        remote: "<?= esc("$controller_name/checkNumeric") ?>"
+                        localeNumber: true
                     },
                     unit_price: {
                         required: true,
-                        remote: "<?= esc("$controller_name/checkNumeric") ?>"
+                        localeNumber: true
                     },
                     <?php foreach ($stock_locations as $key => $location_detail) { ?>
                         <?= 'quantity_' . $key ?>: {
                             required: true,
-                            remote: "<?= esc("$controller_name/checkNumeric") ?>"
+                            localeNumber: true
                         },
                     <?php } ?>
                     receiving_quantity: {
                         required: true,
-                        remote: "<?= esc("$controller_name/checkNumeric") ?>"
+                        localeNumber: true
                     },
                     reorder_level: {
                         required: true,
-                        remote: "<?= esc("$controller_name/checkNumeric") ?>"
+                        localeNumber: true
                     },
                     tax_percent: {
                         required: false,
-                        remote: "<?= esc("$controller_name/checkNumeric") ?>"
+                        localeNumber: true
                     }
                 },
 
@@ -599,28 +615,28 @@
                     category: "<?= lang('Items.category_required') ?>",
                     cost_price: {
                         required: "<?= lang('Items.cost_price_required') ?>",
-                        number: "<?= lang('Items.cost_price_number') ?>"
+                        localeNumber: "<?= lang('Items.cost_price_number') ?>"
                     },
                     unit_price: {
                         required: "<?= lang('Items.unit_price_required') ?>",
-                        number: "<?= lang('Items.unit_price_number') ?>"
+                        localeNumber: "<?= lang('Items.unit_price_number') ?>"
                     },
                     <?php foreach ($stock_locations as $key => $location_detail) { ?>
                         <?= esc("quantity_$key", 'js') ?>: {
                             required: "<?= lang('Items.quantity_required') ?>",
-                            number: "<?= lang('Items.quantity_number') ?>"
+                            localeNumber: "<?= lang('Items.quantity_number') ?>"
                         },
                     <?php } ?>
                     receiving_quantity: {
                         required: "<?= lang('Items.quantity_required') ?>",
-                        number: "<?= lang('Items.quantity_number') ?>"
+                        localeNumber: "<?= lang('Items.quantity_number') ?>"
                     },
                     reorder_level: {
                         required: "<?= lang('Items.reorder_level_required') ?>",
-                        number: "<?= lang('Items.reorder_level_number') ?>"
+                        localeNumber: "<?= lang('Items.reorder_level_number') ?>"
                     },
                     tax_percent: {
-                        number: "<?= lang('Items.tax_percent_number') ?>"
+                        localeNumber: "<?= lang('Items.tax_percent_number') ?>"
                     }
                 }
             }, form_support.error))

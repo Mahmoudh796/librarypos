@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Паролите не съвпадат.',
     'password_not_must_match'                => 'Текущата парола и новата парола трябва да са уникални.',
     'password_required'                      => 'Изисква се парола.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

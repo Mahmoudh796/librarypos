@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'رمزهای ورود مطابقت ندارند.',
     'password_not_must_match'                => 'گذرواژه فعلی و رمز جدید باید بی نظیر باشند.',
     'password_required'                      => 'رمز عبور مورد نیاز است.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

@@ -189,6 +189,81 @@ class LocaleHelperTest extends CIUnitTestCase
         );
     }
 
+    private function useNumberLocale(string $locale, int $thousandsSeparator = 1): void
+    {
+        $config           = new OSPOS();
+        $config->settings = [
+            'dateformat'          => 'Y-m-d',
+            'number_locale'       => $locale,
+            'currency_decimals'   => 2,
+            'currency_symbol'     => 'ج.م',
+            'thousands_separator' => $thousandsSeparator,
+        ];
+        Factories::injectMock('config', OSPOS::class, $config);
+    }
+
+    /**
+     * With number_locale ar-EG the plain ICU formatter rejected "10.5" typed on a
+     * Latin keyboard and read "1,000.50" as 1. Both digit systems must parse.
+     */
+    public function testParseDecimalsAcceptsLatinAndArabicIndicDigitsUnderArabicLocale(): void
+    {
+        $this->useNumberLocale('ar-EG');
+
+        $this->assertSame(10.5, parse_decimals('10.5'));
+        $this->assertSame(10.5, parse_decimals('١٠٫٥'));
+        $this->assertSame(1000.5, parse_decimals('1,000.50'));
+        $this->assertSame(1000.5, parse_decimals('١٬٠٠٠٫٥٠'));
+        $this->assertSame(12.0, parse_decimals(' ۱۲ '));
+        $this->assertSame(-3.0, parse_decimals('-3'));
+    }
+
+    public function testParseDecimalsRejectsPartiallyParsableInput(): void
+    {
+        $this->useNumberLocale('ar-EG');
+        $this->assertFalse(parse_decimals('12abc'));
+
+        $this->useNumberLocale('en_US', 0);
+        $this->assertSame(1000.5, parse_decimals('1,000.50'), 'A grouped amount must be read whole, never truncated at the comma.');
+    }
+
+    public function testParseDecimalsKeepsLatinLocaleBehaviour(): void
+    {
+        $this->useNumberLocale('en_US');
+        $this->assertSame(1234.56, parse_decimals('1,234.56'));
+
+        $this->useNumberLocale('de_DE');
+        $this->assertSame(1234.56, parse_decimals('1.234,56'));
+    }
+
+    public function testNegativeZeroIsFormattedAsZero(): void
+    {
+        $this->useNumberLocale('en_US');
+        config(OSPOS::class)->settings['currency_decimals'] = 2;
+
+        $this->assertSame(to_decimals('0', 'currency_decimals'), to_decimals((string) -0.0, 'currency_decimals'));
+        $this->assertSame(to_decimals('0', 'currency_decimals'), to_decimals('-0.0001', 'currency_decimals'));
+        $this->assertStringStartsWith('-', to_decimals('-0.01', 'currency_decimals'));
+    }
+
+    public function testCurrencyKeepsItsSymbolWithoutThousandsGrouping(): void
+    {
+        $this->useNumberLocale('ar-EG', 0);
+        config(OSPOS::class)->settings['currency_decimals'] = 2;
+
+        $positive = to_currency('3164.5');
+        $this->assertStringContainsString('ج.م', $positive);
+        $this->assertStringNotContainsString('٬', $positive, 'Grouping is off, so no thousands separator.');
+        $this->assertStringContainsString('ج.م', to_currency('-3164.5'));
+    }
+
+    public function testParseDecimalsReturnsEmptyInputUnchanged(): void
+    {
+        $this->useNumberLocale('en_US');
+        $this->assertSame('', parse_decimals(''));
+        $this->assertSame('0', parse_decimals('0'));
+    }
+
     /**
      * Runs $assertions with the given request cookie visible to the cookie
      * helper, restoring the original request cookies afterwards.

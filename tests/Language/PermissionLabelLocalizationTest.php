@@ -163,9 +163,13 @@ class PermissionLabelLocalizationTest extends CIUnitTestCase
         $this->assertStringNotContainsString('rows.eq(', $js);
         $this->assertStringNotContainsString("JSON.parse(safeGetItem(\"summaryVisibility\")) || {\n        cost: false", $js);
 
-        // summary containers must declare data-key for every summary row
+        // Every report result renders its totals through the shared head, which
+        // declares data-key on each total so the toggle can find cost/profit.
+        $this->assertStringContainsString('data-key="<?= esc($key, \'attr\') ?>"', file_get_contents(APPPATH . 'Views/reports/partials/result_head.php'), 'result_head lost data-key');
+        $this->assertStringContainsString("'.ruya-kpis .ruya-kpi[data-key]'", $visibility);
+        $this->assertStringContainsString('".ruya-kpis .ruya-kpi[data-key]"', $js);
         foreach ([APPPATH . 'Views/reports/tabular.php', APPPATH . 'Views/reports/tabular_details.php', APPPATH . 'Views/reports/graphical.php'] as $view) {
-            $this->assertStringContainsString('data-key="<?= esc($name) ?>"', file_get_contents($view), basename($view) . ' lost data-key');
+            $this->assertStringContainsString("view('reports/partials/result_head'", file_get_contents($view), basename($view) . ' no longer renders the shared totals');
         }
     }
 }

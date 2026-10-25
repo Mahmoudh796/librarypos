@@ -180,6 +180,18 @@ class Cashups extends Secure_Controller
             }
 
             $cash_ups_info->closed_amount_total = $this->_calculate_total($cash_ups_info->open_amount_cash, $cash_ups_info->transfer_amount_cash, $cash_ups_info->closed_amount_cash, $cash_ups_info->closed_amount_due, $cash_ups_info->closed_amount_card, $cash_ups_info->closed_amount_check);
+
+            // Expected cash comes from the same calculation the save uses (treasury
+            // movements of the shift). The counted cash is left for the cashier to
+            // enter: pre-filling it with the expected figure hid every shortage.
+            $cash_ups_info->expected_amount_cash = $this->cashup->expectedClosingCash(
+                $cash_ups_info->open_date,
+                $cash_ups_info->close_date,
+                (float) $cash_ups_info->open_amount_cash,
+                (float) $cash_ups_info->transfer_amount_cash
+            );
+            $cash_ups_info->closed_amount_cash = '';
+            $cash_ups_info->difference_cash = null;
         }
 
         $data['cash_ups_info'] = $cash_ups_info;
@@ -211,12 +223,22 @@ class Cashups extends Secure_Controller
         $close_date = $this->request->getPost('close_date');
         $close_date_formatter = date_create_from_format($this->config['dateformat'] . ' ' . $this->config['timeformat'], $close_date);
 
-        $open_amount_cash     = parse_decimals($this->request->getPost('open_amount_cash'));
-        $transfer_amount_cash = parse_decimals($this->request->getPost('transfer_amount_cash'));
-        $closed_amount_cash   = parse_decimals($this->request->getPost('closed_amount_cash'));
-        $closed_amount_due    = parse_decimals($this->request->getPost('closed_amount_due'));
-        $closed_amount_card   = parse_decimals($this->request->getPost('closed_amount_card'));
-        $closed_amount_check  = parse_decimals($this->request->getPost('closed_amount_check'));
+        // Blank amount fields mean zero; parse_decimals('') would hand '' to a DECIMAL column.
+        $amount = fn (string $field): float => (float) (parse_decimals((string) $this->request->getPost($field)) ?: 0);
+
+        $open_amount_cash     = $amount('open_amount_cash');
+        $transfer_amount_cash = $amount('transfer_amount_cash');
+        $closed_amount_cash   = $amount('closed_amount_cash');
+        $closed_amount_due    = $amount('closed_amount_due');
+        $closed_amount_card   = $amount('closed_amount_card');
+        $closed_amount_check  = $amount('closed_amount_check');
+
+        // Closing a shift posts counted-minus-expected to the treasury, so the count is mandatory:
+        // a blank count would be booked as a shortage of the whole drawer.
+        $isClosing = $open_date_formatter && $close_date_formatter && $close_date_formatter > $open_date_formatter;
+        if ($isClosing && trim((string) $this->request->getPost('closed_amount_cash')) === '') {
+            return $this->response->setJSON(['success' => false, 'message' => lang('Cashups.count_required'), 'id' => $cashup_id]);
+        }
 
         $logged_in_employee = $this->employee->get_logged_in_employee_info();
 
@@ -231,7 +253,7 @@ class Cashups extends Secure_Controller
             'closed_amount_check'  => $closed_amount_check,
             'closed_amount_total'  => $this->_calculate_total($open_amount_cash, $transfer_amount_cash, $closed_amount_due, $closed_amount_cash, $closed_amount_card, $closed_amount_check),
             'note'                 => $this->request->getPost('note') != null,
-            'description'          => $this->request->getPost('description', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+            'description'          => (string) $this->request->getPost('description', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'open_employee_id'     => $logged_in_employee->person_id,
             'close_employee_id'    => $logged_in_employee->person_id,
             'deleted'              => $this->request->getPost('deleted') != null

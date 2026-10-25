@@ -28,7 +28,7 @@ use stdClass;
 
 class Sales extends Secure_Controller
 {
-    protected $helpers = ['file'];
+    protected $helpers = ['file', 'store'];
     private Barcode_lib $barcode_lib;
     private Email_lib $email_lib;
     private Sale_lib $sale_lib;
@@ -140,6 +140,36 @@ class Sales extends Secure_Controller
         $dataRow = getSaleDataRow($saleInfo);
 
         return $this->response->setJSON($dataRow);
+    }
+
+    /**
+     * Product lines of one sale for the expandable rows of the sales history:
+     * product, code, quantity, price, line discount, invoice-discount share and net.
+     * @noinspection PhpUnused
+     */
+    public function getLines(int $saleId): ResponseInterface|string
+    {
+        if (!$this->employee->has_grant('reports_sales', $this->session->get('person_id'))) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => lang('Sales.not_authorized')]);
+        }
+
+        $lines = \Config\Database::connect()->table('sales_items')
+            ->select('sales_items.line, sales_items.quantity_purchased, sales_items.item_unit_price, sales_items.discount, sales_items.discount_type, sales_items.invoice_discount, items.name, items.item_number, items.category')
+            ->join('items', 'items.item_id = sales_items.item_id', 'left')
+            ->where('sales_items.sale_id', $saleId)
+            ->orderBy('sales_items.line')
+            ->get()->getResultArray();
+
+        foreach ($lines as &$line) {
+            $gross = (float) $line['quantity_purchased'] * (float) $line['item_unit_price'];
+            $line['line_discount'] = (int) $line['discount_type'] === PERCENT
+                ? round($gross * (float) $line['discount'] / 100, totals_decimals())
+                : round((float) $line['quantity_purchased'] * (float) $line['discount'], totals_decimals());
+            $line['net'] = round($gross - $line['line_discount'] - (float) $line['invoice_discount'], totals_decimals());
+        }
+        unset($line);
+
+        return view('sales/lines', ['lines' => $lines]);
     }
 
     /**
@@ -632,6 +662,85 @@ class Sales extends Secure_Controller
     }
 
     /**
+     * Applies or removes the whole-sale (invoice) discount. Used in app/Views/sales/register.php
+     *
+     * Needs sales_invoice_discount; above invoice_discount_max_percent of the
+     * sale it also needs sales_invoice_discount_override. A reason is required
+     * and every change is written to the audit trail.
+     * @noinspection PhpUnused
+     */
+    public function postInvoiceDiscount(): ResponseInterface|string
+    {
+        $employeeId = (int) $this->employee->get_logged_in_employee_info()->person_id;
+        $data = [];
+        $previous = $this->sale_lib->get_invoice_discount();
+
+        if (!$this->employee->has_grant('sales_invoice_discount', $employeeId)) {
+            $data['error'] = lang('Sales.not_authorized');
+
+            return $this->reload($data);
+        }
+
+        if ($this->request->getPost('remove') !== null) {
+            $this->sale_lib->clear_invoice_discount();
+            $this->sale_lib->empty_payments();
+
+            if ($previous !== []) {
+                $this->audit('invoice_discount', 'sale_cart', $employeeId, $previous, null, 'removed');
+            }
+
+            return $this->reload($data);
+        }
+
+        if ($this->sale_lib->get_mode() === 'return') {
+            $data['error'] = lang('Sales.invoice_discount_not_in_return');
+
+            return $this->reload($data);
+        }
+
+        $type = (int) $this->request->getPost('invoice_discount_type') === PERCENT ? PERCENT : FIXED;
+        $value = parse_decimals((string) $this->request->getPost('invoice_discount_value'));
+        $reason = trim((string) $this->request->getPost('invoice_discount_reason', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+        $base = $this->sale_lib->get_invoice_discount_base();
+
+        if ($value === false || $value === '' || (float) $value <= 0 || ($type === PERCENT && (float) $value > 100)) {
+            $data['error'] = lang('Sales.invoice_discount_invalid');
+
+            return $this->reload($data);
+        }
+
+        if ($reason === '') {
+            $data['error'] = lang('Sales.invoice_discount_reason_required');
+
+            return $this->reload($data);
+        }
+
+        $discount = ['type' => $type, 'value' => (string) $value, 'reason' => mb_substr($reason, 0, 255)];
+        $amount = (float) Sale_lib::invoice_discount_amount($discount, $base);
+
+        if ($type === FIXED && (float) $value > (float) $base) {
+            $data['error'] = lang('Sales.invoice_discount_exceeds_total');
+
+            return $this->reload($data);
+        }
+
+        $percentOfSale = (float) $base > 0 ? $amount / (float) $base * 100 : 0.0;
+        $limit = (float) ($this->config['invoice_discount_max_percent'] ?? 10);
+
+        if ($percentOfSale > $limit + 0.0001 && !$this->employee->has_grant('sales_invoice_discount_override', $employeeId)) {
+            $data['error'] = lang('Sales.invoice_discount_over_limit', [to_decimals((string) $limit, 'tax_decimals')]);
+
+            return $this->reload($data);
+        }
+
+        $this->sale_lib->set_invoice_discount($type, (string) $value, $discount['reason']);
+        $this->sale_lib->empty_payments();
+        $this->audit('invoice_discount', 'sale_cart', $employeeId, $previous === [] ? null : $previous, $discount + ['amount' => $amount, 'base' => $base], $discount['reason']);
+
+        return $this->reload($data);
+    }
+
+    /**
      * Edit an item in the sale. Used in app/Views/sales/register.php
      *
      * @param string $line
@@ -705,6 +814,7 @@ class Sales extends Secure_Controller
                     'oldPrice'   => $current_price,
                     'newPrice'   => $price,
                 ]);
+                $this->audit('price_change', 'item', (int) ($cart_line['item_id'] ?? 0), ['price' => $current_price], ['price' => $price], 'POS cart line ' . $line);
             }
 
             // sales_discount grant is enforced server-side here. A cashier without
@@ -731,6 +841,7 @@ class Sales extends Secure_Controller
                     'newDiscount' => $discount,
                     'newType'     => $discount_type,
                 ]);
+                $this->audit('discount_override', 'item', (int) ($cart_line['item_id'] ?? 0), ['discount' => $current_discount, 'type' => $current_discount_type], ['discount' => $discount, 'type' => $discount_type], 'POS cart line ' . $line);
             }
 
             $item_location = $this->request->getPost('location', FILTER_SANITIZE_NUMBER_INT);
@@ -801,6 +912,13 @@ class Sales extends Secure_Controller
 
         $data['cart'] = $this->sale_lib->get_cart();
 
+        // A repeated submit (double click, refresh of the receipt page) arrives after the
+        // first one emptied the cart; the session lock serialises the two requests, so
+        // there is nothing left to save and the sale is not recorded twice.
+        if ($data['cart'] === []) {
+            return $this->reload(['warning' => lang('Sales.nothing_to_complete')]);
+        }
+
         $data['include_hsn'] = (bool)$this->config['include_hsn'];
         $time = time();
         $data['transaction_time'] = to_datetime($time);
@@ -818,7 +936,7 @@ class Sales extends Secure_Controller
             return $this->reload($data);
         }
 
-        $data['company_info'] = implode("\n", [$this->config['address'], $this->config['phone']]);
+        $data['company_info'] = implode("\n", array_filter([store_info('address'), store_info('phone')]));
 
         if ($this->config['account_number']) {
             $data['company_info'] .= "\n" . lang('Sales.account_number') . ": " . $this->config['account_number'];
@@ -855,6 +973,8 @@ class Sales extends Secure_Controller
         // Returns 'subtotal', 'total', 'cash_total', 'payment_total', 'amount_due', 'cash_amount_due', 'payments_cover_total'
         $totals = $this->sale_lib->get_totals($taxDetails[0]);
         $data['subtotal'] = $totals['subtotal'];
+        $data['invoice_discount'] = $this->sale_lib->get_invoice_discount();
+        $data['invoice_discount_amount'] = $totals['invoice_discount'];
         $data['total'] = $totals['total'];
         $data['payments_total'] = $totals['payment_total'];
         $data['payments_cover_total'] = $totals['payments_cover_total'];
@@ -930,7 +1050,7 @@ class Sales extends Secure_Controller
                 $invoiceView = $invoiceType;
 
                 // Save the data to the sales table
-                $data['sale_id_num'] = $this->sale->save_value($saleId, $data['sale_status'], $data['cart'], $customerId, $employeeId, $data['comments'], $invoiceNumber, $workOrderNumber, $quoteNumber, $saleType, $data['payments'], $data['dinner_table'], $taxDetails);
+                $data['sale_id_num'] = $this->sale->save_value($saleId, $data['sale_status'], $data['cart'], $customerId, $employeeId, $data['comments'], $invoiceNumber, $workOrderNumber, $quoteNumber, $saleType, $data['payments'], $data['dinner_table'], $taxDetails, $this->sale_lib->get_invoice_discount());
                 $data['sale_id'] = 'POS ' . $data['sale_id_num'];
 
                 // Resort and filter cart lines for printing
@@ -977,7 +1097,7 @@ class Sales extends Secure_Controller
                 $data['sale_status'] = SUSPENDED;
                 $saleType = SALE_TYPE_WORK_ORDER;
 
-                $data['sale_id_num'] = $this->sale->save_value($saleId, $data['sale_status'], $data['cart'], $customerId, $employeeId, $data['comments'], $invoiceNumber, $workOrderNumber, $quoteNumber, $saleType, $data['payments'], $data['dinner_table'], $taxDetails);
+                $data['sale_id_num'] = $this->sale->save_value($saleId, $data['sale_status'], $data['cart'], $customerId, $employeeId, $data['comments'], $invoiceNumber, $workOrderNumber, $quoteNumber, $saleType, $data['payments'], $data['dinner_table'], $taxDetails, $this->sale_lib->get_invoice_discount());
 
                 if ($data['sale_id_num'] === INSUFFICIENT_GIFTCARD_BALANCE) {
                     $data['error_message'] = lang('Sales.insufficient_giftcard_balance');
@@ -1020,7 +1140,7 @@ class Sales extends Secure_Controller
                 $data['sale_status'] = SUSPENDED;
                 $saleType = SALE_TYPE_QUOTE;
 
-                $data['sale_id_num'] = $this->sale->save_value($saleId, $data['sale_status'], $data['cart'], $customerId, $employeeId, $data['comments'], $invoiceNumber, $workOrderNumber, $quoteNumber, $saleType, $data['payments'], $data['dinner_table'], $taxDetails);
+                $data['sale_id_num'] = $this->sale->save_value($saleId, $data['sale_status'], $data['cart'], $customerId, $employeeId, $data['comments'], $invoiceNumber, $workOrderNumber, $quoteNumber, $saleType, $data['payments'], $data['dinner_table'], $taxDetails, $this->sale_lib->get_invoice_discount());
 
                 if ($data['sale_id_num'] === INSUFFICIENT_GIFTCARD_BALANCE) {
                     $data['error_message'] = lang('Sales.insufficient_giftcard_balance');
@@ -1053,7 +1173,7 @@ class Sales extends Secure_Controller
                 $saleType = SALE_TYPE_POS;
             }
 
-            $data['sale_id_num'] = $this->sale->save_value($saleId, $data['sale_status'], $data['cart'], $customerId, $employeeId, $data['comments'], $invoiceNumber, $workOrderNumber, $quoteNumber, $saleType, $data['payments'], $data['dinner_table'], $taxDetails);
+            $data['sale_id_num'] = $this->sale->save_value($saleId, $data['sale_status'], $data['cart'], $customerId, $employeeId, $data['comments'], $invoiceNumber, $workOrderNumber, $quoteNumber, $saleType, $data['payments'], $data['dinner_table'], $taxDetails, $this->sale_lib->get_invoice_discount());
 
             $data['sale_id'] = 'POS ' . $data['sale_id_num'];
 
@@ -1282,6 +1402,8 @@ class Sales extends Secure_Controller
         $totals = $this->sale_lib->get_totals($tax_details[0]);
         $this->session->set('cash_adjustment_amount', $totals['cash_adjustment_amount']);
         $data['subtotal'] = $totals['subtotal'];
+        $data['invoice_discount'] = $this->sale_lib->get_invoice_discount();
+        $data['invoice_discount_amount'] = $totals['invoice_discount'];
         $data['payments_total'] = $totals['payment_total'];
         $data['payments_cover_total'] = $totals['payments_cover_total'];
         $data['cash_mode'] = $this->session->get('cash_mode');    // TODO: Duplicated code.
@@ -1312,7 +1434,7 @@ class Sales extends Secure_Controller
         $data['quote_number'] = $sale_info['quote_number'];
         $data['sale_status'] = $sale_info['sale_status'];
 
-        $data['company_info'] = implode("\n", [$this->config['address'], $this->config['phone']]);    // TODO: Duplicated code.
+        $data['company_info'] = implode("\n", array_filter([store_info('address'), store_info('phone')]));
 
         if ($this->config['account_number']) {
             $data['company_info'] .= "\n" . lang('Sales.account_number') . ": " . $this->config['account_number'];
@@ -1399,6 +1521,15 @@ class Sales extends Secure_Controller
         $data['total'] = $totals['total'];
         $data['payments_total'] = $totals['payment_total'];
         $data['payments_cover_total'] = $totals['payments_cover_total'];
+
+        // Whole-sale discount: what was entered, its amount, and whether this employee may give one.
+        $data['line_discount_total'] = $totals['total_discount'];
+        $data['invoice_discount'] = $this->sale_lib->get_invoice_discount();
+        $data['invoice_discount_amount'] = $totals['invoice_discount'];
+        $data['subtotal_before_invoice_discount'] = $totals['subtotal_before_invoice_discount'];
+        $data['can_invoice_discount'] = $this->employee->has_grant('sales_invoice_discount', $this->employee->get_logged_in_employee_info()->person_id)
+            && $this->sale_lib->get_mode() !== 'return';
+        $data['invoice_discount_max_percent'] = (float) ($this->config['invoice_discount_max_percent'] ?? 10);
 
         // cash_mode indicates whether this sale is going to be processed using cash_rounding
         $cash_mode = $this->session->get('cash_mode');
@@ -1598,6 +1729,9 @@ class Sales extends Secure_Controller
                     'employeeId' => $employeeId,
                     'saleIds'    => implode(',', $saleIds),
                 ]);
+                foreach ($saleIds as $voidedSaleId) {
+                    $this->audit('sale_delete', 'sale', (int) $voidedSaleId, ['sale_status' => COMPLETED], ['sale_status' => CANCELED]);
+                }
 
                 return $this->response->setJSON([
                     'success' => true,
@@ -1763,7 +1897,11 @@ class Sales extends Secure_Controller
         }
 
         $inventory->update('POS ' . $saleId, ['trans_date' => $saleTime]);    // TODO: Reflection Exception
+        $previousSale = $this->sale->get_info($saleId)->getRowArray();
+        $previousPayments = $this->sale->get_sale_payments($saleId)->getResultArray();
         if ($this->sale->update($saleId, $saleData)) {
+            $this->audit('sale_edit', 'sale', $saleId, ['sale' => $previousSale, 'payments' => $previousPayments], $saleData);
+
             return $this->response->setJSON(['success' => true, 'message' => lang('Sales.successfully_updated'), 'id' => $saleId]);
         } else {
             return $this->response->setJSON(['success' => false, 'message' => lang('Sales.unsuccessfully_updated'), 'id' => $saleId]);
@@ -1850,7 +1988,7 @@ class Sales extends Secure_Controller
         $data = [];
         $sales_taxes = [[], []];
 
-        $saleIdNum = $this->sale->save_value($sale_id, $sale_status, $cart, $customer_id, $employee_id, $comment, $invoice_number, $work_order_number, $quote_number, $sale_type, $payments, $dinner_table, $sales_taxes);
+        $saleIdNum = $this->sale->save_value($sale_id, $sale_status, $cart, $customer_id, $employee_id, $comment, $invoice_number, $work_order_number, $quote_number, $sale_type, $payments, $dinner_table, $sales_taxes, $this->sale_lib->get_invoice_discount());
 
         if ($saleIdNum === INSUFFICIENT_GIFTCARD_BALANCE) {
             $data['error'] = lang('Sales.insufficient_giftcard_balance');

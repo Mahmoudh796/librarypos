@@ -14,15 +14,8 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        $('#filters').on('hidden.bs.select', function(e) {
-            table_support.refresh();
-        });
-
+        // Filter and date changes reload the table via partial/table_filter_persistence.
         <?= view('partial/daterangepicker') ?>
-
-        $("#daterangepicker").on('apply.daterangepicker', function(ev, picker) {
-            table_support.refresh();
-        });
 
         <?= view('partial/bootstrap_tables_locale') ?>
 
@@ -61,7 +54,7 @@
 <?= view('partial/print_receipt', ['print_after_sale' => false, 'selected_printer' => 'takings_printer']) ?>
 
 <div class="dj-page-head">
-    <?= view('partial/page_path', ['crumbs' => [['module' => 'people'], ['component' => 'people', 'module' => 'expenses']]]) ?>
+    <?= view('partial/page_path', ['crumbs' => [['label' => lang('Common.nav_costs')], ['label' => lang('Module.expenses')]]]) ?>
     <h1 class="dj-page-title">
         <span class="glyphicon glyphicon-tags" aria-hidden="true"></span><?= lang('Module.expenses') ?>
     </h1>

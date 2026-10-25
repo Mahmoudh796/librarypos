@@ -1,6 +1,8 @@
 <?php
 
 return [
+    "accounting"                 => "",
+    "accounting_desc"            => "",
     "admin_cashups"              => "Administrador de retiro",
     "admin_cashups_desc"         => "Administrador de retiro",
     "attributes"                 => "Atributos",
@@ -46,4 +48,6 @@ return [
     "timeclocks_categories"      => "Reloj de Registro de Categorías",
     "timeclocks_categories_desc" => "Agregar, Actualizar, Borrar, y buscar Reloj de Registro de Categorías",
     "timeclocks_desc"            => "Reloj de Registro.",
+    "treasury"                   => "",
+    "treasury_desc"              => "",
 ];

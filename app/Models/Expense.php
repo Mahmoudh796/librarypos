@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Libraries\Accounting\Posting;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use Config\OSPOS;
 use stdClass;
+use Throwable;
 
 /**
  * Expense class
@@ -263,19 +265,29 @@ class Expense extends Model
     {
         $builder = $this->db->table('expenses');
 
-        if ($expense_id == NEW_ENTRY || !$this->exists($expense_id)) {
-            if ($builder->insert($expense_data)) {
-                $expense_data['expense_id'] = $this->db->insertID();
+        $this->db->transStart();
 
-                return true;
+        if ($expense_id == NEW_ENTRY || !$this->exists($expense_id)) {
+            $success = $builder->insert($expense_data);
+
+            if ($success) {
+                $expense_data['expense_id'] = $this->db->insertID();
+                $expense_id = (int) $expense_data['expense_id'];
             }
+        } else {
+            $builder->where('expense_id', $expense_id);
+            $success = $builder->update($expense_data);
+        }
+
+        if ($success && !$this->postToLedger((int) $expense_id)) {
+            $this->db->transRollback();
 
             return false;
         }
 
-        $builder->where('expense_id', $expense_id);
+        $this->db->transComplete();
 
-        return $builder->update($expense_data);
+        return $success && $this->db->transStatus();
     }
 
     /**
@@ -288,11 +300,40 @@ class Expense extends Model
         $this->db->transStart();
         $builder->whereIn('expense_id', $expense_ids);
         $success = $builder->update(['deleted' => 1]);
+
+        foreach ($expense_ids as $expenseId) {
+            if ($success && !$this->postToLedger((int) $expenseId)) {
+                $this->db->transRollback();
+
+                return false;
+            }
+        }
+
         $this->db->transComplete();
 
         $success &= $this->db->transStatus();
 
         return $success;
+    }
+
+    /**
+     * Posts, reposts or reverses the expense's journal entry inside the caller's transaction.
+     */
+    private function postToLedger(int $expenseId): bool
+    {
+        if (!Posting::enabled()) {
+            return true;
+        }
+
+        try {
+            (new Posting($this->db))->postExpense($expenseId);
+
+            return true;
+        } catch (Throwable $e) {
+            log_message('error', "Posting expense $expenseId failed: " . $e->getMessage());
+
+            return false;
+        }
     }
 
     /**

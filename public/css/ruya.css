@@ -1,0 +1,1088 @@
+/*
+ * Ru'ya operational UI layer.
+ *
+ * Shared components for the operations, reporting and accounting screens:
+ * period picker, filter bar, chips, badges, KPI hierarchy, report layout,
+ * busy states and focus. Built on the --dj-* tokens of dahrouj.css (loaded
+ * first) so there is one visual language.
+ *
+ * Glass is an accent, not a theme: only the sticky header, dropdown surfaces,
+ * the period picker and modals are translucent, and only where the browser can
+ * blur behind them. Tables, forms, statements, receipts and numbers always sit
+ * on opaque surfaces for legibility.
+ */
+
+:root {
+    --ruya-glass-bg: rgba(255, 255, 255, 0.82);
+    --ruya-glass-border: rgba(255, 255, 255, 0.6);
+    --ruya-glass-shadow: 0 10px 30px rgba(16, 32, 44, 0.12), 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+    --ruya-glass-blur: 14px;
+    --ruya-focus-ring: 0 0 0 3px rgba(15, 118, 110, 0.35);
+    --ruya-header-height: 58px;
+    --ruya-positive: #15803d;
+    --ruya-negative: #b42318;
+}
+
+@media screen {
+
+    /* ---------- Focus: always visible for keyboard users ---------- */
+
+    a:focus-visible,
+    button:focus-visible,
+    .btn:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    summary:focus-visible,
+    [tabindex]:focus-visible {
+        outline: none;
+        box-shadow: var(--ruya-focus-ring);
+    }
+
+    /* ---------- Glass accents ---------- */
+
+    @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+        .dj-header {
+            background-color: var(--ruya-glass-bg);
+            -webkit-backdrop-filter: saturate(160%) blur(var(--ruya-glass-blur));
+            backdrop-filter: saturate(160%) blur(var(--ruya-glass-blur));
+        }
+
+        .dj-header .dropdown-menu,
+        .daterangepicker,
+        .ruya-popover {
+            background-color: rgba(255, 255, 255, 0.9);
+            -webkit-backdrop-filter: blur(var(--ruya-glass-blur));
+            backdrop-filter: blur(var(--ruya-glass-blur));
+            border: 1px solid var(--ruya-glass-border);
+            box-shadow: var(--ruya-glass-shadow);
+        }
+
+        .modal-content {
+            background-color: rgba(255, 255, 255, 0.96);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+        }
+    }
+
+    .dj-header .dropdown-menu {
+        border-radius: var(--dj-radius-md);
+        padding: var(--dj-space-1) 0;
+        min-width: 220px;
+    }
+
+    .dj-header .dropdown-menu > li > a {
+        padding: 7px var(--dj-space-4);
+        border-radius: var(--dj-radius-sm);
+        margin: 0 var(--dj-space-1);
+    }
+
+    .dj-header .dropdown-menu .dj-nav-group-heading {
+        padding: var(--dj-space-2) var(--dj-space-4) 2px;
+        margin-top: var(--dj-space-1);
+        border-top: 1px solid var(--dj-border);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: var(--dj-text-muted);
+    }
+
+    .dj-header .dropdown-menu .dj-nav-group-heading:first-child {
+        margin-top: 0;
+        border-top: 0;
+    }
+
+    /* The back/forward history pair is a convenience, not a page action. */
+    .dj-page-nav .dj-page-nav__btn {
+        border-color: transparent;
+        background: transparent;
+        color: var(--dj-text-muted);
+        box-shadow: none;
+    }
+
+    .dj-page-nav .dj-page-nav__btn:not([disabled]):hover {
+        background: var(--dj-surface-alt);
+        color: var(--dj-text);
+    }
+
+    /* ---------- Period picker ---------- */
+
+    .dj-period-input,
+    #toolbar #daterangepicker.dj-period-input {
+        min-width: 250px;
+        width: auto;
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--dj-text-strong);
+        background-color: var(--dj-surface) !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230f766e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: left 10px center;
+        padding-left: 34px;
+        border-color: var(--dj-border-strong);
+    }
+
+    [dir="rtl"] .dj-period-input,
+    [dir="rtl"] #toolbar #daterangepicker.dj-period-input {
+        background-position: right 10px center;
+        padding-left: 12px;
+        padding-right: 34px;
+    }
+
+    .dj-period-input:hover {
+        border-color: var(--dj-accent);
+    }
+
+    .daterangepicker {
+        border-radius: var(--dj-radius-md);
+        padding: var(--dj-space-1);
+        font-size: 13px;
+    }
+
+    .daterangepicker .ranges ul {
+        width: 190px;
+    }
+
+    .daterangepicker .ranges li {
+        padding: 7px var(--dj-space-3);
+        border-radius: var(--dj-radius-sm);
+        font-size: 13px;
+        color: var(--dj-text);
+    }
+
+    .daterangepicker .ranges li:hover {
+        background-color: var(--dj-accent-soft);
+    }
+
+    .daterangepicker .ranges li.active {
+        background-color: var(--dj-accent);
+        color: #fff;
+    }
+
+    /* The last preset opens the calendars: set it apart. */
+    .daterangepicker .ranges li[data-range-key]:last-child {
+        margin-top: var(--dj-space-1);
+        border-top: 1px solid var(--dj-border);
+        border-radius: 0 0 var(--dj-radius-sm) var(--dj-radius-sm);
+        font-weight: 600;
+    }
+
+    /* Arabic day names are long: fixed, compact cells keep the two months side by side. */
+    .daterangepicker .calendar {
+        max-width: none;
+    }
+
+    .daterangepicker .calendar-table table {
+        table-layout: fixed;
+        width: 238px;
+    }
+
+    .daterangepicker .calendar th,
+    .daterangepicker .calendar td {
+        min-width: 34px;
+        width: 34px;
+        height: 28px;
+        padding: 0;
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: clip;
+    }
+
+    .daterangepicker .calendar th.month {
+        width: auto;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .daterangepicker td.active,
+    .daterangepicker td.active:hover {
+        background-color: var(--dj-accent);
+    }
+
+    .daterangepicker td.in-range {
+        background-color: var(--dj-accent-soft);
+    }
+
+    .daterangepicker .drp-buttons .btn {
+        min-width: 72px;
+    }
+
+    [dir="rtl"] .daterangepicker {
+        direction: rtl;
+        text-align: right;
+    }
+
+    [dir="rtl"] .daterangepicker .drp-calendar,
+    [dir="rtl"] .daterangepicker .drp-calendar table {
+        direction: ltr;
+    }
+
+    /* ---------- Filter bar ---------- */
+
+    .ruya-filterbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: var(--dj-space-3);
+        padding: var(--dj-space-3) var(--dj-space-4);
+        margin-bottom: var(--dj-space-4);
+        background: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-md);
+        box-shadow: var(--dj-shadow);
+    }
+
+    .ruya-filterbar__field {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 150px;
+    }
+
+    .ruya-filterbar__field > label {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--dj-text-muted);
+    }
+
+    .ruya-filterbar__actions {
+        display: flex;
+        gap: var(--dj-space-2);
+        margin-inline-start: auto;
+    }
+
+    .ruya-filterbar details.ruya-more {
+        flex-basis: 100%;
+    }
+
+    .ruya-filterbar details.ruya-more > summary {
+        cursor: pointer;
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--dj-accent-strong);
+        list-style: none;
+    }
+
+    .ruya-filterbar details.ruya-more > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .ruya-filterbar details.ruya-more > summary::before {
+        content: "+ ";
+    }
+
+    .ruya-filterbar details.ruya-more[open] > summary::before {
+        content: "− ";
+    }
+
+    .ruya-filterbar details.ruya-more .ruya-more__body {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--dj-space-3);
+        margin-top: var(--dj-space-2);
+    }
+
+    /* Active-filter chips. */
+    .ruya-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--dj-space-2);
+        margin: calc(var(--dj-space-2) * -1) 0 var(--dj-space-4);
+    }
+
+    .ruya-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 4px 3px 10px;
+        border-radius: 999px;
+        background: var(--dj-accent-soft);
+        color: var(--dj-accent-deep);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.6;
+    }
+
+    [dir="rtl"] .ruya-chip {
+        padding: 3px 10px 3px 4px;
+    }
+
+    .ruya-chip__remove {
+        border: 0;
+        background: rgba(15, 118, 110, 0.14);
+        color: inherit;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        line-height: 1;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    .ruya-chip__remove:hover {
+        background: rgba(15, 118, 110, 0.28);
+    }
+
+    /* ---------- Badges: icon + text, never colour alone ---------- */
+
+    .dj-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.6;
+        white-space: nowrap;
+        border: 1px solid transparent;
+    }
+
+    .dj-badge--success { background: rgba(21, 128, 61, 0.1); color: var(--ruya-positive); border-color: rgba(21, 128, 61, 0.2); }
+    .dj-badge--danger { background: rgba(180, 35, 24, 0.08); color: var(--ruya-negative); border-color: rgba(180, 35, 24, 0.2); }
+    .dj-badge--warning { background: rgba(183, 121, 31, 0.1); color: #8a5a12; border-color: rgba(183, 121, 31, 0.25); }
+    .dj-badge--info { background: rgba(43, 108, 176, 0.08); color: var(--dj-info); border-color: rgba(43, 108, 176, 0.2); }
+    .dj-badge--neutral { background: var(--dj-surface-alt); color: var(--dj-text-muted); border-color: var(--dj-border); }
+
+    .dj-row-muted > td {
+        color: var(--dj-text-muted);
+    }
+
+    /* ---------- KPI hierarchy ---------- */
+
+    .ruya-kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: var(--dj-space-3);
+        margin-bottom: var(--dj-space-4);
+    }
+
+    .ruya-kpis--primary {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .ruya-kpi {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: var(--dj-space-3) var(--dj-space-4);
+        background: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-md);
+        box-shadow: var(--dj-shadow);
+        color: var(--dj-text);
+        text-decoration: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    a.ruya-kpi:hover,
+    a.ruya-kpi:focus {
+        text-decoration: none;
+        color: var(--dj-text);
+        border-color: var(--dj-accent);
+        box-shadow: var(--dj-shadow-raised);
+    }
+
+    a.ruya-kpi::after {
+        content: "‹";
+        position: absolute;
+        top: var(--dj-space-3);
+        inset-inline-end: var(--dj-space-3);
+        color: var(--dj-text-muted);
+        font-size: 18px;
+        line-height: 1;
+    }
+
+    [dir="ltr"] a.ruya-kpi::after {
+        content: "›";
+    }
+
+    .ruya-kpi__label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--dj-text-muted);
+    }
+
+    .ruya-kpi__value {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--dj-text-strong);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .ruya-kpi--hero {
+        border-top: 3px solid var(--dj-accent);
+    }
+
+    .ruya-kpi--hero .ruya-kpi__value {
+        font-size: 28px;
+    }
+
+    .ruya-kpi--alert {
+        border-top: 3px solid var(--dj-warning);
+    }
+
+    .ruya-kpi--negative .ruya-kpi__value {
+        color: var(--ruya-negative);
+    }
+
+    .ruya-kpi__meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dj-space-2);
+        font-size: 12px;
+        color: var(--dj-text-muted);
+    }
+
+    .ruya-trend {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ruya-trend--up { color: var(--ruya-positive); }
+    .ruya-trend--down { color: var(--ruya-negative); }
+    .ruya-trend--flat { color: var(--dj-text-muted); }
+
+    .ruya-section-title {
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+        margin: var(--dj-space-5) 0 var(--dj-space-3);
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--dj-text-strong);
+    }
+
+    .ruya-section-title .ruya-section-hint {
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--dj-text-muted);
+    }
+
+    /* ---------- Charts: brand colours, readable on white ---------- */
+
+    .dj-chart .ct-series-a .ct-line,
+    .dj-chart .ct-series-a .ct-point {
+        stroke: var(--dj-accent);
+    }
+
+    .dj-chart .ct-series-a .ct-area {
+        fill: var(--dj-accent);
+        fill-opacity: 0.08;
+    }
+
+    .dj-chart .ct-label {
+        font-family: var(--dj-font);
+        font-size: 11px;
+        color: var(--dj-text-muted);
+    }
+
+    /* Two-thirds / one-third split that stacks on narrow screens. */
+    .ruya-split {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+        gap: var(--dj-space-4);
+    }
+
+    @media (max-width: 991px) {
+        .ruya-split {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    /* ---------- Dashboard: alerts and rankings ---------- */
+
+    .ruya-alerts {
+        display: grid;
+        gap: var(--dj-space-2);
+        margin-bottom: var(--dj-space-3);
+    }
+
+    .ruya-alert {
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+        margin: 0;
+        padding: var(--dj-space-2) var(--dj-space-3);
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .ruya-alert:hover,
+    .ruya-alert:focus {
+        text-decoration: underline;
+    }
+
+    .ruya-ranking {
+        margin: 0;
+        padding: var(--dj-space-2) var(--dj-space-3);
+        background: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-md);
+        list-style-position: inside;
+    }
+
+    .ruya-ranking > li {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0 var(--dj-space-2);
+        padding: var(--dj-space-2) 0;
+        border-bottom: 1px solid var(--dj-border);
+    }
+
+    .ruya-ranking > li:last-child {
+        border-bottom: 0;
+    }
+
+    .ruya-ranking__name {
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ruya-ranking__figure {
+        font-weight: 700;
+    }
+
+    .ruya-ranking__sub {
+        grid-column: 1 / -1;
+        font-size: 12px;
+        color: var(--dj-text-muted);
+    }
+
+    /* ---------- Register: the amount to collect dominates the panel ---------- */
+
+    #sale_totals .dj-total-row > th {
+        padding-top: var(--dj-space-3);
+        border-top: 2px solid var(--dj-text-strong);
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--dj-text-strong);
+    }
+
+    #payment_totals tr.ruya-due > th {
+        padding: var(--dj-space-3);
+        background: var(--dj-accent-soft);
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--dj-accent-deep);
+    }
+
+    #payment_totals tr.ruya-due > th:last-child {
+        font-size: 24px;
+    }
+
+    #payment_totals tr.ruya-due--change > th {
+        background: rgba(21, 128, 61, 0.1);
+        color: var(--ruya-positive);
+    }
+
+    #payment_totals tr.ruya-due--settled > th {
+        background: var(--dj-surface-alt);
+        color: var(--dj-text-muted);
+    }
+
+    .ruya-primary-action {
+        margin: var(--dj-space-3) 0;
+        font-weight: 700;
+        min-height: 48px;
+    }
+
+    /* ---------- Report layout ---------- */
+
+    .ruya-report-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--dj-space-3);
+        margin-bottom: var(--dj-space-3);
+    }
+
+    .ruya-report-period {
+        font-size: 13px;
+        color: var(--dj-text-muted);
+    }
+
+    .ruya-report-period strong {
+        color: var(--dj-text-strong);
+    }
+
+    .ruya-report-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--dj-space-2);
+    }
+
+    /* Reports hub: one card per business question. */
+    .ruya-hub {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: var(--dj-space-4);
+    }
+
+    .ruya-hub-card {
+        display: flex;
+        flex-direction: column;
+        background: var(--dj-surface);
+        border: 1px solid var(--dj-border);
+        border-radius: var(--dj-radius-md);
+        box-shadow: var(--dj-shadow);
+        overflow: hidden;
+    }
+
+    .ruya-hub-card__head {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--dj-space-3);
+        padding: var(--dj-space-4) var(--dj-space-4) var(--dj-space-2);
+    }
+
+    .ruya-hub-card__icon {
+        flex: 0 0 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--dj-accent-soft);
+        color: var(--dj-accent);
+        font-size: 16px;
+    }
+
+    .ruya-hub-card__title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--dj-text-strong);
+    }
+
+    .ruya-hub-card__question {
+        margin: 2px 0 0;
+        font-size: 12px;
+        color: var(--dj-text-muted);
+    }
+
+    .ruya-hub-card__links {
+        list-style: none;
+        margin: 0;
+        padding: 0 var(--dj-space-2) var(--dj-space-3);
+    }
+
+    .ruya-hub-card__links a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--dj-space-2);
+        padding: 7px var(--dj-space-3);
+        border-radius: var(--dj-radius-sm);
+        color: var(--dj-text);
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .ruya-hub-card__links a:hover,
+    .ruya-hub-card__links a:focus {
+        background: var(--dj-accent-soft);
+        color: var(--dj-accent-deep);
+        text-decoration: none;
+    }
+
+    .ruya-hub-card__links .ruya-view {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--dj-text-muted);
+    }
+
+    /* ---------- Tables ---------- */
+
+    .dj-ledger-table > thead > tr > th {
+        position: sticky;
+        top: var(--ruya-header-height);
+        z-index: 2;
+        background: var(--dj-surface-alt);
+    }
+
+    .table-responsive .dj-ledger-table > thead > tr > th {
+        top: 0;
+    }
+
+    .dj-num,
+    td.text-right,
+    th.text-right {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ruya-empty {
+        padding: var(--dj-space-6) var(--dj-space-4);
+        text-align: center;
+        color: var(--dj-text-muted);
+        border: 1px dashed var(--dj-border-strong);
+        border-radius: var(--dj-radius-md);
+        background: var(--dj-surface);
+    }
+
+    .ruya-empty .glyphicon {
+        display: block;
+        font-size: 26px;
+        margin-bottom: var(--dj-space-2);
+        color: var(--dj-border-strong);
+    }
+
+    /* ---------- Busy state: a submitting button cannot be pressed twice ---------- */
+
+    .btn.is-busy {
+        position: relative;
+        pointer-events: none;
+        opacity: 0.85;
+    }
+
+    .btn.is-busy::before {
+        content: "";
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        margin-inline-end: 6px;
+        vertical-align: -1px;
+        border: 2px solid currentColor;
+        border-inline-end-color: transparent;
+        border-radius: 50%;
+        animation: ruya-spin 0.7s linear infinite;
+    }
+
+    @keyframes ruya-spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .btn.is-busy::before {
+            animation: none;
+        }
+    }
+}
+
+/*
+ * 80 mm thermal receipt (sales/receipt_default). Screen and print share the
+ * layout; black on white only, because thermal printers have no grey.
+ */
+.ruya-receipt {
+    max-width: 80mm;
+    margin: 0 auto;
+    padding: 3mm;
+    background: #fff;
+    color: #000;
+    font-family: "Cairo", Tahoma, Arial, sans-serif;
+    line-height: 1.35;
+}
+
+.ruya-receipt table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+}
+
+.ruya-receipt td,
+.ruya-receipt th {
+    padding: 0.4mm 0;
+    vertical-align: top;
+    color: #000;
+}
+
+.ruya-receipt .total-value {
+    text-align: left;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+[dir="ltr"] .ruya-receipt .total-value {
+    text-align: right;
+}
+
+.ruya-receipt__header {
+    text-align: center;
+}
+
+.ruya-receipt__header > div,
+.ruya-receipt #company_phone,
+.ruya-receipt #sale_time {
+    margin: 0;
+}
+
+.ruya-receipt__logo {
+    display: block;
+    max-width: 30mm;
+    max-height: 18mm;
+    margin: 0 auto 1mm;
+}
+
+.ruya-receipt__store {
+    font-size: 1.35em;
+    font-weight: 700;
+}
+
+.ruya-receipt__title {
+    margin: 1.5mm 0 1mm !important;
+    padding: 0.8mm 0;
+    border-top: 1px dashed #000;
+    border-bottom: 1px dashed #000;
+    font-weight: 700;
+}
+
+.ruya-receipt__meta {
+    margin: 0 0 1.5mm;
+}
+
+.ruya-receipt__meta > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 2mm;
+}
+
+.ruya-receipt__meta dt {
+    font-weight: 400;
+}
+
+.ruya-receipt__meta dd {
+    margin: 0;
+    font-weight: 600;
+}
+
+.ruya-receipt #receipt_items {
+    margin: 0;
+}
+
+.ruya-receipt__items thead th {
+    border-bottom: 1px solid #000;
+    font-weight: 700;
+}
+
+.ruya-receipt__item-name td {
+    padding-top: 1mm;
+    font-weight: 600;
+}
+
+.ruya-receipt__item-note td,
+.ruya-receipt__item-discount td {
+    font-size: 0.92em;
+}
+
+.ruya-receipt__totals {
+    margin-top: 1mm !important;
+    border-top: 1px dashed #000;
+}
+
+.ruya-receipt__grand td {
+    padding-top: 1mm;
+    border-top: 1px solid #000;
+    font-size: 1.3em;
+    font-weight: 700;
+}
+
+.ruya-receipt__payments {
+    margin-top: 1mm !important;
+    border-top: 1px dashed #000;
+}
+
+.ruya-receipt__change td {
+    font-weight: 700;
+}
+
+.ruya-receipt__policy {
+    margin-top: 2mm;
+    padding-top: 1mm;
+    border-top: 1px dashed #000;
+    text-align: center;
+    font-size: 0.92em;
+}
+
+.ruya-receipt__barcode {
+    margin-top: 2mm;
+    text-align: center;
+}
+
+.ruya-receipt__barcode img {
+    max-width: 100%;
+    height: auto;
+}
+
+@media screen {
+    .ruya-receipt {
+        margin-top: var(--dj-space-4);
+        border: 1px solid var(--dj-border);
+        box-shadow: var(--dj-shadow);
+    }
+}
+
+@media print {
+    .ruya-receipt {
+        max-width: none;
+        padding: 0;
+    }
+}
+
+/*
+ * Printing any page (receipt, report, statement) prints the document only:
+ * no application chrome, no link targets, no screen-only controls.
+ */
+@media print {
+    .dj-header,
+    .dj-footer,
+    .dj-page-nav,
+    .dj-page-path,
+    .ruya-filterbar,
+    .print_hide,
+    #debug-icon,
+    #toolbarContainer {
+        display: none !important;
+    }
+
+    a[href]::after {
+        content: none !important;
+    }
+
+    body,
+    #dj-main {
+        background: #fff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .ruya-kpi {
+        box-shadow: none;
+        break-inside: avoid;
+    }
+}
+
+@media screen {
+    /* Numbered steps on the purchase screen: supplier → products → total and payment. */
+    .ruya-step {
+        display: flex;
+        align-items: center;
+        gap: var(--dj-space-2);
+        margin: 0 0 var(--dj-space-2);
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--dj-text-strong);
+    }
+
+    #overall_sale .ruya-step:not(:first-child) {
+        margin-top: var(--dj-space-4);
+        padding-top: var(--dj-space-3);
+        border-top: 1px solid var(--dj-border);
+    }
+
+    .ruya-step__n {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--dj-accent);
+        color: #fff;
+        font-size: 12px;
+    }
+
+    .ruya-payment-hint {
+        margin: 2px 0 var(--dj-space-2);
+        font-size: 12px;
+    }
+
+    .ruya-print-option {
+        margin: var(--dj-space-2) 0 0;
+    }
+}
+
+@media screen {
+    /* Extra controls passed into the standard filter bar line up as fields. */
+    .ruya-filterbar > .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 150px;
+        margin: 0;
+    }
+
+    .ruya-filterbar > .form-group > label {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--dj-text-muted);
+    }
+
+    .ruya-filterbar__label-text {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--dj-text-muted);
+    }
+}
+
+@media screen {
+    /* Chart of accounts: each top-level type reads as a section, groups as bold
+       sub-headings, postable accounts indented under them with a guide. */
+    .ruya-coa .ruya-coa__depth-0 > td {
+        padding-top: 10px;
+        padding-bottom: 10px;
+        background: var(--dj-accent-soft);
+        border-top: 2px solid var(--dj-accent);
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--dj-accent-deep);
+    }
+
+    .ruya-coa .ruya-coa__group:not(.ruya-coa__depth-0) > td {
+        font-weight: 700;
+        background: var(--dj-surface-alt);
+    }
+
+    .ruya-coa .ruya-coa__row:not(.ruya-coa__group) .ruya-coa__name {
+        position: relative;
+    }
+
+    .ruya-coa .ruya-coa__row:not(.ruya-coa__group) .ruya-coa__name::before {
+        content: "";
+        display: inline-block;
+        width: 10px;
+        height: 1px;
+        margin-inline-end: 6px;
+        vertical-align: middle;
+        background: var(--dj-border-strong);
+    }
+
+    .ruya-coa__side {
+        color: var(--dj-text-muted);
+        font-weight: 400;
+    }
+}
+
+@media screen {
+    /* Trial balance: opening | movement | closing read as three blocks. */
+    .ruya-tb > thead > tr:first-child > th:nth-child(3),
+    .ruya-tb > thead > tr:first-child > th:nth-child(4),
+    .ruya-tb > thead > tr:last-child > th:nth-child(2),
+    .ruya-tb > thead > tr:last-child > th:nth-child(4),
+    .ruya-tb > tbody > tr > td:nth-child(4),
+    .ruya-tb > tbody > tr > td:nth-child(6),
+    .ruya-tb > tfoot > tr > th:nth-child(3),
+    .ruya-tb > tfoot > tr > th:nth-child(5) {
+        border-inline-end: 2px solid var(--dj-border-strong);
+    }
+
+    .ruya-tb > tbody > tr > td:nth-child(7),
+    .ruya-tb > tbody > tr > td:nth-child(8) {
+        font-weight: 600;
+        background: var(--dj-surface-alt);
+    }
+}

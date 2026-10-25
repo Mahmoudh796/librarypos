@@ -115,6 +115,14 @@
                     <td colspan="<?= $invoice_columns ?>" style="text-align: center;"><?= '&nbsp;' ?></td>
                 </tr>
 
+                <?php if (!empty($invoice_discount_amount) && (float) $invoice_discount_amount != 0.0) { ?>
+                    <tr>
+                        <td colspan="<?= $invoice_columns - 3 ?>" class="blank"> </td>
+                        <td colspan="2" class="total-line"><?= lang('Sales.invoice_discount') ?></td>
+                        <td class="total-value"><?= to_currency((string) -(float) $invoice_discount_amount) ?></td>
+                    </tr>
+                <?php } ?>
+
                 <tr>
                     <td colspan="<?= $invoice_columns - 3 ?>" class="blank"> </td>
                     <td colspan="2" class="total-line"><?= lang('Sales.sub_total') ?></td>
@@ -174,7 +182,7 @@
                         <span><?= nl2br(esc($config['payment_message'])) ?></span>
                         <span><?= lang('Sales.comments') . ': ' . (empty($comments) ? esc($config['invoice_default_comments']) : esc($comments)) ?></span>
                     </h5>
-                    <?= nl2br(esc($config['return_policy'])) ?>
+                    <?= nl2br(esc(store_info('return_policy'))) ?>
                 </div>
                 <div id="barcode">
                     <img alt="<?= esc($sale_id) ?>" src="data:image/svg+xml;base64,<?= base64_encode($barcode) ?>"><br>

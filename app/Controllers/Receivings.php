@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\Accounting\PaymentMethod;
 use App\Libraries\Receiving_lib;
 use App\Libraries\Token_lib;
 use App\Libraries\Barcode_lib;
@@ -198,30 +199,35 @@ class Receivings extends Secure_Controller
     {
         $data = [];
 
-        $validation_rule = [
-            'price'    => 'trim|required|decimal_locale',
-            'quantity' => 'trim|required|decimal_locale',
-            'discount' => 'trim|permit_empty|decimal_locale',
+        $validationRule = [
+            // required must run before trim: CI4's trim rule throws a TypeError on a missing (null) field.
+            'price'              => 'required|trim|decimal_locale',
+            'quantity'           => 'required|trim|decimal_locale',
+            'discount'           => 'trim|permit_empty|decimal_locale',
+            'receiving_quantity' => 'trim|permit_empty|decimal_locale',
         ];
 
-        $price = parse_decimals($this->request->getPost('price'));
-        $quantity = parse_quantity($this->request->getPost('quantity'));
-        $raw_receiving_quantity = parse_quantity($this->request->getPost('receiving_quantity'));
-
-        $description = $this->request->getPost('description', FILTER_SANITIZE_FULL_SPECIAL_CHARS);    // TODO: Duplicated code
-        $serialnumber = $this->request->getPost('serialnumber', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?? '';
-        $discount_type = $this->request->getPost('discount_type', FILTER_SANITIZE_NUMBER_INT);
-        $discount = $discount_type
-            ? parse_quantity(filter_var($this->request->getPost('discount'), FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION))
-            : parse_decimals(filter_var($this->request->getPost('discount'), FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION));
-
-        $receiving_quantity = filter_var($raw_receiving_quantity, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-
-        if ($this->validate($validation_rule)) {
-            $this->receiving_lib->edit_item($item_id, $description, $serialnumber, $quantity, $discount, $discount_type, $price, $receiving_quantity);
-        } else {
+        if (!$this->validate($validationRule)) {
             $data['error'] = lang('Receivings.error_editing_item');
+
+            return $this->_reload($data);    // TODO: Hungarian notation
         }
+
+        // Values are parsed with the configured number locale. They must not be passed through
+        // FILTER_SANITIZE_NUMBER_FLOAT first: it strips non-ASCII digits, so Arabic-Indic input
+        // such as "٠٫٠٠" became "" and crashed edit_item()'s float parameters.
+        $price = (float) parse_decimals((string) $this->request->getPost('price'));
+        $quantity = (float) parse_quantity((string) $this->request->getPost('quantity'));
+        $receivingQuantity = (float) (parse_quantity((string) $this->request->getPost('receiving_quantity')) ?: 1);
+
+        $description = $this->request->getPost('description', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?? '';    // TODO: Duplicated code
+        $serialnumber = $this->request->getPost('serialnumber', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?? '';
+        $rawDiscountType = $this->request->getPost('discount_type', FILTER_SANITIZE_NUMBER_INT);
+        $discountType = $rawDiscountType === null || $rawDiscountType === '' ? null : (int) $rawDiscountType;
+        $rawDiscount = (string) $this->request->getPost('discount');
+        $discount = (float) ($discountType ? parse_quantity($rawDiscount) : parse_decimals($rawDiscount));
+
+        $this->receiving_lib->edit_item($item_id, $description, $serialnumber, $quantity, $discount, $discountType, $price, $receivingQuantity);
 
         return $this->_reload($data);    // TODO: Hungarian notation
     }
@@ -328,6 +334,19 @@ class Receivings extends Secure_Controller
         $data = [];
 
         $data['cart'] = $this->receiving_lib->get_cart();
+
+        // A repeated submit arrives after the first one emptied the cart (the session
+        // lock serialises them), so there is nothing to receive twice.
+        if ($data['cart'] === []) {
+            return $this->_reload(['warning' => lang('Receivings.nothing_to_complete')]);
+        }
+
+        // Buying on credit creates a debt to someone: the supplier must be known.
+        $paymentType = (string) $this->request->getPost('payment_type', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        if (PaymentMethod::resolve($paymentType) === PaymentMethod::DUE && $this->receiving_lib->get_supplier() == -1) {
+            return $this->_reload(['error' => lang('Receivings.supplier_required_for_credit')]);
+        }
+
         $data['total'] = $this->receiving_lib->get_total();
         $data['transaction_time'] = to_datetime(time());
         $data['mode'] = $this->receiving_lib->get_mode();

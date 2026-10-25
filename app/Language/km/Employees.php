@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'ពាក្យសម្ងាត់មិនដូចគ្នា។',
     'password_not_must_match'                => 'ពាក្យសម្ងាត់បច្ចុប្បន្ន នឹងពាក្យសម្ងាត់ថ្មី ត្រូវតែមានតែមួយ។',
     'password_required'                      => 'ត្រូវការពាក្យសម្ងាត់។',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

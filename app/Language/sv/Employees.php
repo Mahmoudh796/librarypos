@@ -32,6 +32,8 @@ return [
     'password_must_match'                    => 'Lösenorden matchar ej.',
     'password_not_must_match'                => 'Nuvarande lösenord och nytt lösenord måste vara unikt.',
     'password_required'                      => 'Lösenord krävs.',
+    'perm_group_accounting'                  => '',
+    'perm_group_finance'                     => '',
     'perm_group_admin'                       => '',
     'perm_group_catalog'                     => '',
     'perm_group_comms'                       => '',

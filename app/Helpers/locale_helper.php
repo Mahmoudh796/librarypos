@@ -564,6 +564,18 @@ function to_quantity_decimals(?string $number): string
 }
 
 /**
+ * A percentage in the store's number locale, e.g. "12.5%" (or its Arabic-Indic form).
+ */
+function to_percent(float $percent, int $fractionDigits = 1): string
+{
+    $fmt = new NumberFormatter(config(OSPOS::class)->settings['number_locale'], NumberFormatter::DECIMAL);
+    $fmt->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, $fractionDigits);
+    $fmt->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $fractionDigits);
+
+    return $fmt->format(round($percent, $fractionDigits)) . '%';
+}
+
+/**
  * Converts a string to locale-specific number format for display.
  *
  * @param string|null $decimals
@@ -581,12 +593,22 @@ function to_decimals(?string $number, ?string $decimals = null, int $type = Numb
     $fmt->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, empty($decimals) ? DEFAULT_PRECISION : $config[$decimals]);
     $fmt->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, empty($decimals) ? DEFAULT_PRECISION : $config[$decimals]);
 
+    // Grouping is switched off as an attribute: blanking the separator symbol instead
+    // made ICU drop the currency symbol from positive amounts (ar-EG, ICU 71).
     if (empty($config['thousands_separator'])) {
-        $fmt->setTextAttribute(NumberFormatter::GROUPING_SEPARATOR_SYMBOL, '');
+        $fmt->setAttribute(NumberFormatter::GROUPING_USED, 0);
     }
     $fmt->setSymbol(NumberFormatter::CURRENCY_SYMBOL, $config['currency_symbol']);
 
-    return $fmt->format((float) $number);
+    // A value that rounds to zero at the displayed precision (including -0.0 from a
+    // negated balance) is formatted as 0; ICU would otherwise print "-0.00".
+    $value = (float) $number;
+    $digits = (int) (empty($decimals) ? DEFAULT_PRECISION : $config[$decimals]);
+    if (abs($value) < 0.5 * 10 ** -$digits) {
+        $value = 0.0;
+    }
+
+    return $fmt->format($value);
 }
 
 /**
@@ -608,6 +630,22 @@ function parse_tax(string $number): mixed
 }
 
 /**
+ * Folds Arabic-Indic / Persian digits and Arabic separators to ASCII and strips
+ * direction marks and no-break spaces, which browsers submit verbatim from RTL inputs.
+ */
+function normalize_number_digits(string $number): string
+{
+    return trim(strtr($number, [
+        '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+        '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+        '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+        '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+        '٫' => '.', '٬' => ',', '−' => '-',
+        "\u{200E}" => '', "\u{200F}" => '', "\u{061C}" => '', "\u{00A0}" => '', "\u{202F}" => '',
+    ]));
+}
+
+/**
  * @param string $number
  * @param int|null $decimals
  * @return false|float|int|mixed|string
@@ -621,7 +659,13 @@ function parse_decimals(string $number, ?int $decimals = null): mixed
 
     $config = config(OSPOS::class)->settings;
 
-    $fmt = new NumberFormatter($config['number_locale'], NumberFormatter::DECIMAL);
+    $number = normalize_number_digits($number);
+    $locale = (string) $config['number_locale'];
+
+    // Input is parsed with Latin digits whatever the display locale. Arabic locales format
+    // with Arabic-Indic digits, and their formatter rejects "10.5" typed on a Latin keyboard
+    // (and read "1,000.50" as 1). normalize_number_digits() already folded Arabic-Indic input.
+    $fmt = new NumberFormatter($locale . (str_contains($locale, '@') ? ';' : '@') . 'numbers=latn', NumberFormatter::DECIMAL);
 
     if (!$decimals) {
         $decimals = intVal($config['currency_decimals'] ?? 2);
@@ -633,10 +677,14 @@ function parse_decimals(string $number, ?int $decimals = null): mixed
     }
 
     try {
-        $locale_safe_number = $fmt->parse($number);
+        $position = 0;
+        $locale_safe_number = $fmt->parse($number, NumberFormatter::TYPE_DOUBLE, $position);
 
+        // A partial parse ("1,000.50" -> 1, "12abc" -> 12) silently produces a wrong
+        // amount, so anything left unparsed is rejected.
         if (
             $locale_safe_number === false
+            || $position !== strlen($number)
             || $locale_safe_number > MAX_PRECISION
             || $locale_safe_number > 1.e14
         ) {

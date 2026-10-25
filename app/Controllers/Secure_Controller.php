@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\AuditTrail;
 use App\Models\Employee;
 use App\Models\Module;
 use CodeIgniter\HTTP\Exceptions\RedirectException;
@@ -10,6 +11,7 @@ use CodeIgniter\Model;
 use CodeIgniter\Session\Session;
 use Config\OSPOS;
 use Config\Services;
+use Throwable;
 
 /**
  * Controllers that are considered secure extend Secure_Controller, optionally a $module_id can
@@ -73,6 +75,28 @@ class Secure_Controller extends BaseController
             'allowed_module_ids' => $this->module->get_allowed_module_ids($logged_in_employee_info->person_id),
         ];
         view('viewData', $this->global_view_data);
+    }
+
+    /**
+     * Records a sensitive change in the audit trail (who, what, before/after, why).
+     */
+    protected function audit(string $action, string $entityType, int|string $entityId, ?array $old = null, ?array $new = null, string $reason = ''): void
+    {
+        try {
+            (new AuditTrail())->record(
+                (int) $this->employee->get_logged_in_employee_info()->person_id,
+                $action,
+                $entityType,
+                (string) $entityId,
+                $old,
+                $new,
+                $reason,
+                (string) $this->request->getIPAddress()
+            );
+        } catch (Throwable $e) {
+            // The audit trail must never block the business action it records.
+            log_message('error', "Audit record '$action' failed: " . $e->getMessage());
+        }
     }
 
     public function sanitizeSortColumn($headers, $field, $default): string
